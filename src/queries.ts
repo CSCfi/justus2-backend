@@ -25,6 +25,8 @@ const db = pgp(conString);
 const redis = require("redis");
 const client = redis.createClient();
 
+const dbHelpers = require("./databaseHelpers");
+
 // Scheduler for updating Koodistopalvelu data inside redis
 // Each star represents a different value, beginning from second and ending in day
 // So if we want to update it once a day at midnight we would use ("* 0 0 * * *")
@@ -324,54 +326,157 @@ function getJulkaisuVirtaCrossrefEsitäyttö(req: Request, res: Response, next: 
 // Post a julkaisu to the database
 // Catch the JSON body and parse it so that we can insert the values into postgres
 function postJulkaisu(req: Request, res: Response, next: NextFunction) {
+    let jid: any = "";
     db.task(() => {
-        return db.one(
-            "INSERT INTO julkaisu (organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara, konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero, sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa, kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, julkaisurinnakkaistallennettu, avoinsaatavuus, rinnakkaistallennetunversionverkkoosoite, lisatieto, jufotunnus, jufoluokitus, julkaisuntila, username, modified)" + "values (${julkaisu.organisaatiotunnus}, ${julkaisu.julkaisutyyppi}, ${julkaisu.julkaisuvuosi}, ${julkaisu.julkaisunnimi}, ${julkaisu.tekijat}, ${julkaisu.julkaisuntekijoidenlukumaara}, ${julkaisu.konferenssinvakiintunutnimi}, ${julkaisu.emojulkaisunnimi}, ${julkaisu.isbn}, ${julkaisu.emojulkaisuntoimittajat}, ${julkaisu.lehdenjulkaisusarjannimi}, ${julkaisu.issn}, ${julkaisu.volyymi}, ${julkaisu.numero}, ${julkaisu.sivut}, ${julkaisu.artikkelinumero}, ${julkaisu.kustantaja}, ${julkaisu.julkaisunkustannuspaikka}, ${julkaisu.julkaisunkieli}, ${julkaisu.julkaisunkansainvalisyys}, ${julkaisu.julkaisumaa}, ${julkaisu.kansainvalinenyhteisjulkaisu}, ${julkaisu.yhteisjulkaisuyrityksenkanssa}, ${julkaisu.doitunniste}, ${julkaisu.pysyvaverkkoosoite}, ${julkaisu.julkaisurinnakkaistallennettu}, ${julkaisu.avoinsaatavuus}, ${julkaisu.rinnakkaistallennetunversionverkkoosoite}, ${julkaisu.lisatieto}, ${julkaisu.jufotunnus}, ${julkaisu.jufoluokitus}, ${julkaisu.julkaisuntila}, ${julkaisu.username}, ${julkaisu.modified}) RETURNING id", req.body)
+        const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+        const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + "RETURNING id";
+        return db.one(saveJulkaisu)
+            .then((julkaisuidinit: any) => {
 
-    .then((julkaisuidinit: any) => {
-        return db.one("INSERT INTO tieteenala (tieteenalakoodi, jnro, julkaisuid)" + "values (" + req.body.tieteenala.map((e: any) => e.tieteenalakoodi) + ", " + req.body.tieteenala.map((s: any) => s.jnro) + ", " + JSON.parse(julkaisuidinit.id) + ") RETURNING julkaisuid");
-    })
-    .then((julkaisuidinit: any) => {
-        return db.one("INSERT INTO taiteenala (julkaisuid, taiteenalakoodi, jnro)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + ", " + req.body.taiteenala.map((e: any) => e.taiteenalakoodi) + ", " + req.body.taiteenala.map((s: any) => s.jnro) + ") RETURNING julkaisuid");
-    })
-    .then((julkaisuidinit: any) => {
-        // return console.log(req.body.avainsanat.toString());
-        return db.one("INSERT INTO avainsana (julkaisuid, avainsana)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + ", '" + req.body.avainsanat.map((e: any) => e) + "') RETURNING julkaisuid");
-    })
-    .then((julkaisuidinit: any) => {
-        return db.one("INSERT INTO taidealantyyppikategoria (julkaisuid, tyyppikategoria)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + "," + req.body.taidealantyyppikategoria.map((e: any) => e.tyyppikategoria) + ") RETURNING julkaisuid");
-    })
-    // .then((julkaisuidinit: any) => {
-    //     //     Object.keys(req.body.lisatieto).forEach(function (key) {
-    //     //     const avain = key;
-    //     //     const val = req.body.lisatieto[key];
-    //     //     // return console.log("The key " + avain + " the val " + val);
-    //     // });
-    //     return db.one("INSERT INTO lisatieto (julkaisuid, lisatietotyyppi, lisatietoteksti)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + ", " + Object.keys(req.body.lisatieto).forEach(function(key) {
-    //         const avain = key;
-    //     return avain;
-    //     }) + "," + Object.keys(req.body.lisatieto).forEach(function(key) {
-    //         const val = req.body.lisatieto[key];
-    //         return val;
-    //     }) + ") RETURNING julkaisuid");
-    // })
-    .then((julkaisuidinit: any) => {
-        return db.one("INSERT INTO organisaatiotekija (julkaisuid, etunimet, sukunimi, orcid, rooli)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + ", '" + req.body.organisaatiotekija.map((e: any) => e.etunimet)  + "', '" + req.body.organisaatiotekija.map((s: any) => s.sukunimi)  + "', '" + req.body.organisaatiotekija.map((x: any) => x.orcid)  + "', '" + req.body.organisaatiotekija.map((y: any) => y.rooli) + "') RETURNING id");
-    })
-    .then((organisaatiotekijaid: any) => {
-        return db.one("INSERT INTO alayksikko (organisaatiotekijaid, alayksikko)" + "values (" + JSON.parse(organisaatiotekijaid.id) + ",'" + req.body.avainsanat.map((e: any) => e) + "') RETURNING organisaatiotekijaid");
-    })
-    .then((obj: any) =>  {
-        res.status(200)
-        .json({
-            message: obj,
-        });
-    })
-    .catch(function(err: any) {
-    return next(err);
-     });
-});
+                jid = julkaisuidinit.id;
+
+                Promise.all([
+                    insertOrganisaatiotekijaAndAlayksikko(jid),
+                    insertTieteenala(jid),
+                    insertTaiteenala(jid),
+                    insertAvainsanat(jid),
+                    insertTyyppikategoria(jid),
+                    insertLisatieto(jid)
+                ]).then(() => {
+                    res.status(200)
+                        .json({
+                            julkaisuidinit
+                        });
+                });
+            })
+            .catch(function(err: any) {
+                // error in julkaisun tallennus
+                return next(err);
+            });
+
+
+        function insertTieteenala(jid: any) {
+
+            const tieteenalaObj =  dbHelpers.addJulkaisuIdToObject(req.body.tieteenala, jid);
+            const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.tieteenala, {table: "tieteenala"});
+            const saveTieteenala = pgp.helpers.insert(tieteenalaObj, tieteenalaColumns) + "RETURNING id";
+
+            return db.many(saveTieteenala)
+                .then((response: any) => {
+                    // console.log(response);
+                }).catch(function(err: any) {
+                    console.log(err);
+                });
+        }
+
+        function insertTaiteenala(jid: any) {
+
+            if (!req.body.taiteenala) { return Promise.resolve(true); }
+
+            const taiteenalaObj =  dbHelpers.addJulkaisuIdToObject(req.body.taiteenala, jid);
+            const taiteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.taiteenala, {table: "taiteenala"});
+            const saveTaiteenala = pgp.helpers.insert(taiteenalaObj, taiteenalaColumns) + "RETURNING id";
+
+            return db.many(saveTaiteenala)
+                .then((response: any) => {
+                    // console.log(response);
+                });
+        }
+
+        function insertAvainsanat(jid: any) {
+
+            if (!req.body.avainsanat) { return Promise.resolve(true); }
+
+            const avainsanaObj = { "avainsana": req.body.avainsanat.toString(), "julkaisuid": jid};
+            const avainsanatColumns = new pgp.helpers.ColumnSet(["julkaisuid", "avainsana"], {table: "avainsana"});
+            const saveAvainsanat = pgp.helpers.insert(avainsanaObj, avainsanatColumns) + "RETURNING id";
+            return db.one(saveAvainsanat)
+                .then((response: any) => {
+                    // console.log(response);
+                });
+        }
+
+        function insertTyyppikategoria(jid: any) {
+
+            if (!req.body.taidealantyyppikategoria) { return Promise.resolve(true); }
+
+            const tyyppikategoriaObj = dbHelpers.constructObject(req.body.taidealantyyppikategoria, jid, { "julkaisuid": "", "tyyppikategoria": ""});
+            const tyyppikategoriaColumns = new pgp.helpers.ColumnSet(["julkaisuid", "tyyppikategoria"], {table: "taidealantyyppikategoria"});
+            const saveTyyppikategoria = pgp.helpers.insert(tyyppikategoriaObj, tyyppikategoriaColumns) + "RETURNING id";
+
+            return db.many(saveTyyppikategoria)
+                .then((response: any) => {
+                    // console.log(response);
+                });
+        }
+
+        function insertOrganisaatiotekijaAndAlayksikko(jid: any) {
+            const orgTekijaObj = dbHelpers.addJulkaisuIdToObject(req.body.organisaatiotekija, jid);
+
+            const organisaatiotekijaColumns = new pgp.helpers.ColumnSet(dbHelpers.organisaatiotekija, {table: "organisaatiotekija"});
+            const saveOrganisaatiotekija = pgp.helpers.insert(orgTekijaObj, organisaatiotekijaColumns) + "RETURNING id";
+
+            return db.many(saveOrganisaatiotekija)
+                .then((orgid: any) => {
+
+                    if (!req.body.organisaatiotekija[0].alayksikko[0]) {return Promise.resolve(true); }
+
+                    const alayksikkoObj = [];
+                    for (let i = 0; i < orgid.length; i++) {
+                        for (let j = 0; j < req.body.organisaatiotekija[i].alayksikko.length; j++) {
+                            alayksikkoObj.push({"alayksikko" : req.body.organisaatiotekija[i].alayksikko[j], "organisaatiotekijaid":  orgid[i].id});
+                        }
+                    }
+                    const alayksikkoColumns = new pgp.helpers.ColumnSet(["organisaatiotekijaid", "alayksikko"], {table: "alayksikko"});
+                    const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + "RETURNING id";
+
+                    return db.many(saveAlayksikko)
+                        .then((alyksikkoid: any) => {
+                            // console.log(alyksikkoid);
+                        }).catch(function (err: any) {
+                            // alayksikko error
+                            console.log(err);
+                        });
+
+
+                }).catch(function (err: any) {
+                    // organisaatiotekija error
+                    console.log(err);
+                });
+
+        }
+
+        function insertLisatieto(jid: any) {
+            if (!req.body.lisatieto) { return Promise.resolve(true); }
+
+            const temp = req.body.lisatieto;
+            const lisatietoObj: any = [];
+
+            Object.keys(temp).forEach(function (val, key) {
+                if (typeof lisatietoObj[key] === "undefined") {
+                    lisatietoObj[key] = {"julkaisuid": "", "lisatietotyyppi": "", "lisatietoteksti": ""};
+                }
+                lisatietoObj[key].julkaisuid = jid;
+                lisatietoObj[key].lisatietotyyppi = val;
+                lisatietoObj[key].lisatietoteksti = temp[val];
+            });
+
+            const lisatietoColumns = new pgp.helpers.ColumnSet(["julkaisuid", "lisatietotyyppi", "lisatietoteksti"], {table: "lisatieto"});
+            const saveLisatieto = pgp.helpers.insert(lisatietoObj, lisatietoColumns) + "RETURNING id";
+
+            return db.many(saveLisatieto)
+                .then((lisatietoid: any) => {
+                    // console.log(lisatietoid);
+                }).catch(function (err: any) {
+                    // lisatieto error
+                    console.log(err);
+                });
+
+        }
+    });
+
 }
+
 
 
 
@@ -390,9 +495,9 @@ function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
         // return console.log(req.body.avainsanat.toString());
         return db.one("UPDATE avainsana where id = ${id} (julkaisuid, avainsana)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + ", 'avainsanat') RETURNING julkaisuid");
     })
-    .then((julkaisuidinit: any) => {
-        return db.one("UPDATE taidealantyyppikategoria where id = ${id} (julkaisuid, tyyppikategoria)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + "," + req.body.taidealantyyppikategoria.map((e: any) => e.tyyppikategoria) + ") RETURNING julkaisuid");
-    })
+    // .then((julkaisuidinit: any) => {
+    //     return db.one("UPDATE taidealantyyppikategoria where id = ${id} (julkaisuid, tyyppikategoria)" + "values (" + JSON.parse(julkaisuidinit.julkaisuid) + "," + req.body.taidealantyyppikategoria.map((e: any) => e.tyyppikategoria) + ") RETURNING julkaisuid");
+    // })
     // .then((julkaisuidinit: any) => {
     //     //     Object.keys(req.body.lisatieto).forEach(function (key) {
     //     //     const avain = key;
