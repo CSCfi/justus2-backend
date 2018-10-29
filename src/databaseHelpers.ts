@@ -45,23 +45,21 @@ let addJulkaisuIdToObject = function(obj: any, jid: any) {
     return obj;
 };
 
-let constructObject = function(obj: any, jid: any, objValues: any) {
+let constructObject = function(obj: any, jid: any, objValues: any, value: any) {
     const finalObject = [];
     finalObject.push(objValues);
     // create copy from objValues to prevent reference to original object
     const objectCopy = JSON.parse(JSON.stringify(objValues));
     for (let i = 0; i < obj.length; i++) {
-        console.log(i);
         if (typeof finalObject[i] === "undefined") {
             finalObject[i] = objectCopy;
         }
         finalObject[i].julkaisuid =  jid;
-        finalObject[i].tyyppikategoria = obj[i];
+        finalObject[i][value] = obj[i];
 
     }
     return finalObject;
 };
-
 
 module.exports = {
     julkaisu: julkaisu,
@@ -73,5 +71,3 @@ module.exports = {
 
 
 };
-
-

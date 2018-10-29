@@ -387,10 +387,10 @@ function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             if (!req.body.avainsanat) { return Promise.resolve(true); }
 
-            const avainsanaObj = { "avainsana": req.body.avainsanat.toString(), "julkaisuid": jid};
+            const avainsanaObj = dbHelpers.constructObject(req.body.avainsanat, jid, {"julkaisuid": "", "avainsana": ""}, "avainsana");
             const avainsanatColumns = new pgp.helpers.ColumnSet(["julkaisuid", "avainsana"], {table: "avainsana"});
             const saveAvainsanat = pgp.helpers.insert(avainsanaObj, avainsanatColumns) + "RETURNING id";
-            return db.one(saveAvainsanat)
+            return db.many(saveAvainsanat)
                 .then((response: any) => {
                     // console.log(response);
                 });
@@ -400,7 +400,7 @@ function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             if (!req.body.taidealantyyppikategoria) { return Promise.resolve(true); }
 
-            const tyyppikategoriaObj = dbHelpers.constructObject(req.body.taidealantyyppikategoria, jid, { "julkaisuid": "", "tyyppikategoria": ""});
+            const tyyppikategoriaObj = dbHelpers.constructObject(req.body.taidealantyyppikategoria, jid, {"julkaisuid": "", "tyyppikategoria": ""}, "tyyppikategoria");
             const tyyppikategoriaColumns = new pgp.helpers.ColumnSet(["julkaisuid", "tyyppikategoria"], {table: "taidealantyyppikategoria"});
             const saveTyyppikategoria = pgp.helpers.insert(tyyppikategoriaObj, tyyppikategoriaColumns) + "RETURNING id";
 
