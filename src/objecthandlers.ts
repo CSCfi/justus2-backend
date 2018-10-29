@@ -805,6 +805,65 @@ function ObjectHandlerAllJulkaisutmin(obj: any) {
                 };
             });
 }
+    function  mapOrganisaatiotekijaAndAlayksikko(obj: any) {
+
+        for (let i = 0; i < obj.length; i++) {
+            if (typeof obj[i].alayksikko === "undefined") {
+                obj[i].alayksikko = [];
+            }
+            for (let j = 0; j < obj[i].tempalayksikko.length; j++) {
+                obj[i].alayksikko.push(obj[i].tempalayksikko[j].alayksikko);
+            }
+            delete obj[i].tempalayksikko;
+        }
+        return obj;
+    }
+
+
+    function mapTaideAlanTyyppikategoria(obj: any) {
+
+        if (obj.length < 1) return;
+        const tyyppikategoriat: any = [];
+
+        for (let i = 0; i < obj.length; i++) {
+            tyyppikategoriat.push(obj[i].tyyppikategoria);
+        }
+      return tyyppikategoriat;
+    }
+
+    function mapLisatietoData(obj: any) {
+
+        const lisatietoObj: any = {};
+        if (obj.length < 1) return;
+
+        for (let i = 0; i < obj.length; i++) {
+            lisatietoObj[obj[i].lisatietotyyppi] = obj[i].lisatietoteksti;
+        }
+        return lisatietoObj;
+    }
+
+    function mapAvainsanat(obj: any) {
+
+        if (obj.length < 1) return;
+
+        const avainsanaObj: any =  [];
+
+        for (let i = 0; i < obj.length; i++) {
+            console.log(obj[i]);
+            avainsanaObj.push(obj[i].avainsana);
+        }
+        return avainsanaObj;
+    }
+
+    function checkIfEmpty(obj: any) {
+        if (obj.length < 1) {
+            return;
+        } else {
+            return obj;
+        }
+    }
+
+
 module.exports = {
     ObjectHandlerKielet: ObjectHandlerKielet,
     ObjectHandlerValtiot: ObjectHandlerValtiot,
@@ -828,4 +887,9 @@ module.exports = {
     ObjectHandlerOrgListaus: ObjectHandlerOrgListaus,
     ObjectHandlerTestVirta: ObjectHandlerTestVirta,
     ObjectHandlerAllJulkaisutmin: ObjectHandlerAllJulkaisutmin,
+    mapTaideAlanTyyppikategoria: mapTaideAlanTyyppikategoria,
+    mapLisatietoData: mapLisatietoData,
+    mapAvainsanat: mapAvainsanat,
+    checkIfEmpty: checkIfEmpty,
+    mapOrganisaatiotekijaAndAlayksikko: mapOrganisaatiotekijaAndAlayksikko
 };

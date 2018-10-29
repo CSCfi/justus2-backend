@@ -71,21 +71,77 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 }
 
 // Get a specific julkaisu by "id"
-function getAjulkaisu(req: Request, res: Response, next: NextFunction) {
+// function getAjulkaisu(req: Request, res: Response, next: NextFunction) {
+//     kp.HTTPGETshow();
+//     db.any("select * from julkaisu where id = ${id}", {
+//         id: req.params.id
+//     })
+//         .then((data: any) => {
+//             res.status(200)
+//                 .json(data[0]);
+//             })
+//                 .catch((err: any) => {
+//                 return next(err);
+//         });
+// }
+
+// Get data from all tables by julkaisuid
+function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
     kp.HTTPGETshow();
-    db.any("select * from julkaisu where id = ${id}", {
-        id: req.params.id
-    })
-        .then((data: any) => {
-            res.status(200)
-                .json({
-                    data: data
-                });
+    db.task((t: any) => {
+
+        return t.multi("SELECT * FROM julkaisu WHERE id = ${id}; " +
+                "SELECT jnro, tieteenalakoodi  FROM tieteenala WHERE julkaisuid = ${id}; " +
+                "SELECT jnro, taiteenalakoodi FROM taiteenala WHERE julkaisuid = ${id}; " +
+                "SELECT avainsana FROM avainsana WHERE julkaisuid = ${id}; " +
+                "SELECT tyyppikategoria FROM taidealantyyppikategoria WHERE julkaisuid = ${id}; " +
+                "SELECT lisatietotyyppi, lisatietoteksti FROM lisatieto WHERE julkaisuid = ${id}; ",
+            {
+                id: req.params.id
             })
-                .catch((err: any) => {
-                return next(err);
+            .spread((julkaisu: any, tieteenala: any, taiteenala: any, avainsana: any, taidealantyyppikategoria: any, lisatieto: any) => {
+                getOrgTekijat(req.params.id)
+                    .then((organisaatiotekija: any) => {
+                        const data = {
+                            "julkaisu": julkaisu[0],
+                            "organisaatiotekija": oh.mapOrganisaatiotekijaAndAlayksikko(organisaatiotekija),
+                            "tieteenala": oh.checkIfEmpty(tieteenala),
+                            "taiteenala": oh.checkIfEmpty(taiteenala),
+                            "avainsanat": oh.mapAvainsanat(avainsana),
+                            "taidealantyyppikategoria": oh.mapTaideAlanTyyppikategoria(taidealantyyppikategoria),
+                            "lisatieto": oh.mapLisatietoData(lisatieto)
+                        };
+                        res.status(200)
+                            .json({
+                                data
+                            });
+                    }).catch(function (err: any)  {
+                        // getOrgTekijat promise
+                        console.log(err);
+                });
+            }).catch(function (err: any) {
+                // multi query
+                console.log(err);
+            });
+
+    }).then((julkaisu: any) => {});
+
+    function  getOrgTekijat(id: any) {
+        return db.task((t: any) => {
+            return t.map("SELECT id, etunimet, sukunimi, orcid, rooli FROM organisaatiotekija WHERE julkaisuid=$1", id, (orgtekija: any) => {
+                return t.any("SELECT alayksikko FROM alayksikko WHERE organisaatiotekijaid=$1", orgtekija.id)
+                    .then((res: any) => {
+                        orgtekija.tempalayksikko = res;
+                        return orgtekija;
+                    });
+            }).then(t.batch);
         });
+
+    }
+
+
 }
+
 
 // Get all julkaisut that belong to a specific organisation
 function getJulkaisuListaforOrg(req: Request, res: Response, next: NextFunction) {
@@ -589,7 +645,8 @@ module.exports = {
     getOrgTekija: getOrgTekija,
     getJulkaisut: getJulkaisut,
     getJulkaisutmin: getJulkaisutmin,
-    getAjulkaisu: getAjulkaisu,
+    // getAjulkaisu: getAjulkaisu,
+    getAllPublicationDataById: getAllPublicationDataById,
     getJulkaisuListaforOrg: getJulkaisuListaforOrg,
     getJulkaisunLuokat: getJulkaisunLuokat,
     getJulkaisunTilat: getJulkaisunTilat,
