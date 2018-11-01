@@ -1,4 +1,0 @@
-- name: Install Node via curl from root
-  shell: curl -sL https://rpm.nodesource.com/setup_8.x | bash -
-  become_user: root
-  become_method: sudo

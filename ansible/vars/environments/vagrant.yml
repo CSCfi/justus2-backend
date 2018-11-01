@@ -11,3 +11,5 @@ postgres:
     application_database:
       name: justus
       owner: appaccount
+sources:
+  path: "/opt/sources"

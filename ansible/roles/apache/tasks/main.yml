@@ -1,0 +1,26 @@
+---
+- name: Install Apache
+  yum: 
+    name: [ "httpd", "mod_ssl" ]
+    state: latest
+
+- name: Copy Apache configuration files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+  with_items:
+    - {
+        src: justus-backend.conf.j2,
+        dest: /etc/httpd/conf.d/justus-backend.conf,
+        mode: "0644",
+        owner: root
+      }
+
+- name: Make sure path exists for service to boot
+  file:
+    path: /opt/justus-backend
+    state: directory
+  ignore_errors: true

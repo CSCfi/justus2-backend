@@ -1,0 +1,133 @@
+---
+- name: Clear existing application file struture
+  file: path={{ item }} state=absent
+  with_items:
+    - "{{ backend_sync_path }}"
+
+- name: "Symlink source-files from host machine to provide live editing"
+  file: 
+    src: "{{ sources.path }}/src" 
+    path: "{{ backend_sync_path }}" 
+    state: link
+  when: environment_id == "vagrant"
+
+- name: "Copy source-files from host machine"
+  file: 
+    src: "{{ sources.path }}/src" 
+    path: "{{ backend_sync_path }}" 
+    state: directory
+  when: environment_id != "vagrant"
+
+- name: Ensure file ownership
+  command: chown -cR apache:apache {{ backend_sync_path }}/
+  become: True
+
+- name: Ensure file permissions
+  command: chmod -cR "755" {{ backend_sync_path }}/
+
+- name: Copy backend configuration files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+  with_items:
+    - {
+        src: justus-backend.ini.j2,
+        dest: /etc/justus-backend.ini,
+        mode: "0644",
+        owner: root
+      }
+
+- name: Create Postgres users
+  become_user: postgres
+  postgresql_user:
+    user: "{{ item.value.username }}"
+    password: "{{ item.value.password }}"
+  with_dict: "{{ postgres.users }}"
+
+- name: Setup Postgres databases
+  become_user: postgres
+  postgresql_db:
+    name: "{{ item.value.name }}"
+    owner: "{{ item.value.owner }}"
+    encoding: UTF-8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+    template: template0
+  with_dict: "{{ postgres.databases }}"
+  ignore_errors: True
+
+- name: Ensure database user does not have unnecessary privileges
+  become_user: postgres
+  postgresql_user:
+    name: "{{ item.value.username }}"
+    role_attr_flags: NOSUPERUSER,NOCREATEDB
+    state: present
+  with_dict: "{{ postgres.users }}"
+
+- name: Execute SQL files
+  become_user: postgres
+  shell: cat {{ sources.path }}/sql/{{ item }} | psql -d {{ postgres.databases.application_database.name }} --set ON_ERROR_STOP=1
+  with_items: "{{ sql_files_to_execute }}"
+  ignore_errors: True
+
+- name: Create node_modules directory outside of shared folder
+  file:
+    path: /opt/dependencies/node_modules
+    state: directory
+    owner: vagrant
+    group: vagrant
+
+- name: Create node_modules directory to the shared folder
+  file:
+    path: /opt/sources/node_modules
+    state: directory
+    owner: vagrant
+    group: vagrant
+
+- name: Create root.npm directory owned by vagrant
+  file:
+    path: /root/.npm
+    state: directory
+    owner: vagrant
+    group: vagrant
+
+- name: Create package.json link to external directory
+  file:
+    path: /opt/dependencies/package.json
+    src: "{{ sources.path }}/package.json"
+    state: link
+
+- name: Create package-lock.json link to external directory
+  file:
+    path: /opt/dependencies/package-lock.json
+    src: "{{ sources.path }}/package-lock.json"
+    state: link
+    force: yes
+
+- name: Create bind mount between folders
+  mount:
+    path: "{{ sources.path }}/node_modules"
+    src: /opt/dependencies/node_modules
+    state: mounted
+    fstype: none
+    opts: bind
+
+- name: Get NPM dependencies
+  shell: /usr/bin/npm install
+  args:
+    chdir: "/opt/dependencies"
+  become_user: vagrant
+
+- name: Create the session table for the database
+  shell: psql -h 10.10.10.10 -U appaccount -d justus {{ "<" }} node_modules/connect-pg-simple/table.sql
+  args:
+    chdir: "{{ sources.path }}"
+
+- name: Build sources
+  shell: /usr/bin/npm run build
+  args:
+    chdir: "{{ sources.path }}"
+  become_user: vagrant

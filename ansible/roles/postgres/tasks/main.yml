@@ -1,0 +1,45 @@
+---
+- name: Install PostgreSQL and requirements
+  yum:
+    name: [
+      python-psycopg2,
+      postgresql,
+      postgresql-libs,
+      postgresql-server,
+      postgresql-contrib
+    ]
+    state: latest
+
+- name: Make sure configuration directory exists
+  file:
+    path: /var/lib/pgsql/data
+    state: directory
+    owner: postgres
+    group: postgres
+
+- name: Create PostgreSQL database cluster
+  command: postgresql-setup initdb
+  ignore_errors: True
+
+- name: Copy PostgreSQL configuration files
+  template: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+  with_items:
+    - {
+        src: pg_hba.conf.j2,
+        dest: /var/lib/pgsql/data/pg_hba.conf,
+        mode: "0600",
+        owner: postgres,
+        group: postgres
+      }
+    - { 
+        src: postgresql.conf.j2,
+        dest: /var/lib/pgsql/data/postgresql.conf,
+        mode: "0600",
+        owner: postgres,
+        group: postgres
+       }

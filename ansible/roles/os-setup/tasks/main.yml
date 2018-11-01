@@ -1,9 +1,63 @@
 - name: Install common dev tools for vagrant
   yum: 
-    name: "{{ item }}"
+    name: [
+      "net-tools",
+      "gcc",
+      "nano",
+      "nmap",
+      "git"
+    ]
     state: latest
-  with_items:
-    - gcc
-    - nano
-    - nmap
   when: environment_id == "vagrant"
+
+- name: Install EPEL-release
+  yum:
+    name: "epel-release"
+    state: latest
+
+- name: Set vm.overcommit_memory to 1
+  sysctl:
+    name: vm.overcommit_memory
+    value: 1
+    state: present
+
+- name: Disable THP support scripts added to rc.local
+  lineinfile:
+    path: /etc/rc.local
+    line: |
+      echo never > /sys/kernel/mm/transparent_hugepage/enabled
+      echo never > /sys/kernel/mm/transparent_hugepage/defrag
+
+- name: Change permissions of /etc/rc.local to make it run on boot
+  shell: chmod +x /etc/rc.d/rc.local
+  become_method: sudo
+
+- name: Set SELinux to permissive to allow PostgreSQL access
+  selinux:
+    policy: targeted
+    state: permissive
+
+- set_fact:
+    pubkey_file: "{{ playbook_dir }}/../id_rsa.pub"
+
+- set_fact:
+    pubkey: "{{lookup('file', pubkey_file) }}"
+  ignore_errors: true
+
+- name: Add public key
+  authorized_key:
+    key: "{{ pubkey }}"
+    user: vagrant
+    state: present
+  when: (pubkey|default(False)) != False
+
+- name: Make user to start on sources folder
+  lineinfile:
+    path: /home/vagrant/.bashrc
+    state: present
+    line: 'cd /opt/sources &> /dev/null'
+    regex: '^cd '
+    create: yes
+    owner: vagrant
+    group: vagrant
+    mode: '0644'

@@ -10,9 +10,10 @@ Clone the repository from https://github.com/CSCfi/justus-backend
 ```
 // Example
 § apt install vagrant
-
 // You can always check that npm was installed correctly by typing for example:
 § vagrant --version
+// Install plugin to get Virtualbox Guest Additions
+§ vagrant plugin install vagrant-vbguest
 
 ```
 

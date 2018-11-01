@@ -1,4 +1,0 @@
-- name: Install nodejs from curled file
-  shell: yum install -y nodejs
-  become_user: root
-  become_method: sudo

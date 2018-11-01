@@ -1,4 +1,0 @@
-- name: Create the session table for the database
-  shell: psql -h 10.10.10.10 -U appaccount -d justus {{ "<" }} node_modules/connect-pg-simple/table.sql
-  args:
-    chdir: /vagrant

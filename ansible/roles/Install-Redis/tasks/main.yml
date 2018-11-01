@@ -1,6 +1,0 @@
-- name: Install Redis
-  yum:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - redis

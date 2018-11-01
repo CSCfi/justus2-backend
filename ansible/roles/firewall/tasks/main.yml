@@ -14,9 +14,10 @@
     - { port: 3000, protocol: tcp, comment: "Open port 3000 for node"}
     - { port: 8080, protocol: tcp, comment: "Open port 8080 for Apache" }
     - { port: 5432, protocol: tcp, comment: "Open port 5432 for pgAdmin" }
+    - { port: 445, protocol: tcp, comment: "Open port 445 for samba" }
 
-- name: Restart server to apply firewall rules
-  command: /sbin/shutdown -r
-  async: 0
-  poll: 0
-  ignore_errors: true
+#- name: Restart server to apply firewall rules
+#  command: /sbin/shutdown -r
+#  async: 0
+#  poll: 0
+#  ignore_errors: true

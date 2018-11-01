@@ -1,0 +1,44 @@
+---
+- name: Install supervisor
+  yum:
+    name: supervisor
+    state: latest
+
+- name: Log dir
+  file:
+    path: /var/log/supervisor
+    state: directory
+
+- name: Install configuration
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/supervisord.d/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - httpd.ini
+    - justus.ini
+    - postgres.ini
+    - redis.ini
+    - samba.ini
+  notify: Reload Supervisor
+
+- name: Install service
+  copy:
+    src: supervisord.service
+    dest: /usr/lib/systemd/system/supervisord.service
+    owner: root
+    group: root
+    mode: 0755
+  notify: Reload Supervisor
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Service up
+  service:
+    name: supervisord
+    enabled: yes
+    state: started

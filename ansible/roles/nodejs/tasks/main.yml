@@ -1,0 +1,14 @@
+---
+- name: Import Nodesource RPM key (CentOS 7+)..
+  rpm_key:
+    key: https://rpm.nodesource.com/pub/el/NODESOURCE-GPG-SIGNING-KEY-EL
+    state: present
+
+- name: Install Node via curl from root
+  shell: curl -sL https://rpm.nodesource.com/setup_8.x | bash -
+  become: true
+
+- name: Install nodejs
+  yum:
+    name: nodejs
+    state: latest

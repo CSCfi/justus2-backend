@@ -1,6 +1,0 @@
-- name: Install Epel-Release (Pre-Req for Redis)
-  yum:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - epel-release

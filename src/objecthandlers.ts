@@ -500,13 +500,17 @@ function ObjectHandlerTestVirta(obj: any): any {
 
 // }
 function getrediscallback(key: string, callbacker: Function) {
-       getRedis(key, function success(reply: string) {
-        const newdata = JSON.parse(reply);
-            callbacker(newdata);
-            },
-function error(err: Error) {
-    console.log("Something went wrong" + err);
-});
+    getRedis(key, function success(reply: string) {
+        let newdata = undefined;
+        try {
+            newdata = JSON.parse(reply);
+        } catch (err) {
+            newdata = [];
+        }
+        callbacker(newdata);
+    }, function error(err: Error) {
+        console.log("Something went wrong" + err);
+    });
 }
 
 function ObjectHandlerOrgListaus(obj: any, orgid: any) {

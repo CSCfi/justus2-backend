@@ -1,0 +1,24 @@
+ServerName localhost
+Listen 8080
+<VirtualHost *:8080>
+  ServerName localhost
+  ErrorLog /var/log/httpd/justus-backend.log
+  <Location /api>
+{% if (demo.cors.disable|default(False)) == True %}
+    Header set Access-Control-Allow-Origin "*"
+{% endif %}
+{% if (demo.user.enabled|default(False)) == True %}
+    RequestHeader set shib-shib-uid "{{ demo.user.uid|default('undefined') }}"
+    RequestHeader set shib-shib-sn "{{ demo.user.sn|default('undefined') }}"
+    RequestHeader set shib-shib-givenname "{{ demo.user.givenname|default('undefined') }}"
+    RequestHeader set shib-shib-mail "{{ demo.user.mail|default('undefined@csc.fi') }}"
+    RequestHeader set shib-shib-group "{{ demo.user.group|default('@csc.fi;undefined') }}"
+{% endif %}
+    ProxyPass http://localhost:3000
+    ProxyPassReverse http://localhost:3000
+  </Location>
+</VirtualHost>
+
+{% if environment_id == "vagrant" %}
+EnableSendfile Off
+{% endif %}

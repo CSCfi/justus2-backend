@@ -1,17 +1,19 @@
+---
 - hosts: server
   become: true
   vars_files:
     - "vars/common.yml"
     - "vars/environments/{{ environment_id }}.yml"
     - "{{ secrets_file_path }}"
+
   roles:
-    # - update
-    - os-setup
     - apache
-    - nodejs
-    - redis
-    - firewall
-    - postgres
-    - samba
-    - services
-    - justus
+
+  tasks:
+    - name: Restart httpd
+      service:
+        name: supervisord
+        state: restarted
+      register: restart_result
+
+    # - debug: var=restart_result

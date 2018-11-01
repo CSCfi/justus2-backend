@@ -1,0 +1,12 @@
+---
+- name: Install Redis
+  yum:
+    name: redis
+    state: latest
+
+- name: Prevent Redis from saving to disk
+  replace:
+    path: /etc/redis.conf
+    regexp: '^save ([^\n]+)'
+    replace: '#save \1'
+    backup: yes
