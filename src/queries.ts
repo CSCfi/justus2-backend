@@ -629,16 +629,198 @@ function postAdminAction(req: Request, res: Response, next: NextFunction) {
 }
 
 // PUT requests
-function putJulkaisu(req: Request, res: Response, next: NextFunction) {
-    // TODO ADD CODE HERE
+async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
+
+    const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+    const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id);
+
+
+    // begin transaction
+    await db.any("BEGIN");
+
+    try {
+
+        const julkaisu = await db.none(updateJulkaisu);
+
+        await db.result("DELETE FROM alayksikko WHERE organisaatiotekijaid = ${orgid}", {
+            orgid: req.body.organisaatiotekija.id
+        });
+        await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        const organisaatiotekija = await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, req.params.id);
+
+        await db.result("DELETE FROM tieteenala WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        const tieteenala = await insertTieteenala(req.body.tieteenala, req.params.id);
+
+        await db.result("DELETE FROM taiteenala WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        const taiteenala = await insertTaiteenala(req.body.taiteenala, req.params.id);
+
+        await db.result("DELETE FROM avainsana WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        const avainsana = await insertAvainsanat(req.body.avainsanat, req.params.id);
+
+        await db.result("DELETE FROM taidealantyyppikategoria WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        const taidealantyyppikategoria = await insertTyyppikategoria(req.body.taidealantyyppikategoria, req.params.id);
+
+        await db.result("DELETE FROM lisatieto WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        const lisatieto = await insertLisatieto(req.body.lisatieto, req.params.id);
+
+        await db.any("COMMIT");
+        return res.sendStatus(200);
+
+
+    } catch (err) {
+        // if error exists in any query, rollback
+        console.log(err);
+        await db.any("ROLLBACK");
+        res.sendStatus(500);
+    }
+
 }
+
 function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
     // TODO ADD CODE HERE
 }
 
+function insertTieteenala(obj: any, jid: any) {
+
+    const tieteenalaObj =  dbHelpers.addJulkaisuIdToObject(obj, jid);
+    const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.tieteenala, {table: "tieteenala"});
+    const saveTieteenala = pgp.helpers.insert(tieteenalaObj, tieteenalaColumns) + "RETURNING id";
+
+    return db.many(saveTieteenala)
+        .then((response: any) => {
+            // console.log(response);
+        }).catch(function(err: any) {
+            console.log(err);
+        });
+}
 
 
 
+// insert functions, used both in update and post requests
+function insertTaiteenala(obj: any, jid: any) {
+
+    if (!obj || obj.length < 1) { return Promise.resolve(true); }
+
+    const taiteenalaObj =  dbHelpers.addJulkaisuIdToObject(obj, jid);
+    const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.taiteenala, {table: "taiteenala"});
+    const saveTieteenala = pgp.helpers.insert(taiteenalaObj, tieteenalaColumns) + "RETURNING id";
+
+    return db.many(saveTieteenala)
+        .then((response: any) => {
+            // console.log(response);
+        }).catch(function(err: any) {
+            console.log(err);
+        });
+}
+
+function insertAvainsanat(obj: any, jid: any) {
+
+    if (!obj || obj.length < 1) { return Promise.resolve(true); }
+
+    const avainsanaObj = dbHelpers.constructObject(obj, jid, "avainsana");
+    const avainsanatColumns = new pgp.helpers.ColumnSet(["julkaisuid", "avainsana"], {table: "avainsana"});
+    const saveAvainsanat = pgp.helpers.insert(avainsanaObj, avainsanatColumns) + "RETURNING id";
+    return db.many(saveAvainsanat)
+        .then((response: any) => {
+            // console.log(response);
+        }).catch(function(err: any) {
+            console.log(err);
+        });
+}
+function insertTyyppikategoria(obj: any, jid: any) {
+
+    if (!obj || obj.length < 1) { return Promise.resolve(true); }
+
+    const tyyppikategoriaObj = dbHelpers.constructObject(obj, jid, "tyyppikategoria");
+    const tyyppikategoriaColumns = new pgp.helpers.ColumnSet(["julkaisuid", "tyyppikategoria"], {table: "taidealantyyppikategoria"});
+    const saveTyyppikategoria = pgp.helpers.insert(tyyppikategoriaObj, tyyppikategoriaColumns) + "RETURNING id";
+
+    return db.many(saveTyyppikategoria)
+        .then((response: any) => {
+            // console.log(response);
+        }).catch(function(err: any) {
+            console.log(err);
+        });
+}
+
+function insertLisatieto(obj: any, jid: any) {
+
+    if (!obj || obj.length < 1) { return Promise.resolve(true); }
+
+    const temp = obj;
+    const lisatietoObj: any = [];
+
+    Object.keys(temp).forEach(function (val, key) {
+        if (typeof lisatietoObj[key] === "undefined") {
+            lisatietoObj[key] = {"julkaisuid": "", "lisatietotyyppi": "", "lisatietoteksti": ""};
+        }
+        lisatietoObj[key].julkaisuid = jid;
+        lisatietoObj[key].lisatietotyyppi = val;
+        lisatietoObj[key].lisatietoteksti = temp[val];
+    });
+
+    const lisatietoColumns = new pgp.helpers.ColumnSet(["julkaisuid", "lisatietotyyppi", "lisatietoteksti"], {table: "lisatieto"});
+    const saveLisatieto = pgp.helpers.insert(lisatietoObj, lisatietoColumns) + "RETURNING id";
+
+    return db.many(saveLisatieto)
+        .then((lisatietoid: any) => {
+            // console.log(lisatietoid);
+        }).catch(function (err: any) {
+            // lisatieto error
+            console.log(err);
+        });
+
+}
+
+
+function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
+
+    const orgTekijaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
+    const organisaatiotekijaColumns = new pgp.helpers.ColumnSet(dbHelpers.organisaatiotekija, {table: "organisaatiotekija"});
+    const saveOrganisaatiotekija = pgp.helpers.insert(orgTekijaObj, organisaatiotekijaColumns) + "RETURNING id";
+
+    return db.many(saveOrganisaatiotekija)
+        .then((orgid: any) => {
+
+            if (!obj[0].alayksikko[0]) {return Promise.resolve(true); }
+            // if (!obj[0].alayksikko[0]) {return Promise.resolve(true); }
+
+            const alayksikkoObj = [];
+            for (let i = 0; i < orgid.length; i++) {
+                for (let j = 0; j < obj[i].alayksikko.length; j++) {
+                    alayksikkoObj.push({"alayksikko" : obj[i].alayksikko[j], "organisaatiotekijaid":  orgid[i].id});
+                }
+            }
+            const alayksikkoColumns = new pgp.helpers.ColumnSet(["organisaatiotekijaid", "alayksikko"], {table: "alayksikko"});
+            const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + "RETURNING id";
+
+            return db.many(saveAlayksikko)
+                .then((alyksikkoid: any) => {
+                    // console.log(alyksikkoid);
+                }).catch(function (err: any) {
+                    // error in alayksikko
+                    console.log(err);
+                });
+
+
+        }).catch(function (err: any) {
+            // error in organisaatiotekija
+            console.log(err);
+        });
+
+}
 
 module.exports = {
     // GET requests

@@ -765,7 +765,7 @@ function ObjectHandlerAllJulkaisut(obj: any) {
 function ObjectHandlerAllJulkaisutmin(obj: any) {
     return obj.map((x: any) => {
                 return {
-                    julkaisu: {
+                    // julkaisu: {
                         id: x.id,
                         organisaatiotunnus: x.organisaatiotunnus,
                         julkaisutyyppi: x.julkaisutyyppi,
@@ -801,10 +801,11 @@ function ObjectHandlerAllJulkaisutmin(obj: any) {
                         julkaisuntila: x.julkaisuntila,
                         username: x.username,
                         modified: x.modified,
-                    }
+                    // }
                 };
             });
 }
+
     function  mapOrganisaatiotekijaAndAlayksikko(obj: any) {
 
         for (let i = 0; i < obj.length; i++) {

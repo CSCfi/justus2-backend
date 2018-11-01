@@ -35,7 +35,7 @@ const julkaisu = [
     "modified"];
 
 const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "rooli"];
-const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
+const tieteenala = ["?julkaisuid", "tieteenalakoodi", "jnro"];
 const taiteenala = ["julkaisuid", "taiteenalakoodi", "jnro"];
 
 let addJulkaisuIdToObject = function(obj: any, jid: any) {
@@ -45,18 +45,14 @@ let addJulkaisuIdToObject = function(obj: any, jid: any) {
     return obj;
 };
 
-let constructObject = function(obj: any, jid: any, objValues: any, value: any) {
-    const finalObject = [];
-    finalObject.push(objValues);
-    // create copy from objValues to prevent reference to original object
-    const objectCopy = JSON.parse(JSON.stringify(objValues));
+let constructObject = function(obj: any, jid: any, value: any) {
+    const finalObject: any = [];
     for (let i = 0; i < obj.length; i++) {
         if (typeof finalObject[i] === "undefined") {
-            finalObject[i] = objectCopy;
+            finalObject[i] = {};
         }
         finalObject[i].julkaisuid =  jid;
         finalObject[i][value] = obj[i];
-
     }
     return finalObject;
 };
