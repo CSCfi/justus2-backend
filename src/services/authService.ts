@@ -5,16 +5,16 @@ let getUserData = function(headers: any) {
 
         const userData = {
             "domain": "",
-            "code": "",
+            "organisaatio": "",
             "email": "",
-            "role": "",
+            "rooli": "",
             "nimi": name
         };
 
         const domain =  parseDomainFromHeadersData(headers["shib-shib-group"]);
 
         if (!domain) {
-            return "User has no access";
+            return false;
         }
 
         const role = getRole(headers["shib-shib-group"]);
@@ -22,10 +22,12 @@ let getUserData = function(headers: any) {
         Object.keys(domainMappings).forEach(function (val, key) {
             if (domainMappings[key].domain === domain) {
                 userData.domain = domain;
-                userData.code = domainMappings[key].code;
+                userData.organisaatio = domainMappings[key].code;
                 userData.email = domainMappings[key].email;
-                userData.role = role;
-                userData.nimi = name;
+                userData.rooli = role;
+                // userData.nimi = name;
+            } else {
+                return false;
             }
         });
 
