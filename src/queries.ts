@@ -63,6 +63,11 @@ function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     const organisationCode =  authService.getOrganisationId(req.headers["shib-shib-group"]);
+
+    if (!organisationCode) {
+        return res.status(500).send("Permission denied");
+    }
+
     const userData = authService.getUserData(req.headers);
 
     console.log(userData);
@@ -116,6 +121,12 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
     // check access rights also here
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-shib-group"]);
+
+    if (!organisationCode) {
+        return res.status(500).send("Permission denied");
+    }
+
     kp.HTTPGETshow();
     db.task((t: any) => {
 
@@ -280,6 +291,14 @@ function getAlaYksikot(req: Request, res: Response, next: NextFunction) {
 }
 
 function getUser(req: Request, res: Response, next: NextFunction) {
+
+    const userData = authService.getUserData(req.headers);
+
+    if (!userData) {
+        return res.status(500).send("Permission denied");
+    }
+
+    console.log(userData);
     // TODO ADD CODE HERE
 }
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
@@ -434,15 +453,6 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 });
 }
 
-function getUserLaurea(req: Request, res: Response, next: NextFunction) {
-    fs.readFile("/vagrant/src/jsonFiles/laurea.json", "utf8", function read(err: any, data: any) {
-        if (err) {
-            throw err;
-        }
-        res.send(JSON.parse(data));
-    });
-}
-
 // Post orgtekija, just a test
 function postOrg(req: Request, res: Response, next: NextFunction) {
     db.none("INSERT INTO organisaatiotekija VALUES (2, 5, 'Victor', 'Tester', 'csc', 'Seniorez Developez')")
@@ -457,9 +467,6 @@ function postOrg(req: Request, res: Response, next: NextFunction) {
 });
 }
 
-function postAdminImpersonate(req: Request, res: Response, next: NextFunction) {
-    // TODO ADD CODE HERE
-}
 function postAdminAction(req: Request, res: Response, next: NextFunction) {
     // TODO ADD CODE HERE
 }
@@ -684,13 +691,11 @@ module.exports = {
     getJulkaisutVIRTACR: getJulkaisutVIRTACR,
     getJulkaisuVirtaCrossrefEsitäyttö: getJulkaisuVirtaCrossrefEsitäyttö,
     getOrganisaatioListaus: getOrganisaatioListaus,
-    getUserLaurea: getUserLaurea,
     testvirta: testvirta,
     // POST requests
     postJulkaisu: postJulkaisu,
     postOrg: postOrg,
     postAdminAction: postAdminAction,
-    postAdminImpersonate: postAdminImpersonate,
     // PUT requests
     // putJulkaisu: putJulkaisu,
     putJulkaisuntila: putJulkaisuntila,

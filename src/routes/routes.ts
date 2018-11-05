@@ -6,9 +6,10 @@ const db = require("../queries");
 // Define the routes here, all will have the prexix /api/ as per the proxypass in the apache settings
 // GET requests here
 router.get("/julkaisut/lista/all", db.getJulkaisut);
-router.get("/julkaisutmin/lista/all", db.getJulkaisutmin);
-router.get("/julkaisut/lista/:organisaatiotunnus", db.getJulkaisuListaforOrg);
-router.get("/julkaisu/tiedot/:id", db.getAjulkaisu);
+router.get("/julkaisut/lista", db.getJulkaisutmin);
+
+// router.get("/julkaisut/tiedot/:id", db.getAjulkaisu);
+router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
 router.get("/org/:id", db.getOrgTekija);
 // KoodistoPalvelu routes
 router.get("/haku/julkaisunluokat", db.getJulkaisunLuokat);
@@ -29,17 +30,15 @@ router.get("/haku/jufot/", db.getJufotISSN);
 router.get("/haku/julkaisut/", db.getJulkaisutVIRTACR);
 router.get("/haku/julkaisu/", db.getJulkaisuVirtaCrossrefEsitäyttö);
 router.get("/user", db.getUser);
-router.get("/user/laurea", db.getUserLaurea);
 router.get("/organisaatiolistaus", db.getOrganisaatioListaus);
 router.get("/testvirta", db.testvirta);
 // POST requests here
 router.post("/julkaisu", db.postJulkaisu);
 router.post("/org", db.postOrg);
-router.post("/admin/impersonate", db.postAdminImpersonate);
 router.post("/admin/action", db.postAdminAction);
 
 // Put requests here
-router.put("/updatejulkaisu/:id", db.putJulkaisu);
+router.put("/julkaisu/:id", db.updateJulkaisu);
 router.put("/julkaisuntila", db.putJulkaisuntila);
 
 export = router;
