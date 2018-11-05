@@ -583,6 +583,7 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
                     "tekijat",
                     "julkaisuntekijoidenlukumaara",
                     "organisaatiotekija",
+                    "orcid",
                     "konferenssinvakiintunutnimi",
                     "isbn",
                     "issn",

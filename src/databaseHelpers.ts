@@ -1,3 +1,4 @@
+
 const julkaisu = [
     "organisaatiotunnus",
     "julkaisutyyppi",
@@ -35,7 +36,7 @@ const julkaisu = [
     "modified"];
 
 const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "rooli"];
-const tieteenala = ["?julkaisuid", "tieteenalakoodi", "jnro"];
+const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
 const taiteenala = ["julkaisuid", "taiteenalakoodi", "jnro"];
 
 let addJulkaisuIdToObject = function(obj: any, jid: any) {
