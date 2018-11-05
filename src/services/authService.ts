@@ -42,7 +42,7 @@ let getOrganisationId = function(params: any) {
     let organisationCode = "";
 
     if (!domain) {
-        return "User has no access";
+        return false;
     }
 
     Object.keys(domainMappings).forEach(function (val, key) {
