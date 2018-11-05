@@ -27,6 +27,8 @@ const client = redis.createClient();
 
 const dbHelpers = require("./databaseHelpers");
 
+const authService = require("./services/authService");
+
 // Scheduler for updating Koodistopalvelu data inside redis
 // Each star represents a different value, beginning from second and ending in day
 // So if we want to update it once a day at midnight we would use ("* 0 0 * * *")
@@ -47,6 +49,7 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 function getJulkaisut(req: Request, res: Response, next: NextFunction) {
     db.any("select julkaisu.*, organisaatiotekija.id AS orgid, organisaatiotekija.etunimet, organisaatiotekija.sukunimi, organisaatiotekija.orcid, organisaatiotekija.rooli, alayksikko.alayksikko, tieteenala.tieteenalakoodi, tieteenala.jnro, taiteenala.taiteenalakoodi, taiteenala.jnro, avainsana.avainsana AS avainsanat, taidealantyyppikategoria.tyyppikategoria AS taidealantyyppikategoria, lisatieto.lisatietotyyppi, lisatieto.lisatietoteksti from julkaisu, organisaatiotekija, alayksikko, tieteenala, taiteenala, avainsana, taidealantyyppikategoria, lisatieto where julkaisu.id = organisaatiotekija.julkaisuid AND organisaatiotekija.id = alayksikko.organisaatiotekijaid AND julkaisu.id = tieteenala.julkaisuid AND julkaisu.id= taiteenala.julkaisuid AND julkaisu.id = avainsana.julkaisuid AND julkaisu.id = taidealantyyppikategoria.julkaisuid AND julkaisu.id = lisatieto.julkaisuid")
         .then((data: any) => {
+            console.log(data);
             res.status(200)
                 .json({
                     julkaisut: oh.ObjectHandlerAllJulkaisut(data)
@@ -58,16 +61,40 @@ function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 }
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
-    db.any("select julkaisu.* from julkaisu")
-        .then((data: any) => {
-            res.status(200)
-                .json({
-                    julkaisut: oh.ObjectHandlerAllJulkaisutmin(data)
-    });
-})
-        .catch((err: any) => {
-        return next(err);
-});
+
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-shib-group"]);
+    const userData = authService.getUserData(req.headers);
+
+    console.log(userData);
+    console.log(organisationCode);
+
+
+    if (organisationCode === "00000") {
+        db.any("SELECT * FROM julkaisu")
+            .then((data: any) => {
+                res.status(200)
+                    .json({
+                        julkaisut: oh.ObjectHandlerAllJulkaisutmin(data)
+                    });
+            })
+            .catch((err: any) => {
+                return next(err);
+            });
+    } else {
+        db.any("SELECT * FROM julkaisu WHERE organisaatiotunnus = ${id};",
+            {
+                id: organisationCode
+            })
+            .then((data: any) => {
+                res.status(200)
+                    .json({
+                        julkaisut: oh.ObjectHandlerAllJulkaisutmin(data)
+                    });
+            })
+            .catch((err: any) => {
+                return next(err);
+            });
+    }
 }
 
 // Get a specific julkaisu by "id"
@@ -87,6 +114,8 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
 // Get data from all tables by julkaisuid
 function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
+
+    // check access rights also here
     kp.HTTPGETshow();
     db.task((t: any) => {
 
@@ -138,26 +167,8 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
         });
 
     }
-
-
 }
 
-
-// Get all julkaisut that belong to a specific organisation
-function getJulkaisuListaforOrg(req: Request, res: Response, next: NextFunction) {
-    db.any("select * from julkaisu where organisaatiotunnus = ${organisaatiotunnus}", {
-        organisaatiotunnus: req.params.organisaatiotunnus
-    })
-        .then((data: any) => {
-            res.status(200)
-                .json({
-                    data: data
-                });
-            })
-                .catch((err: any) => {
-                return next(err);
-        });
-}
 // Get org tekija, just a test
 function getOrgTekija(req: Request, res: Response, next: NextFunction) {
     db.any("select * from organisaatiotekija where id = ${id}", {
@@ -654,7 +665,6 @@ module.exports = {
     getJulkaisutmin: getJulkaisutmin,
     // getAjulkaisu: getAjulkaisu,
     getAllPublicationDataById: getAllPublicationDataById,
-    getJulkaisuListaforOrg: getJulkaisuListaforOrg,
     getJulkaisunLuokat: getJulkaisunLuokat,
     getJulkaisunTilat: getJulkaisunTilat,
     getTekijanRooli: getTekijanRooli,
@@ -682,7 +692,7 @@ module.exports = {
     postAdminAction: postAdminAction,
     postAdminImpersonate: postAdminImpersonate,
     // PUT requests
-    putJulkaisu: putJulkaisu,
+    // putJulkaisu: putJulkaisu,
     putJulkaisuntila: putJulkaisuntila,
     // Update requests
     updateJulkaisu: updateJulkaisu,
