@@ -1,7 +1,7 @@
 ---
 backend_sync_path: "{{ backend_server_path }}"
 sql_files_to_execute:
-  - tables.sql
-  - view-uijulkaisut.sql
-  - fx_kaytto_loki_insert.sql  
-  - kaytto_loki.sql
+  - 001_tables.sql
+  - 002_view-uijulkaisut.sql
+  - 003_fx_kaytto_loki_insert.sql
+  - 004_kaytto_loki.sql

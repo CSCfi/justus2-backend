@@ -47,17 +47,30 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 // All GET requests first
 // Get all julkaisut
 function getJulkaisut(req: Request, res: Response, next: NextFunction) {
-    db.any("select julkaisu.*, organisaatiotekija.id AS orgid, organisaatiotekija.etunimet, organisaatiotekija.sukunimi, organisaatiotekija.orcid, organisaatiotekija.rooli, alayksikko.alayksikko, tieteenala.tieteenalakoodi, tieteenala.jnro, taiteenala.taiteenalakoodi, taiteenala.jnro, avainsana.avainsana AS avainsanat, taidealantyyppikategoria.tyyppikategoria AS taidealantyyppikategoria, lisatieto.lisatietotyyppi, lisatieto.lisatietoteksti from julkaisu, organisaatiotekija, alayksikko, tieteenala, taiteenala, avainsana, taidealantyyppikategoria, lisatieto where julkaisu.id = organisaatiotekija.julkaisuid AND organisaatiotekija.id = alayksikko.organisaatiotekijaid AND julkaisu.id = tieteenala.julkaisuid AND julkaisu.id= taiteenala.julkaisuid AND julkaisu.id = avainsana.julkaisuid AND julkaisu.id = taidealantyyppikategoria.julkaisuid AND julkaisu.id = lisatieto.julkaisuid")
-        .then((data: any) => {
-            console.log(data);
-            res.status(200)
-                .json({
-                    julkaisut: oh.ObjectHandlerAllJulkaisut(data)
-    });
-})
-        .catch((err: any) => {
-        return next(err);
-});
+
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-shib-group"]);
+
+    if (!organisationCode) {
+        return res.status(500).send("Permission denied");
+    }
+
+    if(organisationCode === "00000") {
+        db.any("select julkaisu.*, organisaatiotekija.id AS orgid, organisaatiotekija.etunimet, organisaatiotekija.sukunimi, organisaatiotekija.orcid, organisaatiotekija.rooli, alayksikko.alayksikko, tieteenala.tieteenalakoodi, tieteenala.jnro, taiteenala.taiteenalakoodi, taiteenala.jnro, avainsana.avainsana AS avainsanat, taidealantyyppikategoria.tyyppikategoria AS taidealantyyppikategoria, lisatieto.lisatietotyyppi, lisatieto.lisatietoteksti from julkaisu, organisaatiotekija, alayksikko, tieteenala, taiteenala, avainsana, taidealantyyppikategoria, lisatieto where julkaisu.id = organisaatiotekija.julkaisuid AND organisaatiotekija.id = alayksikko.organisaatiotekijaid AND julkaisu.id = tieteenala.julkaisuid AND julkaisu.id= taiteenala.julkaisuid AND julkaisu.id = avainsana.julkaisuid AND julkaisu.id = taidealantyyppikategoria.julkaisuid AND julkaisu.id = lisatieto.julkaisuid")
+            .then((data: any) => {
+                console.log(data);
+                res.status(200)
+                    .json({
+                        julkaisut: oh.ObjectHandlerAllJulkaisut(data)
+                    });
+            })
+            .catch((err: any) => {
+                return next(err);
+            });
+    } else {
+    //   Todo: Get all publication data by specific organisation code
+    }
+
+
 }
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
@@ -67,12 +80,6 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
     }
-
-    const userData = authService.getUserData(req.headers);
-
-    console.log(userData);
-    console.log(organisationCode);
-
 
     if (organisationCode === "00000") {
         db.any("SELECT * FROM julkaisu")

@@ -633,6 +633,8 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
                       "julkaisunkansainvalisyys",
                       "tieteenala",
                       "tieteenalakoodi",
+                      "taiteenala",
+                      "taiteenalakoodi",
                       "kansainvalinenyhteisjulkaisu",
                       "yhteisjulkaisuyrityksenkanssa",
                       "avoinsaatavuus",
