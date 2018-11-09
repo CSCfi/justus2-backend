@@ -869,6 +869,161 @@ function ObjectHandlerAllJulkaisutmin(obj: any) {
         }
     }
 
+function ObjectHandlerUser(perustiedot: any, callback: any) {
+    const org = perustiedot.organisaatio;
+    getrediscallback("getAlayksikot", getdata);
+        function getdata(reply: any) {
+            const alayksikot: object [] = [
+            ];
+                alayksikot.push(reply);
+                parsealayksikot(alayksikot, org, callback);
+
+}
+    function parsealayksikot(obj: any, orgid: any, callbacker: any) {
+        const yarray: object [] = [
+        ];
+        const y2017: object [] = [
+        ];
+        const y2016: object [] = [
+        ];
+        const y2018: object [] = [
+        ];
+        const twoeight = {
+            vuosi: "2018",
+            yksikot: y2018,
+        };
+        const twoseven = {
+            vuosi: "2017",
+            yksikot: y2017
+        };
+        const twosix = {
+            vuosi: "2016",
+            yksikot: y2016
+        };
+         obj.map((s: any) => {
+            s.map((x: any) => {
+                const match = x.arvo.slice(0, x.arvo.indexOf("-"));
+                const year = x.arvo.split("-")[1].split("-")[0];
+                if (orgid === match && year === "2017") {
+                    const y27 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    y2017.push(y27);
+
+                }
+                else if (orgid === match && year === "2018") {
+                    const y28 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    y2018.push(y28);
+                }
+                else if (orgid === match && year != "2017" && year != "2018") {
+                    const y26 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    y2016.push(y26);
+                }
+            });
+        });
+            const visibleFields = [
+                "etunimet",
+                "sukunimi",
+                "julkaisutyyppi",
+                "julkaisuvuosi",
+                "julkaisuvuodenlisatieto",
+                "julkaisunnimi",
+                "tekijat",
+                "julkaisuntekijoidenlukumaara",
+                "organisaatiotekija",
+                "orcid",
+                "konferenssinvakiintunutnimi",
+                "isbn",
+                "issn",
+                "volyymi",
+                "numero",
+                "lehdenjulkaisusarjannimi",
+                "kustantaja",
+                "julkaisunkansainvalisyys",
+                "tieteenala",
+                "taiteenala",
+                "taidealantyyppikategoria",
+                "kansainvalinenyhteisjulkaisu",
+                "yhteisjulkaisuyrityksenkanssa",
+                "avoinsaatavuus",
+                "julkaisurinnakkaistallennettu",
+                "rinnakkaistallennetunversionverkkoosoite",
+                "emojulkaisunnimi",
+                "emojulkaisuntoimittajat",
+                "sivut",
+                "artikkelinumero",
+                "julkaisunkustannuspaikka",
+                "avainsanat",
+                "julkaisumaa",
+                "julkistamispaikkakunta",
+                "tapahtumanlisatieto",
+                "julkaisunkieli",
+                "doitunniste",
+                "muutunniste",
+                "pysyvaverkkoosoite",
+                "tekijanrooli",
+                "lisatieto"
+              ];
+              const requiredFields = [
+                  "etunimet",
+                  "sukunimi",
+                  "julkaisutyyppi",
+                  "julkaisuvuosi",
+                  "julkaisunnimi",
+                  "tekijat",
+                  "julkaisuntekijoidenlukumaara",
+                  "organisaatiotekija",
+                  "konferenssinvakiintunutnimi",
+                  "isbn",
+                  "issn",
+                  "lehdenjulkaisusarjannimi",
+                  "kustantaja",
+                  "julkaisunkansainvalisyys",
+                  "tieteenala",
+                  "tieteenalakoodi",
+                  "kansainvalinenyhteisjulkaisu",
+                  "yhteisjulkaisuyrityksenkanssa",
+                  "avoinsaatavuus",
+                  "julkaisurinnakkaistallennettu",
+                  "rinnakkaistallennetunversionverkkoosoite"
+              ];
+              yarray.push(twoeight);
+              yarray.push(twoseven);
+              yarray.push(twosix);
+              if (y2016 && y2017 && y2018 && y2017.length || y2018.length || y2017.length) {
+                  visibleFields.push("alayksikko");
+                  requiredFields.push("alayksikko");
+              const orgall =  {
+                perustiedot,
+                alayksikot: yarray,
+                visibleFields,
+                requiredFields
+              };
+              callbacker(orgall);
+
+            }
+            else {
+                const orgallx = {
+                    perustiedot,
+                    alayksikot: yarray,
+                    visibleFields,
+                    requiredFields
+                  };
+                  callbacker(orgallx);
+
+
+            }
+
+ }
+}
+
 
 module.exports = {
     ObjectHandlerKielet: ObjectHandlerKielet,
@@ -893,6 +1048,7 @@ module.exports = {
     ObjectHandlerOrgListaus: ObjectHandlerOrgListaus,
     ObjectHandlerTestVirta: ObjectHandlerTestVirta,
     ObjectHandlerAllJulkaisutmin: ObjectHandlerAllJulkaisutmin,
+    ObjectHandlerUser: ObjectHandlerUser,
     mapTaideAlanTyyppikategoria: mapTaideAlanTyyppikategoria,
     mapLisatietoData: mapLisatietoData,
     mapAvainsanat: mapAvainsanat,

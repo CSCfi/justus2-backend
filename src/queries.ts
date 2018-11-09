@@ -294,12 +294,17 @@ function getUser(req: Request, res: Response, next: NextFunction) {
 
     const userData = authService.getUserData(req.headers);
 
+
     if (!userData) {
         return res.status(500).send("Permission denied");
     }
-
-    console.log(userData);
-    // TODO ADD CODE HERE
+    else {
+        oh.ObjectHandlerUser(userData, function(result: any) {
+            res.status(200).json(
+                result
+            );
+          });
+ }
 }
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
         if (req.query.lang.toLowerCase() === "fi" || req.query.lang.toLowerCase() === "sv") {
