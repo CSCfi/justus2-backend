@@ -1,0 +1,11 @@
+vizion: false
+apps:
+  - script   : dist/server.js
+    name     : Worker
+    instances: 1
+    exec_mode: cluster
+    env:
+      TZ     : Europe/Helsinki
+    ignore_watch:
+      - data
+      - node_modules
