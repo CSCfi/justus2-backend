@@ -82,7 +82,12 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
     }
 
     if (organisationCode === "00000") {
-        db.any("SELECT * FROM julkaisu")
+        db.any("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
+            "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
+            "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
+            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus, julkaisurinnakkaistallennettu," +
+            "rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila, username, modified, lisatieto" +
+            " FROM julkaisu;")
             .then((data: any) => {
                 res.status(200)
                     .json({
@@ -93,11 +98,17 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
                 return next(err);
             });
     } else {
-        db.any("SELECT * FROM julkaisu WHERE organisaatiotunnus = ${id};",
+        db.any("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
+            "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
+            "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
+            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus, julkaisurinnakkaistallennettu," +
+            "rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila, username, modified, lisatieto" +
+            " FROM julkaisu WHERE organisaatiotunnus = ${id};",
             {
                 id: organisationCode
             })
             .then((data: any) => {
+                console.log(data);
                 res.status(200)
                     .json({
                         julkaisut: oh.ObjectHandlerAllJulkaisutmin(data)
@@ -137,7 +148,12 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
     kp.HTTPGETshow();
     db.task((t: any) => {
 
-        return t.multi("SELECT * FROM julkaisu WHERE id = ${id}; " +
+        return t.multi("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
+            "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
+            "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
+            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus, julkaisurinnakkaistallennettu," +
+            "rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila, username, modified, lisatieto" +
+            " FROM julkaisu WHERE id = ${id}; " +
                 "SELECT jnro, tieteenalakoodi  FROM tieteenala WHERE julkaisuid = ${id}; " +
                 "SELECT jnro, taiteenalakoodi FROM taiteenala WHERE julkaisuid = ${id}; " +
                 "SELECT avainsana FROM avainsana WHERE julkaisuid = ${id}; " +
