@@ -10,7 +10,6 @@ router.get("/julkaisut/lista", db.getJulkaisutmin);
 
 // router.get("/julkaisut/tiedot/:id", db.getAjulkaisu);
 router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
-router.get("/org/:id", db.getOrgTekija);
 // KoodistoPalvelu routes
 router.get("/haku/julkaisunluokat", db.getJulkaisunLuokat);
 router.get("/haku/julkaisuntilat", db.getJulkaisunTilat);
@@ -34,8 +33,6 @@ router.get("/organisaatiolistaus", db.getOrganisaatioListaus);
 router.get("/testvirta", db.testvirta);
 // POST requests here
 router.post("/julkaisu", db.postJulkaisu);
-router.post("/org", db.postOrg);
-router.post("/admin/action", db.postAdminAction);
 
 // Put requests here
 router.put("/julkaisu/:id", db.updateJulkaisu);

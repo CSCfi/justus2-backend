@@ -203,26 +203,6 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
     }
 }
 
-// Get org tekija, just a test
-function getOrgTekija(req: Request, res: Response, next: NextFunction) {
-    db.any("select * from organisaatiotekija where id = ${id}", {
-        id : req.params.id
-    //     test: {
-    //     id: req.params.id,
-    //     arvo: req.body.arvo ? req.body.arvo = "",
-    // }
-    })
-    .then((data: any) => {
-        res.status(200)
-            .json({
-                data: data
-            });
-        })
-            .catch((err: any) => {
-            return next(err);
-    });
-}
-
 // KOODISTOPALVELU GETS
 
 function getJulkaisunTilat(req: Request, res: Response, next: NextFunction) {
@@ -481,24 +461,6 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 });
 }
 
-// Post orgtekija, just a test
-function postOrg(req: Request, res: Response, next: NextFunction) {
-    db.none("INSERT INTO organisaatiotekija VALUES (2, 5, 'Victor', 'Tester', 'csc', 'Seniorez Developez')")
-    .then(function() {
-        res.status(200)
-        .json({
-            message: "Insert successful"
-        });
-    })
-    .catch(function(err: any) {
-    return next(err);
-});
-}
-
-function postAdminAction(req: Request, res: Response, next: NextFunction) {
-    // TODO ADD CODE HERE
-}
-
 // PUT requests
 async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
@@ -695,7 +657,6 @@ function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
 
 module.exports = {
     // GET requests
-    getOrgTekija: getOrgTekija,
     getJulkaisut: getJulkaisut,
     getJulkaisutmin: getJulkaisutmin,
     // getAjulkaisu: getAjulkaisu,
@@ -722,8 +683,6 @@ module.exports = {
     testvirta: testvirta,
     // POST requests
     postJulkaisu: postJulkaisu,
-    postOrg: postOrg,
-    postAdminAction: postAdminAction,
     // PUT requests
     // putJulkaisu: putJulkaisu,
     putJulkaisuntila: putJulkaisuntila,
