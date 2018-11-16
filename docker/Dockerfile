@@ -2,13 +2,7 @@ FROM node:8 as node_builder
 WORKDIR /app
 COPY package.json /app/
 RUN npm install
-COPY ./src /app/src
-COPY ./test /ap/test
-COPY ./package.json /app/
-COPY ./jest.config.js /app/
-COPY ./package-lock.json /app/
-COPY ./tsconfig.json /app/
-COPY ./tslint.json /app/
+COPY ./ /app
 ARG env=prod
 RUN npm run build -- --prod
 
