@@ -10,6 +10,9 @@ const client = redis.createClient();
 // Prefix for objecthandler import
 const OH = require("./objecthandlers");
 
+const koodistoUrl = process.env.KOODISTO_URL;
+
+
 // REMEMBER THIS
 // (node:1239) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connect listeners added. Use emitter.setMaxListeners() to increase limit
 
@@ -162,10 +165,10 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
             const proms: object [] = [];
             for (const i in orgid) {
                 if (orgid[i][0] === "4") {
-                    proms.push(HTTPSUBGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + orgid[i]));
+                    proms.push(HTTPSUBGET(koodistoUrl + "/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + orgid[i]));
                 }
                 else {
-                    proms.push(HTTPSUBGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/oppilaitosnumero/koodi/oppilaitosnumero_" + orgid[i]));
+                    proms.push(HTTPSUBGET(koodistoUrl + "/oppilaitosnumero/koodi/oppilaitosnumero_" + orgid[i]));
                 }
             }
             Promise.all(proms).then((values: object []) => {
@@ -203,33 +206,34 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
 
 
 function setJulkaisunTilat(res: Response) {
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilat", OH.ObjectHandlerJulkaisuntilat);
+    return HTTPGET(koodistoUrl + "/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilat", OH.ObjectHandlerJulkaisuntilat);
 }
 function setKielet(res: Response) {
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/kieli/koodi?onlyValidKoodis=false", res, "getKielet", OH.ObjectHandlerKielet);
+    return HTTPGET(koodistoUrl + "/kieli/koodi?onlyValidKoodis=false", res, "getKielet", OH.ObjectHandlerKielet);
 }
 function setValtiot(res: Response) {
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiot", OH.ObjectHandlerValtiot);
+    return HTTPGET(koodistoUrl + "/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiot", OH.ObjectHandlerValtiot);
 }
 function setTaideAlanTyyppiKategoria(res: Response) {
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoria", OH.ObjectHandlerTaidealantyyppikategoria);
+    return HTTPGET(koodistoUrl + "/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoria", OH.ObjectHandlerTaidealantyyppikategoria);
 }
 function setTaiteenalat(res: Response) {
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalat", OH.ObjectHandlerTaiteenalat);
+    return HTTPGET(koodistoUrl + "/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalat", OH.ObjectHandlerTaiteenalat);
 }
 function setTieteenalat(res: Response) {
-    return HTTPGETcombiner("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat);
+    return HTTPGETcombiner(koodistoUrl + "/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat);
 }
 function setTekijanRooli(res: Response) {
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooli", OH.ObjectHandlerRoolit);
+    return HTTPGET(koodistoUrl +  "/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooli", OH.ObjectHandlerRoolit);
 }
 function setJulkaisunLuokat(res: Response) {
-    return HTTPGETcombiner("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat);
+    return HTTPGETcombiner(koodistoUrl + "/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat);
 }
 function setAlaYksikot(res: Response) {
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
+    return HTTPGET(koodistoUrl +  "/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
 }
 function setOrgListaus(res: Response) {
+    // hae tämä data domainMappings taulukosta
     const orgid = ["00000", "02535", "02536", "02623", "10056",  "02631",  "02467",  "02504",  "02473",  "02469",  "10118",  "02470",  "02629",  "02358",  "10065",  "02507",  "02472",  "02630",  "10066", "02557", "02537", "02509", "10103", "02471", "4940015", "4020217", "4100010"];
     return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/oppilaitosnumero/koodi/oppilaitosnumero_" , res, "getOrgListaus", OH.ObjectHandlerOrgListaus, orgid);
 }
