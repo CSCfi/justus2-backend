@@ -1,7 +1,7 @@
 
 let getUserData = function(headers: any) {
 
-        const name = headers["shib-shib-sn"] + " " + headers["shib-shib-givenname"] ;
+        const name = headers["shib-sn"] + " " + headers["shib-givenname"] ;
 
         const userData = {
             "domain": "",
@@ -11,13 +11,13 @@ let getUserData = function(headers: any) {
             "nimi": name
         };
 
-        const domain =  parseDomainFromHeadersData(headers["shib-shib-group"]);
+        const domain =  parseDomainFromHeadersData(headers["shib-group"]);
 
         if (!domain) {
             return false;
         }
 
-        const role = getRole(headers["shib-shib-group"]);
+        const role = getRole(headers["shib-group"]);
 
         Object.keys(domainMappings).forEach(function (val, key) {
             if (domainMappings[key].domain === domain) {
@@ -25,14 +25,12 @@ let getUserData = function(headers: any) {
                 userData.organisaatio = domainMappings[key].code;
                 userData.email = domainMappings[key].email;
                 userData.rooli = role;
-                // userData.nimi = name;
             } else {
                 return false;
             }
         });
 
     return userData;
-
 };
 
 
@@ -58,12 +56,12 @@ let getOrganisationId = function(params: any) {
 let parseDomainFromHeadersData = function(data: any) {
 
     // for developing purposes, in production this data comes from headers, then use parameter data instead of this
-    const testHeaderData = "@digia.com;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
-    // const testHeaderData = "@lamk.fi;jira-users;https://tt.eduuni.fi/groups/justus#lamk-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
+    // const testHeaderData = "@digia.com;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
+    // const testHeaderData = "@luke.fi;jira-users;https://tt.eduuni.fi/groups/justus#centria-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
 
-    const domain = testHeaderData.match(/(;|^)(@[^;]+)[$;]/);
+    const domain = data.match(/(;|^)(@[^;]+)[$;]/);
     if (domain !== null) {
-        console.log(domain[2]);
+        // console.log(domain[2]);
         return domain[2];
     } else {
         return false;
@@ -73,13 +71,13 @@ let parseDomainFromHeadersData = function(data: any) {
 let getRole = function(data: any) {
 
     // for developing purposes, in production this data comes from headers, then use parameter data instead of this
-    const testHeaderData = "@digia.com;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
-    // const testHeaderData = "@lamk.fi;jira-users;https://tt.eduuni.fi/groups/justus#lamk-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
+    // const testHeaderData = "@digia.com;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
+    // const testHeaderData = "@luke.fi;jira-users;https://tt.eduuni.fi/groups/justus#centria-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
 
-    if (testHeaderData.match(/\/justus#group-admins[$;]/) !== null) {
+    if (data.match(/\/justus#group-admins[$;]/) !== null) {
         return "owner";
     }
-    else if (testHeaderData.match(/\/justus#([^;]*)-admins[$;]/) !== null) {
+    else if (data.match(/\/justus#([^;]*)-admins[$;]/) !== null) {
         return "admin";
     }
     else {
