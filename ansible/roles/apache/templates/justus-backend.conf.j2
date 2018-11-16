@@ -8,11 +8,11 @@ Listen 8080
     Header set Access-Control-Allow-Origin "*"
 {% endif %}
 {% if (demo.user.enabled|default(False)) == True %}
-    RequestHeader set shib-shib-uid "{{ demo.user.uid|default('undefined') }}"
-    RequestHeader set shib-shib-sn "{{ demo.user.sn|default('undefined') }}"
-    RequestHeader set shib-shib-givenname "{{ demo.user.givenname|default('undefined') }}"
-    RequestHeader set shib-shib-mail "{{ demo.user.mail|default('undefined@csc.fi') }}"
-    RequestHeader set shib-shib-group "{{ demo.user.group|default('@csc.fi;undefined') }}"
+    RequestHeader set shib-uid "{{ demo.user.uid|default('undefined') }}"
+    RequestHeader set shib-sn "{{ demo.user.sn|default('undefined') }}"
+    RequestHeader set shib-givenname "{{ demo.user.givenname|default('undefined') }}"
+    RequestHeader set shib-mail "{{ demo.user.mail|default('undefined@csc.fi') }}"
+    RequestHeader set shib-group "{{ demo.user.group|default('@csc.fi;undefined') }}"
 {% endif %}
     ProxyPass http://localhost:3000
     ProxyPassReverse http://localhost:3000
