@@ -48,7 +48,7 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 // Get all julkaisut
 function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-shib-group"]);
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
@@ -75,7 +75,7 @@ function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-shib-group"]);
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
@@ -85,8 +85,9 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
         db.any("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
             "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
             "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
-            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus, julkaisurinnakkaistallennettu," +
-            "rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila, username, modified, lisatieto" +
+            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus," +
+            "julkaisurinnakkaistallennettu, rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila," +
+            "username, modified, lisatieto" +
             " FROM julkaisu;")
             .then((data: any) => {
                 res.status(200)
@@ -101,8 +102,9 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
         db.any("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
             "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
             "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
-            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus, julkaisurinnakkaistallennettu," +
-            "rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila, username, modified, lisatieto" +
+            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus," +
+            "julkaisurinnakkaistallennettu, rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila," +
+            "username, modified, lisatieto" +
             " FROM julkaisu WHERE organisaatiotunnus = ${id};",
             {
                 id: organisationCode
@@ -139,7 +141,7 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
     // check access rights also here
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-shib-group"]);
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
