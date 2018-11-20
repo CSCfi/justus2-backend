@@ -873,6 +873,14 @@ function ObjectHandlerAllJulkaisutmin(obj: any) {
 
 function ObjectHandlerUser(perustiedot: any, callback: any) {
     const org = perustiedot.organisaatio;
+    getrediscallback("getOrgListaus", addorgname);
+    function addorgname(reply: any) {
+        reply.forEach((s: any) =>  {
+            if (s.arvo === org) {
+                const orgname = s.selite;
+                perustiedot.organisaationimi = orgname;
+            }
+        });
     getrediscallback("getAlayksikot", getdata);
         function getdata(reply: any) {
             const alayksikot: object [] = [
@@ -1022,7 +1030,7 @@ function ObjectHandlerUser(perustiedot: any, callback: any) {
 
 
             }
-
+        }
  }
 }
 
