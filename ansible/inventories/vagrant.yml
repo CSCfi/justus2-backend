@@ -18,4 +18,4 @@ all:
             sn: "Testaaja"
             givenname: "Testi"
             mail: "tessi.testaaja@csc.fi"
-            group: "@csc.fi;jira-users;https://tt.eduuni.fi/groups/csc#development-members"
+            group: "@csc.fi;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;"

@@ -36,7 +36,7 @@ router.post("/julkaisu", db.postJulkaisu);
 
 // Put requests here
 router.put("/julkaisu/:id", db.updateJulkaisu);
-router.put("/julkaisuntila", db.putJulkaisuntila);
+router.put("/julkaisuntila/:id", db.putJulkaisuntila);
 
 export = router;
 

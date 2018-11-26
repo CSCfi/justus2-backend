@@ -524,7 +524,25 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 }
 
 function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
-    // TODO ADD CODE HERE
+
+    const role =  authService.getRole(req.headers["shib-group"]);
+
+    if (role === "admin" || role === "owner") {
+        const julkaisuColumns = new pgp.helpers.ColumnSet(["julkaisuntila", "modified", "username"], {table: "julkaisu"});
+        const updateJulkaisuntila = pgp.helpers.update(req.body, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id) + "RETURNING id";
+
+        return db.one(updateJulkaisuntila)
+            .then((response: any) => {
+                console.log(response);
+                return res.sendStatus(200);
+            }).catch(function (err: any) {
+                console.log(err);
+            });
+    } else {
+        return res.status(500).send("Permission denied");
+
+    }
+
 }
 
 function insertTieteenala(obj: any, jid: any) {

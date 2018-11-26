@@ -287,7 +287,8 @@ const domainMappings = [
 
 module.exports = {
     getOrganisationId: getOrganisationId,
-    getUserData: getUserData
+    getUserData: getUserData,
+    getRole: getRole
 
 
 
