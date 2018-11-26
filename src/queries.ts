@@ -81,14 +81,10 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
         return res.status(500).send("Permission denied");
     }
 
+    const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
+
     if (organisationCode === "00000") {
-        db.any("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
-            "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
-            "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
-            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus," +
-            "julkaisurinnakkaistallennettu, rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila," +
-            "username, modified, lisatieto" +
-            " FROM julkaisu;")
+        db.any("SELECT julkaisu.id, " +  julkaisuTableFields + " FROM julkaisu;")
             .then((data: any) => {
                 res.status(200)
                     .json({
@@ -99,13 +95,7 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
                 return next(err);
             });
     } else {
-        db.any("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
-            "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
-            "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
-            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus," +
-            "julkaisurinnakkaistallennettu, rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila," +
-            "username, modified, lisatieto" +
-            " FROM julkaisu WHERE organisaatiotunnus = ${id};",
+        db.any("SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = ${id};",
             {
                 id: organisationCode
             })

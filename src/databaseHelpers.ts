@@ -58,13 +58,20 @@ let constructObject = function(obj: any, jid: any, value: any) {
     return finalObject;
 };
 
+let fields = function (prefix: any) {
+    if (!prefix) prefix = "julkaisu";
+    return prefix + "." + julkaisu.join("," + prefix + ".");
+};
+
+
 module.exports = {
     julkaisu: julkaisu,
     organisaatiotekija: organisasaatiotekija,
     tieteenala: tieteenala,
     taiteenala: taiteenala,
     addJulkaisuIdToObject: addJulkaisuIdToObject,
-    constructObject: constructObject
+    constructObject: constructObject,
+    getTableFields: fields
 
 
 };
