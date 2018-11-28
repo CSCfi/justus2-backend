@@ -46,7 +46,7 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 // Add Query functions here and define them in the module.exports at the end
 // All GET requests first
 // Get all julkaisut
-function getJulkaisut(req: Request, res: Response, next: NextFunction) {
+async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
     const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
@@ -55,22 +55,37 @@ function getJulkaisut(req: Request, res: Response, next: NextFunction) {
     }
 
     if (organisationCode === "00000") {
-        db.any("select julkaisu.*, organisaatiotekija.id AS orgid, organisaatiotekija.etunimet, organisaatiotekija.sukunimi, organisaatiotekija.orcid, organisaatiotekija.rooli, alayksikko.alayksikko, tieteenala.tieteenalakoodi, tieteenala.jnro, taiteenala.taiteenalakoodi, taiteenala.jnro, avainsana.avainsana AS avainsanat, taidealantyyppikategoria.tyyppikategoria AS taidealantyyppikategoria, lisatieto.lisatietotyyppi, lisatieto.lisatietoteksti from julkaisu, organisaatiotekija, alayksikko, tieteenala, taiteenala, avainsana, taidealantyyppikategoria, lisatieto where julkaisu.id = organisaatiotekija.julkaisuid AND organisaatiotekija.id = alayksikko.organisaatiotekijaid AND julkaisu.id = tieteenala.julkaisuid AND julkaisu.id= taiteenala.julkaisuid AND julkaisu.id = avainsana.julkaisuid AND julkaisu.id = taidealantyyppikategoria.julkaisuid AND julkaisu.id = lisatieto.julkaisuid")
-            .then((data: any) => {
-                console.log(data);
-                res.status(200)
-                    .json({
-                        julkaisut: oh.ObjectHandlerAllJulkaisut(data)
-                    });
-            })
-            .catch((err: any) => {
-                return next(err);
-            });
+        try {
+
+            const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
+            const query = "SELECT julkaisu.id, " +  julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+
+            const julkaisudata = await db.any(query);
+            const data  = await getAllData(julkaisudata);
+
+            res.status(200).json({ data });
+
+        } catch (err) {
+            console.log(err);
+            res.sendStatus(500);
+        }
     } else {
-    //   Todo: Get all publication data by specific organisation code
+
+        //  TODO: get data by specific organisation id
+
     }
+}
 
-
+async function  getAllData(data: any) {
+    for (let i = 0; i < data.length; i++) {
+        data[i].tieteenala = await getTieteenala(data[i].id);
+        data[i].taiteenala = await getTaiteenala(data[i].id);
+        data[i].taidealantyyppikategoria = await getTyyppikategoria(data[i].id);
+        data[i].avainsanat = await getAvainsana(data[i].id);
+        data[i].lisatieto = await getLisatieto(data[i].id);
+        data[i].organisaatiotekija = await getOrganisaatiotekija(data[i].id);
+    }
+    return data;
 }
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
@@ -535,6 +550,69 @@ function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
 }
 
+
+// Select queries for all tables by julkaisid:
+
+async function getOrganisaatiotekija(julkaisuid: any) {
+    let result = await getOrgTekijatAndAlayksikko(julkaisuid);
+    result = oh.mapOrganisaatiotekijaAndAlayksikko(result);
+    console.log(result);
+    return result;
+}
+
+async function getTieteenala(julkaisuid: any) {
+    const query =  "SELECT jnro, tieteenalakoodi  FROM tieteenala WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await db.any(query);
+    result = oh.checkIfEmpty(result);
+    return result;
+}
+
+async function getTaiteenala(julkaisuid: any) {
+    const query =  "SELECT jnro, taiteenalakoodi  FROM taiteenala WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await db.any(query);
+    result = oh.checkIfEmpty(result);
+    return result;
+}
+
+async function getTyyppikategoria(julkaisuid: any) {
+    const query =  "SELECT tyyppikategoria FROM taidealantyyppikategoria WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await db.any(query);
+    result = oh.mapTaideAlanTyyppikategoria(result);
+    return result;
+}
+
+async function getAvainsana(julkaisuid: any) {
+    const query =  "SELECT avainsana FROM avainsana WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await db.any(query);
+    result = oh.mapAvainsanat(result);
+    console.log(result);
+    return result;
+}
+
+async function getLisatieto(julkaisuid: any) {
+    const query = "SELECT lisatietotyyppi, lisatietoteksti FROM lisatieto WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await db.any(query);
+    result = oh.mapLisatietoData(result);
+    console.log(result);
+    return result;
+}
+
+function getOrgTekijatAndAlayksikko(id: any) {
+    return db.task((t: any) => {
+        return t.map("SELECT id, etunimet, sukunimi, orcid, rooli FROM organisaatiotekija WHERE julkaisuid=$1", id, (orgtekija: any) => {
+            return t.any("SELECT alayksikko FROM alayksikko WHERE organisaatiotekijaid=$1", orgtekija.id)
+                .then((res: any) => {
+                    orgtekija.tempalayksikko = res;
+                    return orgtekija;
+                });
+        }).then(t.batch);
+    });
+
+}
+
+
+// Insert functions, used both in update and post requests:
+
 function insertTieteenala(obj: any, jid: any) {
 
     const tieteenalaObj =  dbHelpers.addJulkaisuIdToObject(obj, jid);
@@ -549,9 +627,6 @@ function insertTieteenala(obj: any, jid: any) {
         });
 }
 
-
-
-// insert functions, used both in update and post requests
 function insertTaiteenala(obj: any, jid: any) {
 
     if (!obj || obj.length < 1) { return Promise.resolve(true); }
