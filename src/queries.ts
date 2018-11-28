@@ -94,7 +94,7 @@ async function getAllData(data: any) {
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
+    const organisationCode = authService.getOrganisationId(req.headers["shib-group"]);
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
@@ -102,54 +102,30 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
 
-    if (organisationCode === "00000") {
-        db.any("SELECT julkaisu.id, " +  julkaisuTableFields + " FROM julkaisu;")
-            .then((data: any) => {
-                res.status(200)
-                    .json({
-                        julkaisut: oh.ObjectHandlerAllJulkaisutmin(data)
-                    });
-            })
-            .catch((err: any) => {
-                return next(err);
-            });
-    } else {
-        db.any("SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = ${id};",
-            {
-                id: organisationCode
-            })
-            .then((data: any) => {
-                console.log(data);
-                res.status(200)
-                    .json({
-                        julkaisut: oh.ObjectHandlerAllJulkaisutmin(data)
-                    });
-            })
-            .catch((err: any) => {
-                return next(err);
-            });
-    }
-}
+    let query;
+    let params = {};
 
-// Get a specific julkaisu by "id"
-// function getAjulkaisu(req: Request, res: Response, next: NextFunction) {
-//     kp.HTTPGETshow();
-//     db.any("select * from julkaisu where id = ${id}", {
-//         id: req.params.id
-//     })
-//         .then((data: any) => {
-//             res.status(200)
-//                 .json(data[0]);
-//             })
-//                 .catch((err: any) => {
-//                 return next(err);
-//         });
-// }
+    if (organisationCode === "00000") {
+        query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+    } else {
+        params = {"code": organisationCode};
+        query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
+            "${code} ORDER BY julkaisu.id;";
+    }
+
+    db.any(query, params)
+        .then((data: any) => {
+            res.status(200).json({data});
+        })
+        .catch((err: any) => {
+            return next(err);
+        });
+
+}
 
 // Get data from all tables by julkaisuid
 function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
-    // check access rights also here
     const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
     if (!organisationCode) {
@@ -157,6 +133,7 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
     }
 
     kp.HTTPGETshow();
+
     db.task((t: any) => {
 
         return t.multi("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
