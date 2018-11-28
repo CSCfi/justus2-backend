@@ -48,19 +48,27 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 // Get all julkaisut
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]).toString();
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
     }
 
-    if (organisationCode === "00000") {
         try {
 
             const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
-            const query = "SELECT julkaisu.id, " +  julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+            let query;
+            let params = { };
 
-            const julkaisudata = await db.any(query);
+            if (organisationCode === "00000") {
+                query = "SELECT julkaisu.id, " +  julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+            } else {
+                params = {"code": organisationCode};
+                query = "SELECT julkaisu.id, " +  julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
+                    "${code} ORDER BY julkaisu.id;";
+            }
+
+            const julkaisudata = await db.any(query, params);
             const data  = await getAllData(julkaisudata);
 
             res.status(200).json({ data });
@@ -69,14 +77,10 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
             console.log(err);
             res.sendStatus(500);
         }
-    } else {
 
-        //  TODO: get data by specific organisation id
-
-    }
 }
 
-async function  getAllData(data: any) {
+async function getAllData(data: any) {
     for (let i = 0; i < data.length; i++) {
         data[i].tieteenala = await getTieteenala(data[i].id);
         data[i].taiteenala = await getTaiteenala(data[i].id);
