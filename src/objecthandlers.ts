@@ -802,12 +802,12 @@ function ObjectHandlerAllJulkaisutmin(obj: any) {
                         avoinsaatavuus: x.avoinsaatavuus,
                         julkaisurinnakkaistallennettu: x.julkaisurinnakkaistallennettu,
                         rinnakkaistallennetunversionverkkoosoite: x.rinnakkaistallennetunversionverkkoosoite,
-                        lisatieto: x.lisatietoteksti,
                         jufotunnus: x.jufotunnus,
                         jufoluokitus: x.jufoluokitus,
                         julkaisuntila: x.julkaisuntila,
                         username: x.username,
                         modified: x.modified,
+                        lisatieto: x.lisatieto
                     // }
                 };
             });
