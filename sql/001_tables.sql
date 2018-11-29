@@ -125,7 +125,7 @@ CREATE TABLE organisaatiotekija
   etunimet text,
   sukunimi text,
   orcid text,
-  rooli text,
+  rooli integer,
   CONSTRAINT organisaatiotekija_pkey PRIMARY KEY (id),
   CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)
       REFERENCES julkaisu (id) MATCH SIMPLE
