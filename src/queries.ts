@@ -48,7 +48,7 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 // Get all julkaisut
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]).toString();
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
@@ -69,7 +69,8 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
             }
 
             const julkaisudata = await db.any(query, params);
-            const data  = await getAllData(julkaisudata);
+            const temp = oh.ObjectHandlerJulkaisudata(julkaisudata);
+            const data  = await getAllData(temp);
 
             res.status(200).json({ data });
 
@@ -80,17 +81,6 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
 }
 
-async function getAllData(data: any) {
-    for (let i = 0; i < data.length; i++) {
-        data[i].tieteenala = await getTieteenala(data[i].id);
-        data[i].taiteenala = await getTaiteenala(data[i].id);
-        data[i].taidealantyyppikategoria = await getTyyppikategoria(data[i].id);
-        data[i].avainsanat = await getAvainsana(data[i].id);
-        data[i].lisatieto = await getLisatieto(data[i].id);
-        data[i].organisaatiotekija = await getOrganisaatiotekija(data[i].id);
-    }
-    return data;
-}
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
@@ -589,6 +579,20 @@ function getOrgTekijatAndAlayksikko(id: any) {
         }).then(t.batch);
     });
 
+}
+
+async function getAllData(data: any) {
+
+    for (let i = 0; i < data.length; i++) {
+        data[i]["tieteenala"] = await getTieteenala(data[i].julkaisu.id);
+        data[i]["tieteenala"] = await getTieteenala(data[i].julkaisu.id);
+        data[i]["taiteenala"] = await getTaiteenala(data[i].julkaisu.id);
+        data[i]["taidealantyyppikategoria"] = await getTyyppikategoria(data[i].julkaisu.id);
+        data[i]["avainsanat"] = await getAvainsana(data[i].julkaisu.id);
+        data[i]["lisatieto"] = await getLisatieto(data[i].julkaisu.id);
+        data[i]["organisaatiotekija"] = await getOrganisaatiotekija(data[i].julkaisu.id);
+    }
+    return data;
 }
 
 
