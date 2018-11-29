@@ -414,6 +414,7 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 // PUT requests
 async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
+
     const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
     const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id);
 
@@ -481,7 +482,6 @@ function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
         return db.one(updateJulkaisuntila)
             .then((response: any) => {
-                console.log(response);
                 return res.sendStatus(200);
             }).catch(function (err: any) {
                 console.log(err);
@@ -499,7 +499,6 @@ function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 async function getOrganisaatiotekija(julkaisuid: any) {
     let result = await getOrgTekijatAndAlayksikko(julkaisuid);
     result = oh.mapOrganisaatiotekijaAndAlayksikko(result);
-    console.log(result);
     return result;
 }
 
@@ -528,7 +527,6 @@ async function getAvainsana(julkaisuid: any) {
     const query =  "SELECT avainsana FROM avainsana WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
     result = oh.mapAvainsanat(result);
-    console.log(result);
     return result;
 }
 
@@ -536,7 +534,6 @@ async function getLisatieto(julkaisuid: any) {
     const query = "SELECT lisatietotyyppi, lisatietoteksti FROM lisatieto WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
     result = oh.mapLisatietoData(result);
-    console.log(result);
     return result;
 }
 
@@ -670,7 +667,6 @@ function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
         .then((orgid: any) => {
 
             if (!obj[0].alayksikko[0]) {return Promise.resolve(true); }
-            // if (!obj[0].alayksikko[0]) {return Promise.resolve(true); }
 
             const alayksikkoObj = [];
             for (let i = 0; i < orgid.length; i++) {
@@ -701,7 +697,6 @@ module.exports = {
     // GET requests
     getJulkaisut: getJulkaisut,
     getJulkaisutmin: getJulkaisutmin,
-    // getAjulkaisu: getAjulkaisu,
     getAllPublicationDataById: getAllPublicationDataById,
     getJulkaisunLuokat: getJulkaisunLuokat,
     getJulkaisunTilat: getJulkaisunTilat,
@@ -726,9 +721,7 @@ module.exports = {
     // POST requests
     postJulkaisu: postJulkaisu,
     // PUT requests
-    // putJulkaisu: putJulkaisu,
     putJulkaisuntila: putJulkaisuntila,
-    // Update requests
     updateJulkaisu: updateJulkaisu,
 
 };
