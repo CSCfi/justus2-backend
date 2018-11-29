@@ -20,16 +20,25 @@ const getRedis = (rediskey: string, success: any, error: any) => {
     });
 };
 
+function namechecker(name: any) {
+    if (name == undefined) {
+        return "";
+    }
+    else {
+        return name.nimi;
+    }
+}
 
 // Objecthandler for Koodistopalvelu kielet
-function ObjectHandlerKielet(obj: any): object[] {
+function ObjectHandlerKielet(obj: any, lang: any): object[] {
     const kielet: object[] = [
     ];
     obj.forEach((e: any) => {
-        const metadata = e.metadata.find( (e: any) => e.kieli === "FI");
+        const metadata = e.metadata.find( (e: any) => e.kieli === lang);
+        const namecheck = metadata;
         const keyvalues = {
             arvo: e.koodiArvo,
-            selite: metadata.nimi,
+            selite: namechecker(namecheck),
         };
         kielet.push(keyvalues);
         kielet.sort((a: any, b: any) => {
@@ -45,14 +54,15 @@ function ObjectHandlerKielet(obj: any): object[] {
         return kielet;
 }
 // Objecthandler for Koodistopalvelu maat ja valtiot
-function ObjectHandlerValtiot(obj: any): object[] {
+function ObjectHandlerValtiot(obj: any, lang: any): object[] {
     const valtiot: object[] = [
     ];
     obj.forEach((e: any) => {
-        const metadata = e.metadata.find( (e: any) => e.kieli === "FI");
+        const metadata = e.metadata.find( (e: any) => e.kieli === lang);
+        const namecheck = metadata;
         const keyvalues = {
             arvo: e.koodiArvo,
-            selite: metadata.nimi,
+            selite: namechecker(namecheck),
         };
         valtiot.push(keyvalues);
         valtiot.sort((a: any, b: any) => {
@@ -68,28 +78,30 @@ function ObjectHandlerValtiot(obj: any): object[] {
         return valtiot;
 }
 // Objecthandler for Koodistopalvelu roolit
-function ObjectHandlerRoolit(obj: any): object[] {
+function ObjectHandlerRoolit(obj: any, lang: any): object[] {
     const roolit: object[] = [
     ];
     obj.forEach((e: any) => {
-        const metadata = e.metadata.find( (e: any) => e.kieli === "FI");
+        const metadata = e.metadata.find( (e: any) => e.kieli === lang);
+        const namecheck = metadata;
         const keyvalues = {
             arvo: e.koodiArvo,
-            selite: metadata.nimi,
+            selite: namechecker(namecheck),
         };
         roolit.push(keyvalues);
     });
         return roolit;
 }
 // Objecthandler for Koodistopalvelu taiteenalat
-function ObjectHandlerTaiteenalat(obj: any): object[] {
+function ObjectHandlerTaiteenalat(obj: any, lang: any): object[] {
     const taiteenalat: object[] = [
     ];
     obj.forEach((e: any) => {
-        const metadata = e.metadata.find( (e: any) => e.kieli === "FI");
+        const metadata = e.metadata.find( (e: any) => e.kieli === lang);
+        const namecheck = metadata;
         const keyvalues = {
             arvo: e.koodiArvo,
-            selite: metadata.nimi,
+            selite: namechecker(namecheck),
         };
         taiteenalat.push(keyvalues);
         taiteenalat.sort((a: any, b: any) => {
@@ -105,14 +117,15 @@ function ObjectHandlerTaiteenalat(obj: any): object[] {
         return taiteenalat;
 }
 // Objecthandler for Koodistopalvelu taidealantyyppikategoriat
-function ObjectHandlerTaidealantyyppikategoria(obj: any): object[] {
+function ObjectHandlerTaidealantyyppikategoria(obj: any, lang: any): object[] {
     const taidealantyyppikategoria: object[] = [
     ];
     obj.forEach((e: any) => {
-        const metadata = e.metadata.find( (e: any) => e.kieli === "FI");
+        const metadata = e.metadata.find( (e: any) => e.kieli === lang);
+        const namecheck = metadata;
         const keyvalues = {
             arvo: e.koodiArvo,
-            selite: metadata.nimi,
+            selite: namechecker(namecheck),
         };
         taidealantyyppikategoria.push(keyvalues);
         taidealantyyppikategoria.sort((a: any, b: any) => {
@@ -128,15 +141,16 @@ function ObjectHandlerTaidealantyyppikategoria(obj: any): object[] {
         return taidealantyyppikategoria;
 }
 // Objecthandler for Koodistopalvelu julkaisuntilat
-function ObjectHandlerJulkaisuntilat(obj: any): object[] {
+function ObjectHandlerJulkaisuntilat(obj: any, lang: any): object[] {
     const julkaisuntilat: object[] = [
     ];
     obj.forEach((e: any) => {
         if ( (e.koodiArvo === "1" || e.koodiArvo === "-1" || e.koodiArvo === "2" || e.koodiArvo === "0")) {
-            const metadata = e.metadata.find(( e: any ) => e.kieli === "FI");
+            const metadata = e.metadata.find(( e: any ) => e.kieli === lang);
+            const namecheck = metadata;
             const keyvalues = {
                 arvo: e.koodiArvo,
-                selite: metadata.nimi,
+                selite: namechecker(metadata),
                 kuvaus: metadata.kuvaus,
             };
             julkaisuntilat.push(keyvalues);
@@ -163,14 +177,15 @@ function httpgetCombiner(URL: String, callback: Function) {
 }
 
 // Objecthandler for Koodistopalvelu alayksikot
-function ObjectHandlerAlayksikot(obj: any): object[] {
+function ObjectHandlerAlayksikot(obj: any, lang: any): object[] {
     const alayksikot: object[] = [
     ];
     obj.forEach((e: any) => {
-            const metadata = e.metadata.find(( e: any ) => e.kieli === "FI");
+            const metadata = e.metadata.find(( e: any ) => e.kieli === lang);
+            const namecheck = metadata;
             const keyvalues = {
                 arvo: e.koodiArvo,
-                selite: metadata.nimi,
+                selite: namechecker(namecheck),
             };
             alayksikot.push(keyvalues);
     });
@@ -178,7 +193,7 @@ function ObjectHandlerAlayksikot(obj: any): object[] {
 }
 
 // Objecthandler for Koodistopalvelu tieteenalat
-function ObjectHandlerTieteenalat(obj: any) {
+function ObjectHandlerTieteenalat(obj: any, lang: any) {
     const tieteenalat: object[] = [
     ];
     obj.forEach((e: any) => {
@@ -191,7 +206,7 @@ function ObjectHandlerTieteenalat(obj: any) {
             alatieteenalatRAW.forEach((e: any) => {
                 const determinatormatch = e.koodiArvo[0];
                 if ( determinator === determinatormatch ) {
-                const metadata = e.metadata.find((e: any) => e.kieli === "FI");
+                const metadata = e.metadata.find((e: any) => e.kieli === lang);
                 const al_keyvalues = {
                     arvo: e.koodiArvo,
                     selite: metadata.nimi,
@@ -210,7 +225,7 @@ function ObjectHandlerTieteenalat(obj: any) {
             combine(alatieteenalat);
         }
         function combine(alatieteenalat: object[]) {
-        const metadata2 = e.metadata.find( (e: any) => e.kieli === "FI");
+        const metadata2 = e.metadata.find( (e: any) => e.kieli === lang);
         const keyvalues = {
             arvo: e.koodiArvo,
             selite: metadata2.nimi,
@@ -226,7 +241,8 @@ function ObjectHandlerTieteenalat(obj: any) {
                 return 1;
             return 0;
         });
-        settoRedis("getTieteenalat", tieteenalat);
+        const redisKey = "getTieteenalat" + lang;
+        settoRedis(redisKey, tieteenalat);
     }
 });
         return tieteenalat;
@@ -234,7 +250,7 @@ function ObjectHandlerTieteenalat(obj: any) {
 
 
 // Objecthandler for Koodistopalvelu taidealantyyppikategoriat
-function ObjectHandlerJulkaisunluokat(obj: any) {
+function ObjectHandlerJulkaisunluokat(obj: any, lang: any) {
     const julkaisunluokat: object[] = [
     ];
 
@@ -246,7 +262,7 @@ function ObjectHandlerJulkaisunluokat(obj: any) {
             const alaluokat: object[] = [
             ];
             alaluokatRAW.forEach((e: any) => {
-                const metadata = e.metadata.find((e: any) => e.kieli === "FI");
+                const metadata = e.metadata.find((e: any) => e.kieli === lang);
                 const al_keyvalues = {
                     arvo: e.koodiArvo,
                     selite: metadata.nimi,
@@ -266,7 +282,7 @@ function ObjectHandlerJulkaisunluokat(obj: any) {
             combine(alaluokat);
         }
         function combine(alaluokat: object[]) {
-        const metadata2 = e.metadata.find( (e: any) => e.kieli === "FI");
+        const metadata2 = e.metadata.find( (e: any) => e.kieli === lang);
         const keyvalues = {
             arvo: e.koodiArvo,
             selite: metadata2.nimi,
@@ -282,7 +298,8 @@ function ObjectHandlerJulkaisunluokat(obj: any) {
                 return 1;
             return 0;
         });
-        settoRedis("getJulkaisunLuokat", julkaisunluokat);
+        const redisKey = "getJulkaisunLuokat" + lang;
+        settoRedis(redisKey, julkaisunluokat);
     }
 });
         return julkaisunluokat;
