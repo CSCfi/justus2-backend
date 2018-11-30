@@ -93,14 +93,22 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
     const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
 
     let query;
+    const queryAllOrganisations = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+    const queryByOrganisationCode = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
+        "${code} ORDER BY julkaisu.id;";
     let params = {};
 
+    // user 00000 can fetch data from all organisations or filter by organisation
     if (organisationCode === "00000") {
-        query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
-    } else {
+        query = queryAllOrganisations;
+        if (req.params.organisaatiotunnus) {
+            params = {"code": req.params.organisaatiotunnus};
+            query = queryByOrganisationCode;
+        }
+    }
+     else {
         params = {"code": organisationCode};
-        query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
-            "${code} ORDER BY julkaisu.id;";
+        query = queryByOrganisationCode;
     }
 
     db.any(query, params)

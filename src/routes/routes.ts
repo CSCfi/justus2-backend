@@ -6,7 +6,7 @@ const db = require("../queries");
 // Define the routes here, all will have the prexix /api/ as per the proxypass in the apache settings
 // GET requests here
 router.get("/julkaisut/lista/all", db.getJulkaisut);
-router.get("/julkaisut/lista", db.getJulkaisutmin);
+router.get("/julkaisut/lista/:organisaatiotunnus?", db.getJulkaisutmin);
 
 // router.get("/julkaisut/tiedot/:id", db.getAjulkaisu);
 router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
