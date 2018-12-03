@@ -33,6 +33,7 @@ router.get("/organisaatiolistaus", db.getOrganisaatioListaus);
 router.get("/testvirta", db.testvirta);
 // POST requests here
 router.post("/julkaisu", db.postJulkaisu);
+router.post("/language/:lang", db.postLanguage);
 
 // Put requests here
 router.put("/julkaisu/:id", db.updateJulkaisu);

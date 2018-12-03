@@ -6,6 +6,7 @@ const promise = require("bluebird");
 const kp = require("./koodistopalvelu");
 const oh = require("./objecthandlers");
 const fs = require("fs");
+let language = "FI";
 // Options used for our pgp const
 const options = {
     promiseLib: promise
@@ -194,7 +195,8 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
 // KOODISTOPALVELU GETS
 
 function getJulkaisunTilat(req: Request, res: Response, next: NextFunction) {
-    getRedis("getJulkaisunTilat", function success(reply: any) {
+    const redisKey = "getJulkaisunTilat" + language;
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
         );
@@ -203,7 +205,8 @@ function getJulkaisunTilat(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getTekijanRooli(req: Request, res: Response, next: NextFunction) {
-    getRedis("getTekijanRooli", function success(reply: any) {
+    const redisKey = "getTekijanRooli" + language;
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
         );
@@ -212,7 +215,8 @@ function getTekijanRooli(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getKielet(req: Request, res: Response, next: NextFunction) {
-    getRedis("getKielet", function success(reply: any) {
+    const redisKey = "getKielet" + language;
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
         );
@@ -221,7 +225,8 @@ function getKielet(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getValtiot(req: Request, res: Response, next: NextFunction) {
-        getRedis("getValtiot", function success(reply: any) {
+    const redisKey = "getValtiot" + language;
+    getRedis(redisKey, function success(reply: any) {
             res.status(200).json(
                 JSON.parse(reply)
             );
@@ -230,7 +235,8 @@ function getValtiot(req: Request, res: Response, next: NextFunction) {
     });
 }
 function getTaideAlanTyyppiKategoria(req: Request, res: Response, next: NextFunction) {
-    getRedis("getTaideAlanTyyppiKategoria", function success(reply: any) {
+    const redisKey = "getTaideAlantyyppiKategoria" + language;
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
         );
@@ -239,7 +245,8 @@ function getTaideAlanTyyppiKategoria(req: Request, res: Response, next: NextFunc
 });
 }
 function getTaiteenalat(req: Request, res: Response, next: NextFunction) {
-    getRedis("getTaiteenalat", function success(reply: any) {
+    const redisKey = "getTaiteenalat" + language;
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
         );
@@ -248,7 +255,8 @@ function getTaiteenalat(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getTieteenalat(req: Request, res: Response, next: NextFunction) {
-    getRedis("getTieteenalat", function success(reply: any) {
+    const redisKey = "getTieteenalat" + language;
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
            JSON.parse(reply)
         );
@@ -257,7 +265,8 @@ function getTieteenalat(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getJulkaisunLuokat(req: Request, res: Response, next: NextFunction) {
-    getRedis("getJulkaisunLuokat", function success(reply: any) {
+    const redisKey = "getJulkaisunLuokat" + language;
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
            JSON.parse(reply)
         );
@@ -721,6 +730,19 @@ function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
 
 }
 
+
+
+
+function postLanguage(req: Request, res: Response) {
+    if (req.params.lang === "EN" || req.params.lang === "SV" || req.params.lang === "FI") {
+        language = req.params.lang;
+        console.log("The new language = " + language);
+        res.status(200).send("Language switched to " + req.params.lang);
+    }
+    else {
+        res.status(400).send("Wrong lang parameter posted");
+    }
+}
 module.exports = {
     // GET requests
     getJulkaisut: getJulkaisut,
@@ -749,6 +771,7 @@ module.exports = {
     testvirta: testvirta,
     // POST requests
     postJulkaisu: postJulkaisu,
+    postLanguage: postLanguage,
     // PUT requests
     // putJulkaisu: putJulkaisu,
     putJulkaisuntila: putJulkaisuntila,
