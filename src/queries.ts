@@ -6,12 +6,11 @@ const promise = require("bluebird");
 const kp = require("./koodistopalvelu");
 const oh = require("./objecthandlers");
 const fs = require("fs");
-let language = "FI";
+const language = "FI";
 // Options used for our pgp const
 const options = {
     promiseLib: promise
 };
-
 const BASEURLFINTO = "https://api.finto.fi/rest/v1/yso/search?type=skos%3AConcept&unique=true&lang=";
 const BASEURLJUFO =   "https://jufo-rest.csc.fi/v1.0/etsi.php?tyyppi=";
 
@@ -175,9 +174,7 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
                 // multi query
                 console.log(err);
             });
-
     }).then((julkaisu: any) => {});
-
     function  getOrgTekijat(id: any) {
         return db.task((t: any) => {
             return t.map("SELECT id, etunimet, sukunimi, orcid, rooli FROM organisaatiotekija WHERE julkaisuid=$1", id, (orgtekija: any) => {
@@ -188,14 +185,19 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
                     });
             }).then(t.batch);
         });
-
     }
 }
 
 // KOODISTOPALVELU GETS
 
 function getJulkaisunTilat(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getJulkaisunTilat" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getJulkaisunTilatFI";
+    }
+    else {
+         redisKey = "getJulkaisunTilat" + req.session.language;
+    }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
@@ -205,17 +207,31 @@ function getJulkaisunTilat(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getTekijanRooli(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getTekijanRooli" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getTekijanRooliFI";
+    }
+    else {
+         redisKey = "getTekijanRooli" + req.session.language;
+    }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
         );
 }, function error(err: Error) {
     console.log("Something went wrong");
-});
+    });
 }
+
 function getKielet(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getKielet" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getKieletFI";
+    }
+    else {
+         redisKey = "getKielet" + req.session.language;
+    }
+    console.log(redisKey);
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
@@ -225,7 +241,13 @@ function getKielet(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getValtiot(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getValtiot" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getValtiotFI";
+    }
+    else {
+         redisKey = "getValtio" + req.session.language;
+    }
     getRedis(redisKey, function success(reply: any) {
             res.status(200).json(
                 JSON.parse(reply)
@@ -235,7 +257,13 @@ function getValtiot(req: Request, res: Response, next: NextFunction) {
     });
 }
 function getTaideAlanTyyppiKategoria(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getTaideAlantyyppiKategoria" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getTaideAlanTyyppiKategoriaFI";
+    }
+    else {
+         redisKey = "getTaideAlanTyyppiKategoria" + req.session.language;
+    }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
@@ -245,7 +273,13 @@ function getTaideAlanTyyppiKategoria(req: Request, res: Response, next: NextFunc
 });
 }
 function getTaiteenalat(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getTaiteenalat" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getTaiteenalatFI";
+    }
+    else {
+         redisKey = "getTaiteenalat" + req.session.language;
+    }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
@@ -255,7 +289,13 @@ function getTaiteenalat(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getTieteenalat(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getTieteenalat" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getTieteenalatFI";
+    }
+    else {
+         redisKey = "getTieteenalat" + req.session.language;
+    }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
            JSON.parse(reply)
@@ -265,7 +305,13 @@ function getTieteenalat(req: Request, res: Response, next: NextFunction) {
 });
 }
 function getJulkaisunLuokat(req: Request, res: Response, next: NextFunction) {
-    const redisKey = "getJulkaisunLuokat" + language;
+    let redisKey;
+    if (!req.session.language) {
+         redisKey = "getJulkaisunLuokatFI";
+    }
+    else {
+         redisKey = "getJulkaisunLuokat" + req.session.language;
+    }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
            JSON.parse(reply)
@@ -287,13 +333,13 @@ function getAlaYksikot(req: Request, res: Response, next: NextFunction) {
         );
 }, function error(err: Error) {
     console.log("Something went wrong");
-});
+    });
 }
 
 function getUser(req: Request, res: Response, next: NextFunction) {
 
     const userData = authService.getUserData(req.headers);
-
+    console.log(userData);
 
     if (!userData) {
         return res.status(500).send("Permission denied");
@@ -446,7 +492,6 @@ function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
 }
 
-
 // GET ORGANISAATIOLISTAUS
 function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction) {
     getRedis("getOrgListaus", function success(reply: any) {
@@ -463,7 +508,6 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
     const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
     const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id);
-
 
     // begin transaction
     await db.any("BEGIN");
@@ -540,7 +584,6 @@ function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
 }
 
-
 // Select queries for all tables by julkaisid:
 
 async function getOrganisaatiotekija(julkaisuid: any) {
@@ -599,7 +642,6 @@ function getOrgTekijatAndAlayksikko(id: any) {
     });
 
 }
-
 
 // Insert functions, used both in update and post requests:
 
@@ -692,7 +734,6 @@ function insertLisatieto(obj: any, jid: any) {
 
 }
 
-
 function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
 
     const orgTekijaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
@@ -722,22 +763,31 @@ function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
                     console.log(err);
                 });
 
-
         }).catch(function (err: any) {
             // error in organisaatiotekija
             console.log(err);
         });
-
 }
 
-
-
-
+// function postLanguage(req: Request, res: Response) {
+//     if (req.params.lang === "EN" || req.params.lang === "SV" || req.params.lang === "FI") {
+//         language = req.params.lang;
+//         console.log("The new language = " + language);
+//         res.status(200).send("Language switched to " + req.params.lang);
+//     }
+//     else {
+//         res.status(400).send("Wrong lang parameter posted");
+//     }
+// }
 function postLanguage(req: Request, res: Response) {
     if (req.params.lang === "EN" || req.params.lang === "SV" || req.params.lang === "FI") {
-        language = req.params.lang;
-        console.log("The new language = " + language);
-        res.status(200).send("Language switched to " + req.params.lang);
+        req.session.language = {};
+        const lang = req.params.lang;
+        console.log("Before post " + JSON.stringify(req.session.language));
+        req.session.language = lang;
+        console.log("The new language according to req session = " + req.session.language);
+        console.log("The JSONSTRINGIFIED session " + JSON.stringify(req.session));
+        res.status(200).send("Language switched to " + req.session.language);
     }
     else {
         res.status(400).send("Wrong lang parameter posted");
@@ -777,5 +827,4 @@ module.exports = {
     putJulkaisuntila: putJulkaisuntila,
     // Update requests
     updateJulkaisu: updateJulkaisu,
-
 };

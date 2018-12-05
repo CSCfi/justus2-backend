@@ -12,7 +12,6 @@ const OH = require("./objecthandlers");
 
 const koodistoUrl = process.env.KOODISTO_URL;
 
-
 // REMEMBER THIS
 // (node:1239) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connect listeners added. Use emitter.setMaxListeners() to increase limit
 
@@ -33,7 +32,6 @@ function UpdateOrgListaus(res: Response) {
 UpdateKoodistopalveluRedis(undefined).then(function() {
     return UpdateOrgListaus(undefined);
 });
-
 
 function UpdateKoodistopalveluRedis(res: Response) {
     return new Promise((resolve, reject) => {
@@ -96,7 +94,6 @@ function UpdateKoodistopalveluRedis(res: Response) {
         });
     });
 }
-
 
 function TestFunction() {
     console.log("Testing scheduler");
@@ -236,7 +233,6 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
     });
 }
 
-
 function setJulkaisunTilatFI(res: Response) {
     return HTTPGET(koodistoUrl + "/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatFI", OH.ObjectHandlerJulkaisuntilat, "FI");
 }
@@ -336,7 +332,6 @@ function setOrgListaus(res: Response) {
 // function setJufotISSN(res: Response) {
 //     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");
 // }
-
 
 module.exports = {
 HTTPGETshow: HTTPGETshow,
