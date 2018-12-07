@@ -48,13 +48,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("port", 3000);
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
+app.use(require("./services/populateUserData"));
 app.get("/", homeController.index);
 app.use("/", apiRouter);
 app.use(expressValidator);
 app.use(flash);
 app.use(lusca.xframe("SAMEORIGIN"));
 app.use(lusca.xssProtection);
-
-
 
 export default app;

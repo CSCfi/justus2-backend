@@ -6,7 +6,6 @@ const promise = require("bluebird");
 const kp = require("./koodistopalvelu");
 const oh = require("./objecthandlers");
 const fs = require("fs");
-const language = "FI";
 // Options used for our pgp const
 const options = {
     promiseLib: promise
