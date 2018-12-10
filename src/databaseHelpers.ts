@@ -33,11 +33,14 @@ const julkaisu = [
     "jufoluokitus",
     "julkaisuntila",
     "username",
-    "modified"];
+    "modified"
+];
 
 const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "rooli"];
 const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
 const taiteenala = ["julkaisuid", "taiteenalakoodi", "jnro"];
+
+const kaytto_loki = ["name", "mail", "uid", "julkaisu", "organization", "role", "itable", "action", "data"];
 
 let addJulkaisuIdToObject = function(obj: any, jid: any) {
     Object.keys(obj).forEach(function (key) {
@@ -69,6 +72,7 @@ module.exports = {
     organisaatiotekija: organisasaatiotekija,
     tieteenala: tieteenala,
     taiteenala: taiteenala,
+    kaytto_loki: kaytto_loki,
     addJulkaisuIdToObject: addJulkaisuIdToObject,
     constructObject: constructObject,
     getTableFields: fields
