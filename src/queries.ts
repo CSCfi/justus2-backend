@@ -44,8 +44,9 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
     const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
+    const role = authService.getRole(req.headers["shib-group"]);
 
-    if (!organisationCode) {
+    if (!organisationCode || role === "member") {
         return res.status(500).send("Permission denied");
     }
 
