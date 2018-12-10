@@ -47,7 +47,7 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 // Get all julkaisut
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]).toString();
+    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
@@ -68,7 +68,8 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
             }
 
             const julkaisudata = await db.any(query, params);
-            const data  = await getAllData(julkaisudata);
+            const temp = oh.ObjectHandlerJulkaisudata(julkaisudata);
+            const data  = await getAllData(temp);
 
             res.status(200).json({ data });
 
@@ -79,17 +80,6 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
 }
 
-async function getAllData(data: any) {
-    for (let i = 0; i < data.length; i++) {
-        data[i].tieteenala = await getTieteenala(data[i].id);
-        data[i].taiteenala = await getTaiteenala(data[i].id);
-        data[i].taidealantyyppikategoria = await getTyyppikategoria(data[i].id);
-        data[i].avainsanat = await getAvainsana(data[i].id);
-        data[i].lisatieto = await getLisatieto(data[i].id);
-        data[i].organisaatiotekija = await getOrganisaatiotekija(data[i].id);
-    }
-    return data;
-}
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
@@ -102,18 +92,27 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
     const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
 
     let query;
+    const queryAllOrganisations = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+    const queryByOrganisationCode = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
+        "${code} ORDER BY julkaisu.id;";
     let params = {};
 
+    // user 00000 can fetch data from all organisations or filter by organisation
     if (organisationCode === "00000") {
-        query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
-    } else {
+        query = queryAllOrganisations;
+        if (req.params.organisaatiotunnus) {
+            params = {"code": req.params.organisaatiotunnus};
+            query = queryByOrganisationCode;
+        }
+    }
+     else {
         params = {"code": organisationCode};
-        query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
-            "${code} ORDER BY julkaisu.id;";
+        query = queryByOrganisationCode;
     }
 
     db.any(query, params)
-        .then((data: any) => {
+        .then((response: any) => {
+            const data = oh.ObjectHandlerJulkaisudata(response);
             res.status(200).json({data});
         })
         .catch((err: any) => {
@@ -123,7 +122,7 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 }
 
 // Get data from all tables by julkaisuid
-function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
+async function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
     const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
 
@@ -131,61 +130,35 @@ function getAllPublicationDataById(req: Request, res: Response, next: NextFuncti
         return res.status(500).send("Permission denied");
     }
 
-    kp.HTTPGETshow();
+    const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
 
-    db.task((t: any) => {
+    let params;
+    let query;
 
-        return t.multi("SELECT id, organisaatiotunnus, julkaisutyyppi, julkaisuvuosi, julkaisunnimi, tekijat, julkaisuntekijoidenlukumaara," +
-            "konferenssinvakiintunutnimi, emojulkaisunnimi, isbn, emojulkaisuntoimittajat, lehdenjulkaisusarjannimi, issn, volyymi, numero," +
-            "sivut, artikkelinumero, kustantaja, julkaisunkustannuspaikka, julkaisunkieli, julkaisunkansainvalisyys, julkaisumaa," +
-            "kansainvalinenyhteisjulkaisu, yhteisjulkaisuyrityksenkanssa, doitunniste, pysyvaverkkoosoite, avoinsaatavuus, julkaisurinnakkaistallennettu," +
-            "rinnakkaistallennetunversionverkkoosoite, jufotunnus, jufoluokitus, julkaisuntila, username, modified, lisatieto" +
-            " FROM julkaisu WHERE id = ${id}; " +
-                "SELECT jnro, tieteenalakoodi  FROM tieteenala WHERE julkaisuid = ${id}; " +
-                "SELECT jnro, taiteenalakoodi FROM taiteenala WHERE julkaisuid = ${id}; " +
-                "SELECT avainsana FROM avainsana WHERE julkaisuid = ${id}; " +
-                "SELECT tyyppikategoria FROM taidealantyyppikategoria WHERE julkaisuid = ${id}; " +
-                "SELECT lisatietotyyppi, lisatietoteksti FROM lisatieto WHERE julkaisuid = ${id}; ",
-            {
-                id: req.params.id
-            })
-            .spread((julkaisu: any, tieteenala: any, taiteenala: any, avainsana: any, taidealantyyppikategoria: any, lisatieto: any) => {
-                getOrgTekijat(req.params.id)
-                    .then((organisaatiotekija: any) => {
-                        const data = {
-                            "julkaisu": julkaisu[0],
-                            "organisaatiotekija": oh.mapOrganisaatiotekijaAndAlayksikko(organisaatiotekija),
-                            "tieteenala": oh.checkIfEmpty(tieteenala),
-                            "taiteenala": oh.checkIfEmpty(taiteenala),
-                            "avainsanat": oh.mapAvainsanat(avainsana),
-                            "taidealantyyppikategoria": oh.mapTaideAlanTyyppikategoria(taidealantyyppikategoria),
-                            "lisatieto": oh.mapLisatietoData(lisatieto)
-                        };
-                        res.status(200)
-                            .json({
-                                data
-                            });
-                    }).catch(function (err: any)  {
-                        // getOrgTekijat promise
-                        console.log(err);
-                });
-            }).catch(function (err: any) {
-                // multi query
-                console.log(err);
-            });
-    }).then((julkaisu: any) => {});
-    function  getOrgTekijat(id: any) {
-        return db.task((t: any) => {
-            return t.map("SELECT id, etunimet, sukunimi, orcid, rooli FROM organisaatiotekija WHERE julkaisuid=$1", id, (orgtekija: any) => {
-                return t.any("SELECT alayksikko FROM alayksikko WHERE organisaatiotekijaid=$1", orgtekija.id)
-                    .then((res: any) => {
-                        orgtekija.tempalayksikko = res;
-                        return orgtekija;
-                    });
-            }).then(t.batch);
-        });
+    params = {"id": req.params.id};
+    query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
+        "${id} ORDER BY julkaisu.id;";
+
+    const data: any = {};
+
+    try {
+
+        data["julkaisu"] = await db.one(query, params);
+        data["tieteenala"] = await getTieteenala(req.params.id);
+        data["taiteenala"] = await getTaiteenala(req.params.id);
+        data["taidealantyyppikategoria"] = await getTyyppikategoria(req.params.id);
+        data["avainsanat"] = await getAvainsana(req.params.id);
+        data["lisatieto"] = await getLisatieto(req.params.id);
+        data["organisaatiotekija"] = await getOrganisaatiotekija(req.params.id);
+
+        res.status(200).json({"data": data});
+
+    } catch (err) {
+        console.log(err);
     }
+
 }
+
 
 // KOODISTOPALVELU GETS
 
@@ -505,6 +478,7 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 // PUT requests
 async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
+
     const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
     const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id);
 
@@ -571,7 +545,6 @@ function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
         return db.one(updateJulkaisuntila)
             .then((response: any) => {
-                console.log(response);
                 return res.sendStatus(200);
             }).catch(function (err: any) {
                 console.log(err);
@@ -588,7 +561,6 @@ function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 async function getOrganisaatiotekija(julkaisuid: any) {
     let result = await getOrgTekijatAndAlayksikko(julkaisuid);
     result = oh.mapOrganisaatiotekijaAndAlayksikko(result);
-    console.log(result);
     return result;
 }
 
@@ -617,7 +589,6 @@ async function getAvainsana(julkaisuid: any) {
     const query =  "SELECT avainsana FROM avainsana WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
     result = oh.mapAvainsanat(result);
-    console.log(result);
     return result;
 }
 
@@ -625,7 +596,6 @@ async function getLisatieto(julkaisuid: any) {
     const query = "SELECT lisatietotyyppi, lisatietoteksti FROM lisatieto WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
     result = oh.mapLisatietoData(result);
-    console.log(result);
     return result;
 }
 
@@ -641,6 +611,21 @@ function getOrgTekijatAndAlayksikko(id: any) {
     });
 
 }
+
+async function getAllData(data: any) {
+
+    for (let i = 0; i < data.length; i++) {
+        data[i]["tieteenala"] = await getTieteenala(data[i].julkaisu.id);
+        data[i]["tieteenala"] = await getTieteenala(data[i].julkaisu.id);
+        data[i]["taiteenala"] = await getTaiteenala(data[i].julkaisu.id);
+        data[i]["taidealantyyppikategoria"] = await getTyyppikategoria(data[i].julkaisu.id);
+        data[i]["avainsanat"] = await getAvainsana(data[i].julkaisu.id);
+        data[i]["lisatieto"] = await getLisatieto(data[i].julkaisu.id);
+        data[i]["organisaatiotekija"] = await getOrganisaatiotekija(data[i].julkaisu.id);
+    }
+    return data;
+}
+
 
 // Insert functions, used both in update and post requests:
 
@@ -743,7 +728,6 @@ function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
         .then((orgid: any) => {
 
             if (!obj[0].alayksikko[0]) {return Promise.resolve(true); }
-            // if (!obj[0].alayksikko[0]) {return Promise.resolve(true); }
 
             const alayksikkoObj = [];
             for (let i = 0; i < orgid.length; i++) {
@@ -801,7 +785,6 @@ module.exports = {
     // GET requests
     getJulkaisut: getJulkaisut,
     getJulkaisutmin: getJulkaisutmin,
-    // getAjulkaisu: getAjulkaisu,
     getAllPublicationDataById: getAllPublicationDataById,
     getJulkaisunLuokat: getJulkaisunLuokat,
     getJulkaisunTilat: getJulkaisunTilat,
@@ -828,8 +811,6 @@ module.exports = {
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,
     // PUT requests
-    // putJulkaisu: putJulkaisu,
     putJulkaisuntila: putJulkaisuntila,
-    // Update requests
     updateJulkaisu: updateJulkaisu,
 };
