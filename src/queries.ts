@@ -780,7 +780,7 @@ function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
 // }
 function postLanguage(req: Request, res: Response) {
     if (req.params.lang === "EN" || req.params.lang === "SV" || req.params.lang === "FI") {
-        req.session.language = {};
+        // req.session.language = {};
         const lang = req.params.lang;
         console.log("Before post " + JSON.stringify(req.session.language));
         req.session.language = lang;
@@ -791,6 +791,11 @@ function postLanguage(req: Request, res: Response) {
     else {
         res.status(400).send("Wrong lang parameter posted");
     }
+}
+
+
+function getUserSessionData(req: Request, res: Response) {
+    res.status(200).send(req.session);
 }
 module.exports = {
     // GET requests
@@ -817,6 +822,7 @@ module.exports = {
     getJulkaisutVIRTACR: getJulkaisutVIRTACR,
     getJulkaisuVirtaCrossrefEsitäyttö: getJulkaisuVirtaCrossrefEsitäyttö,
     getOrganisaatioListaus: getOrganisaatioListaus,
+    getUserSessionData: getUserSessionData,
     testvirta: testvirta,
     // POST requests
     postJulkaisu: postJulkaisu,

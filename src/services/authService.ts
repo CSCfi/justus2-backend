@@ -2,7 +2,6 @@
 let getUserData = function(headers: any) {
 
         const name = headers["shib-sn"] + " " + headers["shib-givenname"] ;
-
         const userData = {
             "domain": "",
             "organisaatio": "",
@@ -288,7 +287,8 @@ const domainMappings = [
 module.exports = {
     getOrganisationId: getOrganisationId,
     getUserData: getUserData,
-    getRole: getRole
+    getRole: getRole,
+    parseDomainFromHeadersData: parseDomainFromHeadersData
 
 
 

@@ -29,6 +29,7 @@ router.get("/haku/jufot/", db.getJufotISSN);
 router.get("/haku/julkaisut/", db.getJulkaisutVIRTACR);
 router.get("/haku/julkaisu/", db.getJulkaisuVirtaCrossrefEsitäyttö);
 router.get("/user", db.getUser);
+router.get("/usersession", db.getUserSessionData);
 router.get("/organisaatiolistaus", db.getOrganisaatioListaus);
 router.get("/testvirta", db.testvirta);
 // POST requests here
