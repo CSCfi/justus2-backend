@@ -517,38 +517,56 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
         const julkaisu = await db.none(updateJulkaisu);
 
-        await db.result("DELETE FROM alayksikko WHERE organisaatiotekijaid = ${orgid}", {
-            orgid: req.body.organisaatiotekija.id
-        });
-        await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        const organisaatiotekija = await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, req.params.id);
+        await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, req.body.julkaisu);
 
-        await db.result("DELETE FROM tieteenala WHERE julkaisuid = ${id}", {
+        const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
             id: req.params.id
         });
-        const tieteenala = await insertTieteenala(req.body.tieteenala, req.params.id);
+        if (deletedOrganisaatiotekijaRows.rowCount > 0) {
+            await auditLog.postAuditData(req.headers, "DELETE", "organisaatiotekija", req.params.id, [undefined]);
+        }
 
-        await db.result("DELETE FROM taiteenala WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        const taiteenala = await insertTaiteenala(req.body.taiteenala, req.params.id);
+        await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, req.params.id, req.headers);
 
-        await db.result("DELETE FROM avainsana WHERE julkaisuid = ${id}", {
+        const deletedTieteenalaRows = await db.result("DELETE FROM tieteenala WHERE julkaisuid = ${id}", {
             id: req.params.id
         });
-        const avainsana = await insertAvainsanat(req.body.avainsanat, req.params.id);
+        if (deletedTieteenalaRows.rowCount > 0) {
+            await auditLog.postAuditData(req.headers, "DELETE", "tieteenala", req.params.id, [undefined]);
+        }
+        await insertTieteenala(req.body.tieteenala, req.params.id, req.headers);
 
-        await db.result("DELETE FROM taidealantyyppikategoria WHERE julkaisuid = ${id}", {
+        const deletedTaiteenalaRows =  await db.result("DELETE FROM taiteenala WHERE julkaisuid = ${id}", {
             id: req.params.id
         });
-        const taidealantyyppikategoria = await insertTyyppikategoria(req.body.taidealantyyppikategoria, req.params.id);
+        if (deletedTaiteenalaRows.rowCount > 0) {
+            await auditLog.postAuditData(req.headers, "DELETE", "taiteenala", req.params.id, [undefined]);
+        }
+        await insertTaiteenala(req.body.taiteenala, req.params.id, req.headers);
 
-        await db.result("DELETE FROM lisatieto WHERE julkaisuid = ${id}", {
+        const deletedAvainsanaRows = await db.result("DELETE FROM avainsana WHERE julkaisuid = ${id}", {
             id: req.params.id
         });
-        const lisatieto = await insertLisatieto(req.body.lisatieto, req.params.id);
+        if (deletedAvainsanaRows.rowCount > 0) {
+            await auditLog.postAuditData(req.headers, "DELETE", "avainsana", req.params.id, [undefined]);
+        }
+        await insertAvainsanat(req.body.avainsanat, req.params.id, req.headers);
+
+        const deletedTyyppikategoriaRows = await db.result("DELETE FROM taidealantyyppikategoria WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        if (deletedTyyppikategoriaRows.rowCount > 0) {
+            await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
+        }
+        await insertTyyppikategoria(req.body.taidealantyyppikategoria, req.params.id, req.headers);
+
+        const deletedLisatietoRows = await db.result("DELETE FROM lisatieto WHERE julkaisuid = ${id}", {
+            id: req.params.id
+        });
+        if (deletedLisatietoRows.rowCount > 0) {
+            await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
+        }
+        await insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
 
         await db.any("COMMIT");
         return res.sendStatus(200);
