@@ -2,23 +2,18 @@ import { Request, Response, NextFunction } from "express";
 const schedule = require("node-schedule");
 // https will be used for external API calls
 const https = require("https");
-const promise = require("bluebird");
+// const promise = require("bluebird");
 const kp = require("./koodistopalvelu");
 const oh = require("./objecthandlers");
 const fs = require("fs");
-// Options used for our pgp const
-const options = {
-    promiseLib: promise
-};
+
 const BASEURLFINTO = "https://api.finto.fi/rest/v1/yso/search?type=skos%3AConcept&unique=true&lang=";
 const BASEURLJUFO =   "https://jufo-rest.csc.fi/v1.0/etsi.php?tyyppi=";
 
-// Initializing postgres connection by using pg-promise
-const pgp = require("pg-promise")(options);
-// Connection string for the database, move this to a ENV.variable later
-const conString = process.env.PG_URL;
-// const db will be used for all queries etc. db.any, db.none and so on
-const db = pgp(conString);
+// Database connection from db.ts
+const connection = require("./db");
+const pgp = connection.pgp;
+const db = connection.db;
 
 // Redis client
 const redis = require("redis");
