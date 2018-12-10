@@ -449,33 +449,45 @@ function getJulkaisuVirtaCrossrefEsitäyttö(req: Request, res: Response, next: 
 // POST requests
 // Post a julkaisu to the database
 // Catch the JSON body and parse it so that we can insert the values into postgres
-function postJulkaisu(req: Request, res: Response, next: NextFunction) {
-    let jid: any = "";
-    db.task(() => {
-        const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-        const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + "RETURNING id";
-        return db.one(saveJulkaisu)
-            .then((julkaisuidinit: any) => {
+async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
-                jid = julkaisuidinit.id;
+    const method = "POST";
 
-                Promise.all([
-                    insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, jid),
-                    insertTieteenala(req.body.tieteenala, jid),
-                    insertTaiteenala(req.body.taiteenala, jid),
-                    insertAvainsanat(req.body.avainsanat, jid),
-                    insertTyyppikategoria(req.body.taidealantyyppikategoria, jid),
-                    insertLisatieto(req.body.lisatieto, jid)
-                ]).then(() => {
-                    res.status(200)
-                        .json(julkaisuidinit);
-                });
-            })
-            .catch(function(err: any) {
-                // error in julkaisun tallennus
-                return next(err);
-            });
-    });
+    const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+    const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + "RETURNING id";
+
+    // begin transaction
+    await db.any("BEGIN");
+
+    try {
+
+        // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
+        const julkaisuId = await db.one(saveJulkaisu);
+
+        const kayttoLokiId = await auditLog.postAuditData(req.headers,
+            method, "julkaisu", julkaisuId.id, req.body.julkaisu);
+
+        const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
+        const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + "RETURNING accessid";
+
+        await db.one(insertAccessId);
+
+        await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
+        await insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
+        await insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
+        await insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
+        await insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
+        await insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
+
+        await db.any("COMMIT");
+
+        res.status(200).json({ "julkaisuId":  julkaisuId.id, "kayttoLokiIdJulkaisu": kayttoLokiId.id });
+
+    } catch (err) {
+        await db.any("ROLLBACK");
+        res.sendStatus(500);
+        console.log(err);
+    }
 
 }
 
@@ -641,24 +653,19 @@ async function getAllData(data: any) {
     return data;
 }
 
-
 // Insert functions, used both in update and post requests:
 
-function insertTieteenala(obj: any, jid: any) {
+async function insertTieteenala(obj: any, jid: any, headers: any) {
 
-    const tieteenalaObj =  dbHelpers.addJulkaisuIdToObject(obj, jid);
+    const tieteenalaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
     const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.tieteenala, {table: "tieteenala"});
     const saveTieteenala = pgp.helpers.insert(tieteenalaObj, tieteenalaColumns) + "RETURNING id";
 
-    return db.many(saveTieteenala)
-        .then((response: any) => {
-            // console.log(response);
-        }).catch(function(err: any) {
-            console.log(err);
-        });
+    await db.many(saveTieteenala);
+    await auditLog.postAuditData(headers, "POST", "tieteenala", jid, tieteenalaObj);
 }
 
-function insertTaiteenala(obj: any, jid: any) {
+async function insertTaiteenala(obj: any, jid: any, headers: any) {
 
     if (!obj || obj.length < 1) { return Promise.resolve(true); }
 
@@ -666,29 +673,24 @@ function insertTaiteenala(obj: any, jid: any) {
     const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.taiteenala, {table: "taiteenala"});
     const saveTieteenala = pgp.helpers.insert(taiteenalaObj, tieteenalaColumns) + "RETURNING id";
 
-    return db.many(saveTieteenala)
-        .then((response: any) => {
-            // console.log(response);
-        }).catch(function(err: any) {
-            console.log(err);
-        });
+    await db.many(saveTieteenala);
+    await auditLog.postAuditData(headers, "POST", "taiteenala", jid, taiteenalaObj);
+
 }
 
-function insertAvainsanat(obj: any, jid: any) {
+async function insertAvainsanat(obj: any, jid: any, headers: any) {
 
     if (!obj || obj.length < 1) { return Promise.resolve(true); }
 
     const avainsanaObj = dbHelpers.constructObject(obj, jid, "avainsana");
     const avainsanatColumns = new pgp.helpers.ColumnSet(["julkaisuid", "avainsana"], {table: "avainsana"});
     const saveAvainsanat = pgp.helpers.insert(avainsanaObj, avainsanatColumns) + "RETURNING id";
-    return db.many(saveAvainsanat)
-        .then((response: any) => {
-            // console.log(response);
-        }).catch(function(err: any) {
-            console.log(err);
-        });
+
+    await db.many(saveAvainsanat);
+    await auditLog.postAuditData(headers, "POST", "avainsana", jid, avainsanaObj);
+
 }
-function insertTyyppikategoria(obj: any, jid: any) {
+async function insertTyyppikategoria(obj: any, jid: any, headers: any) {
 
     if (!obj || obj.length < 1) { return Promise.resolve(true); }
 
@@ -696,15 +698,13 @@ function insertTyyppikategoria(obj: any, jid: any) {
     const tyyppikategoriaColumns = new pgp.helpers.ColumnSet(["julkaisuid", "tyyppikategoria"], {table: "taidealantyyppikategoria"});
     const saveTyyppikategoria = pgp.helpers.insert(tyyppikategoriaObj, tyyppikategoriaColumns) + "RETURNING id";
 
-    return db.many(saveTyyppikategoria)
-        .then((response: any) => {
-            // console.log(response);
-        }).catch(function(err: any) {
-            console.log(err);
-        });
+    await db.many(saveTyyppikategoria);
+    await auditLog.postAuditData(headers, "POST", "taidealantyyppikategoria", jid, tyyppikategoriaObj);
+
+
 }
 
-function insertLisatieto(obj: any, jid: any) {
+async function insertLisatieto(obj: any, jid: any, headers: any) {
 
     if (!obj || obj.length < 1) { return Promise.resolve(true); }
 
@@ -723,48 +723,46 @@ function insertLisatieto(obj: any, jid: any) {
     const lisatietoColumns = new pgp.helpers.ColumnSet(["julkaisuid", "lisatietotyyppi", "lisatietoteksti"], {table: "lisatieto"});
     const saveLisatieto = pgp.helpers.insert(lisatietoObj, lisatietoColumns) + "RETURNING id";
 
-    return db.many(saveLisatieto)
-        .then((lisatietoid: any) => {
-            // console.log(lisatietoid);
-        }).catch(function (err: any) {
-            // lisatieto error
-            console.log(err);
-        });
-
+    await db.many(saveLisatieto);
+    await auditLog.postAuditData(headers, "POST", "lisatieto", jid, lisatietoObj);
 }
 
-function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any) {
+
+async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers: any) {
 
     const orgTekijaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
+
     const organisaatiotekijaColumns = new pgp.helpers.ColumnSet(dbHelpers.organisaatiotekija, {table: "organisaatiotekija"});
     const saveOrganisaatiotekija = pgp.helpers.insert(orgTekijaObj, organisaatiotekijaColumns) + "RETURNING id";
 
-    return db.many(saveOrganisaatiotekija)
-        .then((orgid: any) => {
+    const orgid = await db.many(saveOrganisaatiotekija);
 
-            if (!obj[0].alayksikko[0]) {return Promise.resolve(true); }
+    const kayttolokiObj = JSON.parse(JSON.stringify(orgTekijaObj));
 
-            const alayksikkoObj = [];
-            for (let i = 0; i < orgid.length; i++) {
-                for (let j = 0; j < obj[i].alayksikko.length; j++) {
-                    alayksikkoObj.push({"alayksikko" : obj[i].alayksikko[j], "organisaatiotekijaid":  orgid[i].id});
-                }
-            }
-            const alayksikkoColumns = new pgp.helpers.ColumnSet(["organisaatiotekijaid", "alayksikko"], {table: "alayksikko"});
-            const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + "RETURNING id";
+    Object.keys(kayttolokiObj).forEach(function (val, key) {
+        delete kayttolokiObj[key].alayksikko;
+        delete kayttolokiObj[key].id;
+    });
 
-            return db.many(saveAlayksikko)
-                .then((alyksikkoid: any) => {
-                    // console.log(alyksikkoid);
-                }).catch(function (err: any) {
-                    // error in alayksikko
-                    console.log(err);
-                });
+    await auditLog.postAuditData(headers, "POST", "organisaatiotekija", jid, kayttolokiObj);
 
-        }).catch(function (err: any) {
-            // error in organisaatiotekija
-            console.log(err);
-        });
+    if (!obj[0].alayksikko[0]) {
+        return Promise.resolve(true);
+    }
+
+
+    const alayksikkoObj = [];
+    for (let i = 0; i < orgid.length; i++) {
+        for (let j = 0; j < obj[i].alayksikko.length; j++) {
+            alayksikkoObj.push({"alayksikko": obj[i].alayksikko[j], "organisaatiotekijaid": orgid[i].id});
+        }
+    }
+
+    const alayksikkoColumns = new pgp.helpers.ColumnSet(["organisaatiotekijaid", "alayksikko"], {table: "alayksikko"});
+    const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + "RETURNING id";
+
+    await db.any(saveAlayksikko);
+    await auditLog.postAuditData(headers, "POST", "alayksikko", jid, alayksikkoObj);
 }
 
 // function postLanguage(req: Request, res: Response) {
