@@ -153,7 +153,7 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
     params = {"id": req.params.id};
     query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
-        "${id} ORDER BY julkaisu.id;";
+        "${id};";
 
     const data: any = {};
 
