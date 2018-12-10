@@ -22,6 +22,7 @@ const client = redis.createClient();
 const dbHelpers = require("./databaseHelpers");
 
 const authService = require("./services/authService");
+const auditLog = require("./services/auditLogService");
 
 // Scheduler for updating Koodistopalvelu data inside redis
 // Each star represents a different value, beginning from second and ending in day
@@ -79,6 +80,8 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     const organisationCode = authService.getOrganisationId(req.headers["shib-group"]);
+    const role =  authService.getRole(req.headers["shib-group"]);
+    const uid = req.headers["shib-uid"];
 
     if (!organisationCode) {
         return res.status(500).send("Permission denied");
@@ -87,22 +90,39 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
     const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
 
     let query;
+
+    // owners can see all data in julkaisu table
     const queryAllOrganisations = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+
+    // admins can see all publications for organisation
     const queryByOrganisationCode = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
         "${code} ORDER BY julkaisu.id;";
+
+    // members can only see own publications, so ensure that uid in kaytto_loki table matches current users uid
+    const queryForMembers = "SELECT julkaisu.id, julkaisu.accessid, " + julkaisuTableFields + " FROM julkaisu" +
+        " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
+        " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
+        " ORDER BY julkaisu.id;";
+
+
     let params = {};
 
+
     // user 00000 can fetch data from all organisations or filter by organisation
-    if (organisationCode === "00000") {
+    if (role === "owner" && organisationCode === "00000") {
         query = queryAllOrganisations;
         if (req.params.organisaatiotunnus) {
             params = {"code": req.params.organisaatiotunnus};
             query = queryByOrganisationCode;
         }
     }
-     else {
+    if (role === "admin") {
         params = {"code": organisationCode};
         query = queryByOrganisationCode;
+    }
+    if (role === "member") {
+        params = {"code": organisationCode, "uid": uid};
+        query = queryForMembers;
     }
 
     db.any(query, params)
