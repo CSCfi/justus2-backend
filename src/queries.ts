@@ -24,6 +24,8 @@ const dbHelpers = require("./databaseHelpers");
 const authService = require("./services/authService");
 const auditLog = require("./services/auditLogService");
 
+let USER_DATA: any = {};
+
 // Scheduler for updating Koodistopalvelu data inside redis
 // Each star represents a different value, beginning from second and ending in day
 // So if we want to update it once a day at midnight we would use ("* 0 0 * * *")
@@ -43,13 +45,11 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 // Get all julkaisut
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
-    const role = authService.getRole(req.headers["shib-group"]);
+    USER_DATA = req.session.userData;
+    const hasAccess = await auditLog.hasAccess(USER_DATA);
 
-    if (!organisationCode || role === "member") {
-        return res.status(500).send("Permission denied");
-    }
-
+    if (hasAccess && USER_DATA.rooli !== "member") {
+        const organisationCode =  USER_DATA.organisaatio;
         try {
 
             const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
@@ -75,102 +75,107 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
             res.sendStatus(500);
         }
 
+    } else {
+        return res.status(500).send("Permission denied");
+    }
+
 }
 
 
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode = authService.getOrganisationId(req.headers["shib-group"]);
-    const role =  authService.getRole(req.headers["shib-group"]);
-    const uid = req.headers["shib-uid"];
+    USER_DATA = req.session.userData;
+    const hasAccess = auditLog.hasAccess(USER_DATA);
 
-    if (!organisationCode) {
+    if (hasAccess) {
+
+        const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
+        let query;
+
+        // owners can see all data in julkaisu table
+        const queryAllOrganisations = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+
+        // admins can see all publications for organisation
+        const queryByOrganisationCode = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
+            "${code} ORDER BY julkaisu.id;";
+
+        // members can only see own publications, so ensure that uid in kaytto_loki table matches current users uid
+        const queryForMembers = "SELECT julkaisu.id, julkaisu.accessid, " + julkaisuTableFields + " FROM julkaisu" +
+            " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
+            " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
+            " ORDER BY julkaisu.id;";
+
+        let params = {};
+
+        // user 00000 can fetch data from all organisations or filter by organisation
+        if (USER_DATA.rooli === "owner" && USER_DATA.organisaatio === "00000") {
+            query = queryAllOrganisations;
+            if (req.params.organisaatiotunnus) {
+                params = {"code": req.params.organisaatiotunnus};
+                query = queryByOrganisationCode;
+            }
+        }
+        if (USER_DATA.rooli === "admin") {
+            params = {"code": USER_DATA.organisaatio};
+            query = queryByOrganisationCode;
+        }
+        if (USER_DATA.rooli === "member") {
+            console.log("rooli on member");
+            params = {"code": USER_DATA.organisaatio, "uid": USER_DATA.uid};
+            query = queryForMembers;
+        }
+
+        db.any(query, params)
+            .then((response: any) => {
+                const data = oh.ObjectHandlerJulkaisudata(response);
+                res.status(200).json({data});
+            })
+            .catch((err: any) => {
+                return next(err);
+            });
+    } else {
         return res.status(500).send("Permission denied");
     }
 
-    const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
 
-    let query;
-
-    // owners can see all data in julkaisu table
-    const queryAllOrganisations = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
-
-    // admins can see all publications for organisation
-    const queryByOrganisationCode = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
-        "${code} ORDER BY julkaisu.id;";
-
-    // members can only see own publications, so ensure that uid in kaytto_loki table matches current users uid
-    const queryForMembers = "SELECT julkaisu.id, julkaisu.accessid, " + julkaisuTableFields + " FROM julkaisu" +
-        " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
-        " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
-        " ORDER BY julkaisu.id;";
-
-
-    let params = {};
-
-
-    // user 00000 can fetch data from all organisations or filter by organisation
-    if (role === "owner" && organisationCode === "00000") {
-        query = queryAllOrganisations;
-        if (req.params.organisaatiotunnus) {
-            params = {"code": req.params.organisaatiotunnus};
-            query = queryByOrganisationCode;
-        }
-    }
-    if (role === "admin") {
-        params = {"code": organisationCode};
-        query = queryByOrganisationCode;
-    }
-    if (role === "member") {
-        params = {"code": organisationCode, "uid": uid};
-        query = queryForMembers;
-    }
-
-    db.any(query, params)
-        .then((response: any) => {
-            const data = oh.ObjectHandlerJulkaisudata(response);
-            res.status(200).json({data});
-        })
-        .catch((err: any) => {
-            return next(err);
-        });
 
 }
 
 // Get data from all tables by julkaisuid
 async function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
-    const organisationCode =  authService.getOrganisationId(req.headers["shib-group"]);
+    USER_DATA = req.session.userData;
+    const hasAccess = await auditLog.hasAccess(USER_DATA, req.params.id);
 
-    if (!organisationCode) {
+    if (hasAccess) {
+        const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
+
+        let params;
+        let query;
+
+        params = {"id": req.params.id};
+        query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
+            "${id};";
+
+        const data: any = {};
+
+        try {
+
+            data["julkaisu"] = await db.one(query, params);
+            data["tieteenala"] = await getTieteenala(req.params.id);
+            data["taiteenala"] = await getTaiteenala(req.params.id);
+            data["taidealantyyppikategoria"] = await getTyyppikategoria(req.params.id);
+            data["avainsanat"] = await getAvainsana(req.params.id);
+            data["lisatieto"] = await getLisatieto(req.params.id);
+            data["organisaatiotekija"] = await getOrganisaatiotekija(req.params.id);
+
+            res.status(200).json({"data": data});
+
+        } catch (err) {
+            console.log(err);
+        }
+    } else {
         return res.status(500).send("Permission denied");
-    }
-
-    const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
-
-    let params;
-    let query;
-
-    params = {"id": req.params.id};
-    query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
-        "${id};";
-
-    const data: any = {};
-
-    try {
-
-        data["julkaisu"] = await db.one(query, params);
-        data["tieteenala"] = await getTieteenala(req.params.id);
-        data["taiteenala"] = await getTaiteenala(req.params.id);
-        data["taidealantyyppikategoria"] = await getTyyppikategoria(req.params.id);
-        data["avainsanat"] = await getAvainsana(req.params.id);
-        data["lisatieto"] = await getLisatieto(req.params.id);
-        data["organisaatiotekija"] = await getOrganisaatiotekija(req.params.id);
-
-        res.status(200).json({"data": data});
-
-    } catch (err) {
-        console.log(err);
     }
 
 }

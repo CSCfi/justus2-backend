@@ -32,6 +32,57 @@ async function postAuditData(headers: any, method: any, table: any, id: any, inp
     return klId;
 }
 
+async function hasAccess(user: any, id?: any) {
+
+        if (!id) {
+            if (!user.organisaatio) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        if (id) {
+
+            let access: boolean = false;
+
+            if (user.rooli === "owner") {
+                access = true;
+
+            } else {
+                access = false;
+                const params = {"code": user.organisaatio, "uid":  user.uid};
+
+                let query;
+                const select = "SELECT julkaisu.id FROM julkaisu" +
+                    " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
+                    " WHERE organisaatiotunnus = ${code}";
+
+                if (user.rooli === "admin") {
+                    query = select + " ORDER BY julkaisu.id";
+                }
+
+                if (user.rooli === "member") {
+                    query = select + " AND kl.uid = ${uid} ORDER BY julkaisu.id";
+                }
+
+                    const list = await dataBase.any(query, params);
+
+                    // verify that requested id matches to id list
+                    for (let i = 0; i < list.length; i++) {
+                        if (parseInt(list[i].id) === parseInt(id)) {
+                            access = true;
+                        }
+                    }
+            }
+
+            return access;
+        }
+
+}
+
+
 module.exports = {
     postAuditData: postAuditData,
+    hasAccess: hasAccess
 };
