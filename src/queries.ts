@@ -800,9 +800,10 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
 //     }
 // }
 function postLanguage(req: Request, res: Response) {
-    if (req.params.lang === "EN" || req.params.lang === "SV" || req.params.lang === "FI") {
+
+    if (req.body.lang === "EN" || req.body.lang === "SV" || req.body.lang === "FI") {
         // req.session.language = {};
-        const lang = req.params.lang;
+        const lang = req.body.lang;
         console.log("Before post " + JSON.stringify(req.session.language));
         req.session.language = lang;
         console.log("The new language according to req session = " + req.session.language);
