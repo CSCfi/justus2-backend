@@ -439,7 +439,7 @@ function getJulkaisutVIRTACR(req: Request, res: Response, next: NextFunction) {
 }
 
 // Esitäyttö, figure out how the res object should look.
-function getJulkaisuVirtaCrossrefEsitäyttö(req: Request, res: Response, next: NextFunction) {
+function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: NextFunction) {
     const apiurlCR = "https://api.crossref.org/works/" + req.query.id;
     const apiurlVirta = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
     console.log("This is the req query lahde: " + req.query.lahde + " And this is the req query id: " + req.query.id);
