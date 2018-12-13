@@ -4,6 +4,12 @@ const domainMapping = organisationConfig.domainMappings;
 
 let getUserData = function(headers: any) {
 
+    const domain =  parseDomainFromHeadersData(headers["shib-group"]);
+
+        if (!domain) {
+            return false;
+        }
+
         const name = headers["shib-sn"] + " " + headers["shib-givenname"] ;
         const userData = {
             "domain": "",
@@ -12,12 +18,6 @@ let getUserData = function(headers: any) {
             "rooli": "",
             "nimi": name
         };
-
-        const domain =  parseDomainFromHeadersData(headers["shib-group"]);
-
-        if (!domain) {
-            return false;
-        }
 
         const role = getRole(headers["shib-group"]);
 
