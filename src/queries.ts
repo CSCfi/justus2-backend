@@ -459,43 +459,52 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
 // Catch the JSON body and parse it so that we can insert the values into postgres
 async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
-    const method = "POST";
+    USER_DATA = req.session.userData;
+    const hasAccess = await auditLog.hasOrganisation(USER_DATA);
 
-    const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-    const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + "RETURNING id";
+    if (hasAccess) {
+        const method = "POST";
 
-    // begin transaction
-    await db.any("BEGIN");
+        const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+        const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + "RETURNING id";
 
-    try {
+        // begin transaction
+        await db.any("BEGIN");
 
-        // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
-        const julkaisuId = await db.one(saveJulkaisu);
+        try {
 
-        const kayttoLokiId = await auditLog.postAuditData(req.headers,
-            method, "julkaisu", julkaisuId.id, req.body.julkaisu);
+            // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
+            const julkaisuId = await db.one(saveJulkaisu);
 
-        const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
-        const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + "RETURNING accessid";
+            const kayttoLokiId = await auditLog.postAuditData(req.headers,
+                method, "julkaisu", julkaisuId.id, req.body.julkaisu);
 
-        await db.one(insertAccessId);
+            const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
+            const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + "RETURNING accessid";
 
-        await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
-        await insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
-        await insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
-        await insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
-        await insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
-        await insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
+            await db.one(insertAccessId);
 
-        await db.any("COMMIT");
+            await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
+            await insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
+            await insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
+            await insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
+            await insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
+            await insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
 
-        res.status(200).json({ "julkaisuId":  julkaisuId.id, "kayttoLokiIdJulkaisu": kayttoLokiId.id });
+            await db.any("COMMIT");
 
-    } catch (err) {
-        await db.any("ROLLBACK");
-        res.sendStatus(500);
-        console.log(err);
+            res.status(200).json({ "julkaisu_id":  julkaisuId.id, "kayttoloki_id": kayttoLokiId.id });
+
+        } catch (err) {
+            await db.any("ROLLBACK");
+            res.sendStatus(500);
+            console.log(err);
+        }
+    } else {
+        return res.status(403).send("Permission denied");
     }
+
+
 
 }
 
