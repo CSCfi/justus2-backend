@@ -77,7 +77,7 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
         }
 
     } else {
-        return res.status(500).send("Permission denied");
+        return res.status(403).send("Permission denied");
     }
 
 }
@@ -135,7 +135,7 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
                 return next(err);
             });
     } else {
-        return res.status(500).send("Permission denied");
+        return res.status(403).send("Permission denied");
     }
 
 
@@ -177,7 +177,7 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             console.log(err);
         }
     } else {
-        return res.status(500).send("Permission denied");
+        return res.status(403).send("Permission denied");
     }
 
 }
@@ -337,7 +337,7 @@ function getUser(req: Request, res: Response, next: NextFunction) {
     console.log(userData);
 
     if (!userData) {
-        return res.status(500).send("Permission denied");
+        return res.status(401).send("Unauthorized");
     }
     else {
         oh.ObjectHandlerUser(userData, function(result: any) {
@@ -599,7 +599,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             return res.status(500).send("Could not update publication");
         }
     } else {
-        return res.status(500).send("Permission denied");
+        return res.status(403).send("Permission denied");
     }
 
 
@@ -624,8 +624,7 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
                 console.log(err);
             });
     } else {
-        return res.status(500).send("Permission denied");
-
+        return res.status(403).send("Permission denied");
     }
 
 }
@@ -864,7 +863,7 @@ module.exports = {
     getJufo: getJufo,
     getJufotISSN: getJufotISSN,
     getJulkaisutVIRTACR: getJulkaisutVIRTACR,
-    getJulkaisuVirtaCrossrefEsitäyttö: getJulkaisuVirtaCrossrefEsitäyttö,
+    getJulkaisuVirtaCrossrefEsitaytto: getJulkaisuVirtaCrossrefEsitaytto,
     getOrganisaatioListaus: getOrganisaatioListaus,
     getUserSessionData: getUserSessionData,
     testvirta: testvirta,
@@ -873,5 +872,6 @@ module.exports = {
     postLanguage: postLanguage,
     // PUT requests
     putJulkaisuntila: putJulkaisuntila,
-    updateJulkaisu: updateJulkaisu,
+    updateJulkaisu: updateJulkaisu
+
 };
