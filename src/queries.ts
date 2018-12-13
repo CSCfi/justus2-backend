@@ -597,11 +597,14 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
 }
 
-function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
+async function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
-    const role =  authService.getRole(req.headers["shib-group"]);
+    USER_DATA = req.session.userData;
 
-    if (role === "admin" || role === "owner") {
+    const isAdmin = await auditLog.isAdmin(USER_DATA);
+    const hasAccessToPublication = await auditLog.hasAccessToPublication(USER_DATA, req.params.id);
+
+    if (isAdmin && hasAccessToPublication) {
         const julkaisuColumns = new pgp.helpers.ColumnSet(["julkaisuntila", "modified", "username"], {table: "julkaisu"});
         const updateJulkaisuntila = pgp.helpers.update(req.body, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id) + "RETURNING id";
 
