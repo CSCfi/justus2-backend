@@ -86,6 +86,11 @@ async function hasOrganisation(user: any) {
 
 
 async function isAdmin(user: any) {
+
+    if (!user) {
+        return false;
+    }
+
     if (user.rooli === "owner" || user.rooli === "admin") {
         return true;
     } else {
