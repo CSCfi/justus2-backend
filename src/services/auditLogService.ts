@@ -32,57 +32,71 @@ async function postAuditData(headers: any, method: any, table: any, id: any, inp
     return klId;
 }
 
-async function hasAccess(user: any, id?: any) {
+async function hasAccessToPublication(user: any, id: any) {
 
-        if (!id) {
-            if (!user.organisaatio) {
-                return false;
-            } else {
-                return true;
+    if (!user) {
+        return false;
+    }
+
+    let access: boolean = false;
+
+        if (user.rooli === "owner") {
+            access = true;
+
+        } else {
+            access = false;
+            const params = {"code": user.organisaatio, "uid":  user.uid, "julkaisuid": id};
+
+            let query;
+            const select = "SELECT julkaisu.id FROM julkaisu" +
+                " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
+                " WHERE organisaatiotunnus = ${code} AND julkaisu.id = ${julkaisuid}";
+
+            if (user.rooli === "admin") {
+                query = select;
             }
-        }
 
-        if (id) {
+            if (user.rooli === "member") {
+                query = select + " AND kl.uid = ${uid}";
+            }
 
-            let access: boolean = false;
+            const data = await dataBase.any(query, params);
 
-            if (user.rooli === "owner") {
+            if (data.length > 0) {
                 access = true;
-
-            } else {
-                access = false;
-                const params = {"code": user.organisaatio, "uid":  user.uid};
-
-                let query;
-                const select = "SELECT julkaisu.id FROM julkaisu" +
-                    " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
-                    " WHERE organisaatiotunnus = ${code}";
-
-                if (user.rooli === "admin") {
-                    query = select + " ORDER BY julkaisu.id";
-                }
-
-                if (user.rooli === "member") {
-                    query = select + " AND kl.uid = ${uid} ORDER BY julkaisu.id";
-                }
-
-                    const list = await dataBase.any(query, params);
-
-                    // verify that requested id matches to id list
-                    for (let i = 0; i < list.length; i++) {
-                        if (parseInt(list[i].id) === parseInt(id)) {
-                            access = true;
-                        }
-                    }
             }
-
-            return access;
         }
 
+        return access;
+
+}
+
+async function hasOrganisation(user: any) {
+
+    if (!user) {
+        return false;
+    }
+
+    if (!user.organisaatio) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+
+async function isAdmin(user: any) {
+    if (user.rooli === "owner" || user.rooli === "admin") {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 
 module.exports = {
     postAuditData: postAuditData,
-    hasAccess: hasAccess
+    hasAccessToPublication: hasAccessToPublication,
+    hasOrganisation: hasOrganisation,
+    isAdmin: isAdmin
 };

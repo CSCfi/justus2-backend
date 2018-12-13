@@ -46,9 +46,10 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
-    const hasAccess = await auditLog.hasAccess(USER_DATA);
+    const hasOrganisation = await auditLog.hasOrganisation(USER_DATA);
+    const isAdmin = await auditLog.isAdmin(USER_DATA);
 
-    if (hasAccess && USER_DATA.rooli !== "member") {
+    if (hasOrganisation && isAdmin) {
         const organisationCode =  USER_DATA.organisaatio;
         try {
 
@@ -85,9 +86,9 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
-    const hasAccess = auditLog.hasAccess(USER_DATA);
+    const hasOrganisation = auditLog.hasOrganisation(USER_DATA);
 
-    if (hasAccess) {
+    if (hasOrganisation) {
 
         const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
         let query;
@@ -145,9 +146,10 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 async function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
-    const hasAccess = await auditLog.hasAccess(USER_DATA, req.params.id);
+    const hasOrganisation = await auditLog.hasOrganisation(USER_DATA);
+    const hasAccessToPublication = await auditLog.hasAccessToPublication(USER_DATA, req.params.id);
 
-    if (hasAccess) {
+    if (hasOrganisation && hasAccessToPublication) {
         const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
 
         let params;
