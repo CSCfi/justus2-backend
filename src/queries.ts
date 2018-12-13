@@ -513,78 +513,87 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 // PUT requests
 async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
+    USER_DATA = req.session.userData;
+    const hasAccessToPublication = await auditLog.hasAccessToPublication(USER_DATA, req.params.id);
 
-    const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-    const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id);
+    if (hasAccessToPublication) {
+        const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+        const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id);
 
-    // begin transaction
-    await db.any("BEGIN");
+        // begin transaction
+        await db.any("BEGIN");
 
-    try {
+        try {
 
-        const julkaisu = await db.none(updateJulkaisu);
+            const julkaisu = await db.none(updateJulkaisu);
 
-        await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, req.body.julkaisu);
+            await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, req.body.julkaisu);
 
-        const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        if (deletedOrganisaatiotekijaRows.rowCount > 0) {
-            await auditLog.postAuditData(req.headers, "DELETE", "organisaatiotekija", req.params.id, [undefined]);
+            const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedOrganisaatiotekijaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "organisaatiotekija", req.params.id, [undefined]);
+            }
+
+            await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, req.params.id, req.headers);
+
+            const deletedTieteenalaRows = await db.result("DELETE FROM tieteenala WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedTieteenalaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "tieteenala", req.params.id, [undefined]);
+            }
+            await insertTieteenala(req.body.tieteenala, req.params.id, req.headers);
+
+            const deletedTaiteenalaRows =  await db.result("DELETE FROM taiteenala WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedTaiteenalaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "taiteenala", req.params.id, [undefined]);
+            }
+            await insertTaiteenala(req.body.taiteenala, req.params.id, req.headers);
+
+            const deletedAvainsanaRows = await db.result("DELETE FROM avainsana WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedAvainsanaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "avainsana", req.params.id, [undefined]);
+            }
+            await insertAvainsanat(req.body.avainsanat, req.params.id, req.headers);
+
+            const deletedTyyppikategoriaRows = await db.result("DELETE FROM taidealantyyppikategoria WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedTyyppikategoriaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
+            }
+            await insertTyyppikategoria(req.body.taidealantyyppikategoria, req.params.id, req.headers);
+
+            const deletedLisatietoRows = await db.result("DELETE FROM lisatieto WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedLisatietoRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
+            }
+            await insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
+
+            await db.any("COMMIT");
+            return res.sendStatus(200);
+
+
+        } catch (err) {
+            // if error exists in any query, rollback
+            console.log(err);
+            await db.any("ROLLBACK");
+            // res.sendStatus(500);
+            return res.status(500).send("Could not update publication");
         }
-
-        await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, req.params.id, req.headers);
-
-        const deletedTieteenalaRows = await db.result("DELETE FROM tieteenala WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        if (deletedTieteenalaRows.rowCount > 0) {
-            await auditLog.postAuditData(req.headers, "DELETE", "tieteenala", req.params.id, [undefined]);
-        }
-        await insertTieteenala(req.body.tieteenala, req.params.id, req.headers);
-
-        const deletedTaiteenalaRows =  await db.result("DELETE FROM taiteenala WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        if (deletedTaiteenalaRows.rowCount > 0) {
-            await auditLog.postAuditData(req.headers, "DELETE", "taiteenala", req.params.id, [undefined]);
-        }
-        await insertTaiteenala(req.body.taiteenala, req.params.id, req.headers);
-
-        const deletedAvainsanaRows = await db.result("DELETE FROM avainsana WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        if (deletedAvainsanaRows.rowCount > 0) {
-            await auditLog.postAuditData(req.headers, "DELETE", "avainsana", req.params.id, [undefined]);
-        }
-        await insertAvainsanat(req.body.avainsanat, req.params.id, req.headers);
-
-        const deletedTyyppikategoriaRows = await db.result("DELETE FROM taidealantyyppikategoria WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        if (deletedTyyppikategoriaRows.rowCount > 0) {
-            await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
-        }
-        await insertTyyppikategoria(req.body.taidealantyyppikategoria, req.params.id, req.headers);
-
-        const deletedLisatietoRows = await db.result("DELETE FROM lisatieto WHERE julkaisuid = ${id}", {
-            id: req.params.id
-        });
-        if (deletedLisatietoRows.rowCount > 0) {
-            await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
-        }
-        await insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
-
-        await db.any("COMMIT");
-        return res.sendStatus(200);
-
-
-    } catch (err) {
-        // if error exists in any query, rollback
-        console.log(err);
-        await db.any("ROLLBACK");
-        res.sendStatus(500);
+    } else {
+        return res.status(500).send("Permission denied");
     }
+
+
 
 }
 
