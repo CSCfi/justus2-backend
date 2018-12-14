@@ -831,7 +831,6 @@ function ObjectHandlerUser(perustiedot: any, callback: any) {
             "tekijat",
             "julkaisuntekijoidenlukumaara",
             "organisaatiotekija",
-            "orcid",
             "konferenssinvakiintunutnimi",
             "isbn",
             "issn",
