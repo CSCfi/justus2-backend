@@ -605,6 +605,7 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
                     "organisaatiotekija",
                     "konferenssinvakiintunutnimi",
                     "isbn",
+                    "issn",
                     "volyymi",
                     "numero",
                     "lehdenjulkaisusarjannimi",
