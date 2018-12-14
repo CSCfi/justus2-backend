@@ -178,15 +178,14 @@ function httpgetCombiner(URL: String, callback: Function) {
 }
 
 // Objecthandler for Koodistopalvelu alayksikot
-function ObjectHandlerAlayksikot(obj: any, lang: any): object[] {
+function ObjectHandlerAlayksikot(obj: any): object[] {
     const alayksikot: object[] = [
     ];
     obj.forEach((e: any) => {
-            const metadata = e.metadata.find(( e: any ) => e.kieli === lang);
-            const namecheck = metadata;
+            const metadata = e.metadata.find(( e: any ) => e.kieli === "FI");
             const keyvalues = {
                 arvo: e.koodiArvo,
-                selite: namechecker(namecheck),
+                selite: metadata.nimi,
             };
             alayksikot.push(keyvalues);
     });
@@ -822,13 +821,76 @@ function ObjectHandlerUser(perustiedot: any, callback: any) {
                 }
             });
         });
-            const visibleFields = organisationConfig.commonVisibleFields;
-            const requiredFields = organisationConfig.commonRequiredFields;
-
+        const visibleFields = [
+            "etunimet",
+            "sukunimi",
+            "julkaisutyyppi",
+            "julkaisuvuosi",
+            "julkaisuvuodenlisatieto",
+            "julkaisunnimi",
+            "tekijat",
+            "julkaisuntekijoidenlukumaara",
+            "organisaatiotekija",
+            "orcid",
+            "konferenssinvakiintunutnimi",
+            "isbn",
+            "issn",
+            "volyymi",
+            "numero",
+            "lehdenjulkaisusarjannimi",
+            "kustantaja",
+            "julkaisunkansainvalisyys",
+            "tieteenala",
+            "taiteenala",
+            "taidealantyyppikategoria",
+            "kansainvalinenyhteisjulkaisu",
+            "yhteisjulkaisuyrityksenkanssa",
+            "avoinsaatavuus",
+            "julkaisurinnakkaistallennettu",
+            "rinnakkaistallennetunversionverkkoosoite",
+            "emojulkaisunnimi",
+            "emojulkaisuntoimittajat",
+            "sivut",
+            "artikkelinumero",
+            "julkaisunkustannuspaikka",
+            "avainsanat",
+            "julkaisumaa",
+            "julkistamispaikkakunta",
+            "tapahtumanlisatieto",
+            "julkaisunkieli",
+            "doitunniste",
+            "muutunniste",
+            "pysyvaverkkoosoite",
+            "tekijanrooli",
+            "lisatieto"
+          ];
+          const requiredFields = [
+              "etunimet",
+              "sukunimi",
+              "julkaisutyyppi",
+              "julkaisuvuosi",
+              "julkaisunnimi",
+              "tekijat",
+              "julkaisuntekijoidenlukumaara",
+              "organisaatiotekija",
+              "konferenssinvakiintunutnimi",
+              "isbn",
+              "issn",
+              "lehdenjulkaisusarjannimi",
+              "kustantaja",
+              "julkaisunkansainvalisyys",
+              "tieteenala",
+              "tieteenalakoodi",
+              "kansainvalinenyhteisjulkaisu",
+              "yhteisjulkaisuyrityksenkanssa",
+              "avoinsaatavuus",
+              "julkaisurinnakkaistallennettu",
+              "rinnakkaistallennetunversionverkkoosoite"
+          ];
               yarray.push(twoeight);
               yarray.push(twoseven);
               yarray.push(twosix);
-              if (y2016 && y2017 && y2018 && y2017.length || y2018.length || y2017.length) {
+              if (y2017.length || y2018.length || y2017.length) {
                   visibleFields.push("alayksikko");
                   requiredFields.push("alayksikko");
               const orgall =  {
