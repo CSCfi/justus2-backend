@@ -590,74 +590,8 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
 
                   });
                 });
-                // const visibleFields = organisationConfig.commonVisibleFields;
-                // const requiredFields = organisationConfig.commonRequiredFields;
-
-                const visibleFields = [
-                    "etunimet",
-                    "sukunimi",
-                    "julkaisutyyppi",
-                    "julkaisuvuosi",
-                    "julkaisuvuodenlisatieto",
-                    "julkaisunnimi",
-                    "tekijat",
-                    "julkaisuntekijoidenlukumaara",
-                    "organisaatiotekija",
-                    "konferenssinvakiintunutnimi",
-                    "isbn",
-                    "issn",
-                    "volyymi",
-                    "numero",
-                    "lehdenjulkaisusarjannimi",
-                    "kustantaja",
-                    "julkaisunkansainvalisyys",
-                    "tieteenala",
-                    "taiteenala",
-                    "taidealantyyppikategoria",
-                    "kansainvalinenyhteisjulkaisu",
-                    "yhteisjulkaisuyrityksenkanssa",
-                    "avoinsaatavuus",
-                    "julkaisurinnakkaistallennettu",
-                    "rinnakkaistallennetunversionverkkoosoite",
-                    "emojulkaisunnimi",
-                    "emojulkaisuntoimittajat",
-                    "sivut",
-                    "artikkelinumero",
-                    "julkaisunkustannuspaikka",
-                    "avainsanat",
-                    "julkaisumaa",
-                    "julkistamispaikkakunta",
-                    "tapahtumanlisatieto",
-                    "julkaisunkieli",
-                    "doitunniste",
-                    "muutunniste",
-                    "pysyvaverkkoosoite",
-                    "tekijanrooli",
-                    "lisatieto"
-                ];
-                const requiredFields = [
-                    "etunimet",
-                    "sukunimi",
-                    "julkaisutyyppi",
-                    "julkaisuvuosi",
-                    "julkaisunnimi",
-                    "tekijat",
-                    "julkaisuntekijoidenlukumaara",
-                    "organisaatiotekija",
-                    "konferenssinvakiintunutnimi",
-                    "isbn",
-                    "issn",
-                    "lehdenjulkaisusarjannimi",
-                    "kustantaja",
-                    "julkaisunkansainvalisyys",
-                    "tieteenala",
-                    "tieteenalakoodi",
-                    "kansainvalinenyhteisjulkaisu",
-                    "yhteisjulkaisuyrityksenkanssa",
-                    "avoinsaatavuus",
-                    "julkaisurinnakkaistallennettu",
-                    "rinnakkaistallennetunversionverkkoosoite"
-                ];
+                const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
+                const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
 
                 yksikotarray.push(twntyeight);
                 yksikotarray.push(twntyseven);
@@ -887,71 +821,11 @@ function ObjectHandlerUser(perustiedot: any, callback: any) {
                 }
             });
         });
-        const visibleFields = [
-            "etunimet",
-            "sukunimi",
-            "julkaisutyyppi",
-            "julkaisuvuosi",
-            "julkaisuvuodenlisatieto",
-            "julkaisunnimi",
-            "tekijat",
-            "julkaisuntekijoidenlukumaara",
-            "organisaatiotekija",
-            "konferenssinvakiintunutnimi",
-            "isbn",
-            "issn",
-            "volyymi",
-            "numero",
-            "lehdenjulkaisusarjannimi",
-            "kustantaja",
-            "julkaisunkansainvalisyys",
-            "tieteenala",
-            "taiteenala",
-            "taidealantyyppikategoria",
-            "kansainvalinenyhteisjulkaisu",
-            "yhteisjulkaisuyrityksenkanssa",
-            "avoinsaatavuus",
-            "julkaisurinnakkaistallennettu",
-            "rinnakkaistallennetunversionverkkoosoite",
-            "emojulkaisunnimi",
-            "emojulkaisuntoimittajat",
-            "sivut",
-            "artikkelinumero",
-            "julkaisunkustannuspaikka",
-            "avainsanat",
-            "julkaisumaa",
-            "julkistamispaikkakunta",
-            "tapahtumanlisatieto",
-            "julkaisunkieli",
-            "doitunniste",
-            "muutunniste",
-            "pysyvaverkkoosoite",
-            "tekijanrooli",
-            "lisatieto"
-          ];
-          const requiredFields = [
-              "etunimet",
-              "sukunimi",
-              "julkaisutyyppi",
-              "julkaisuvuosi",
-              "julkaisunnimi",
-              "tekijat",
-              "julkaisuntekijoidenlukumaara",
-              "organisaatiotekija",
-              "konferenssinvakiintunutnimi",
-              "isbn",
-              "issn",
-              "lehdenjulkaisusarjannimi",
-              "kustantaja",
-              "julkaisunkansainvalisyys",
-              "tieteenala",
-              "tieteenalakoodi",
-              "kansainvalinenyhteisjulkaisu",
-              "yhteisjulkaisuyrityksenkanssa",
-              "avoinsaatavuus",
-              "julkaisurinnakkaistallennettu",
-              "rinnakkaistallennetunversionverkkoosoite"
-          ];
+
+
+        const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
+        const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
+
               yarray.push(twoeight);
               yarray.push(twoseven);
               yarray.push(twosix);
