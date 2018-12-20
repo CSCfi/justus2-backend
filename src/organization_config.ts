@@ -81,7 +81,7 @@ const domainMappings = [
     {
         // Arcada - Nylands svenska yrkeshögskola  #arcada-admins
         "domain": "@arcada.fi",
-        "code": "025352",
+        "code": "02535",
         "email": "biblioteket@arcada.fi"
     },
     {
@@ -123,7 +123,7 @@ const domainMappings = [
     {
         // Kajaanin ammattikorkeakoulu  #kamk-admins
         "domain": "@kamk.fi",
-        "code": "2024732",
+        "code": "02473",
         "email": "amkkirjasto@kamk.fi"
     },
     {
