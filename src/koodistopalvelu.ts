@@ -12,6 +12,8 @@ const OH = require("./objecthandlers");
 
 const koodistoUrl = process.env.KOODISTO_URL;
 
+const organisationConfig = require("./organization_config");
+
 // REMEMBER THIS
 // (node:1239) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connect listeners added. Use emitter.setMaxListeners() to increase limit
 
@@ -308,10 +310,9 @@ function setJulkaisunLuokatSV(res: Response) {
 function setAlaYksikot(res: Response) {
     return HTTPGET(koodistoUrl +  "/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
 }
-function setOrgListaus(res: Response) {
-    // hae tämä data domainMappings taulukosta
-    const orgid = ["00000", "02535", "02536", "02623", "10056",  "02631",  "02467",  "02504",  "02473",  "02469",  "10118",  "02470",  "02629",  "02358",  "10065",  "02507",  "02472",  "02630",  "10066", "02557", "02537", "02509", "10103", "02471", "4940015", "4020217", "4100010"];
-    return HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/oppilaitosnumero/koodi/oppilaitosnumero_" , res, "getOrgListaus", OH.ObjectHandlerOrgListaus, "FI", orgid);
+ function setOrgListaus(res: Response) {
+    const orgid = organisationConfig.getOrganisationCodes();
+    return HTTPGET(koodistoUrl + "/oppilaitosnumero/koodi/oppilaitosnumero_" , res, "getOrgListaus", OH.ObjectHandlerOrgListaus, "FI", orgid);
 }
 
 // function setAvainSanat(res: Response) {

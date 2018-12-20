@@ -260,12 +260,31 @@ const domainMappings = [
         "domain": "@oamk.fi",
         "code": "02471",
         "email": ""
-    }
+    },
+
 
 ];
+
+ function getOrganisationCodes() {
+
+    const organisationCodes: any = [];
+
+    for (let i = 0; i < domainMappings.length; i++ ) {
+        organisationCodes.push(domainMappings[i].code);
+    }
+
+    // remove duplicates
+    function filter(list: any) {
+        return Array.from(new Set(list));
+    }
+    return  filter(organisationCodes);
+
+}
+
 
 module.exports = {
     domainMappings: domainMappings,
     commonVisibleFields: commonVisibleFields,
-    commonRequiredFields: commonRequiredFields
+    commonRequiredFields: commonRequiredFields,
+    getOrganisationCodes: getOrganisationCodes
 };
