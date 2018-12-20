@@ -1,6 +1,7 @@
 const organisationConfig = require("./../organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
+const conn = require("./../db");
 
 let getUserData = function(headers: any) {
 
@@ -89,13 +90,82 @@ let getRole = function(data: any) {
 
 };
 
+async function hasAccessToPublication(user: any, id: any) {
+
+    if (!user) {
+        return false;
+    }
+
+    let access: boolean = false;
+
+    if (user.rooli === "owner") {
+        access = true;
+
+    } else {
+        access = false;
+        const params = {"code": user.organisaatio, "uid":  user.uid, "julkaisuid": id};
+
+        let query;
+        const select = "SELECT julkaisu.id FROM julkaisu" +
+            " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
+            " WHERE organisaatiotunnus = ${code} AND julkaisu.id = ${julkaisuid}";
+
+        if (user.rooli === "admin") {
+            query = select;
+        }
+
+        if (user.rooli === "member") {
+            query = select + " AND kl.uid = ${uid}";
+        }
+
+        const data = await conn.db.any(query, params);
+
+        if (data.length > 0) {
+            access = true;
+        }
+    }
+
+    return access;
+
+}
+
+async function hasOrganisation(user: any) {
+
+    if (!user) {
+        return false;
+    }
+
+    if (!user.organisaatio) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+
+async function isAdmin(user: any) {
+
+    if (!user) {
+        return false;
+    }
+
+    if (user.rooli === "owner" || user.rooli === "admin") {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 
 module.exports = {
     getOrganisationId: getOrganisationId,
     getUserData: getUserData,
     getRole: getRole,
-    parseDomainFromHeadersData: parseDomainFromHeadersData
+    parseDomainFromHeadersData: parseDomainFromHeadersData,
+    hasAccessToPublication: hasAccessToPublication,
+    hasOrganisation: hasOrganisation,
+    isAdmin: isAdmin
 
 
 

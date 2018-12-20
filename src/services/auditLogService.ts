@@ -1,10 +1,8 @@
+
 const authService = require("./authService");
 const dbHelpers = require("./../databaseHelpers");
 
 const connection = require("./../db");
-
-const pgPromise = connection.pgp;
-const dataBase = connection.db;
 
 async function postAuditData(headers: any, method: any, table: any, id: any, inputData: any) {
 
@@ -26,82 +24,14 @@ async function postAuditData(headers: any, method: any, table: any, id: any, inp
     };
 
 
-    const kayttoLokiColumns = new pgPromise.helpers.ColumnSet(dbHelpers.kaytto_loki, {table: "kaytto_loki"});
-    const saveLokiData = pgPromise.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
-    const klId = await dataBase.one(saveLokiData);
+    const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbHelpers.kaytto_loki, {table: "kaytto_loki"});
+    const saveLokiData = connection.pgp.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
+    const klId = await connection.db.one(saveLokiData);
     return klId;
 }
 
-async function hasAccessToPublication(user: any, id: any) {
-
-    if (!user) {
-        return false;
-    }
-
-    let access: boolean = false;
-
-        if (user.rooli === "owner") {
-            access = true;
-
-        } else {
-            access = false;
-            const params = {"code": user.organisaatio, "uid":  user.uid, "julkaisuid": id};
-
-            let query;
-            const select = "SELECT julkaisu.id FROM julkaisu" +
-                " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
-                " WHERE organisaatiotunnus = ${code} AND julkaisu.id = ${julkaisuid}";
-
-            if (user.rooli === "admin") {
-                query = select;
-            }
-
-            if (user.rooli === "member") {
-                query = select + " AND kl.uid = ${uid}";
-            }
-
-            const data = await dataBase.any(query, params);
-
-            if (data.length > 0) {
-                access = true;
-            }
-        }
-
-        return access;
-
-}
-
-async function hasOrganisation(user: any) {
-
-    if (!user) {
-        return false;
-    }
-
-    if (!user.organisaatio) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
-
-async function isAdmin(user: any) {
-
-    if (!user) {
-        return false;
-    }
-
-    if (user.rooli === "owner" || user.rooli === "admin") {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 
 module.exports = {
-    postAuditData: postAuditData,
-    hasAccessToPublication: hasAccessToPublication,
-    hasOrganisation: hasOrganisation,
-    isAdmin: isAdmin
+    postAuditData: postAuditData
 };
