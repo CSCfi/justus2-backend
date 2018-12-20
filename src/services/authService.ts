@@ -108,7 +108,7 @@ async function hasAccessToPublication(user: any, id: any) {
         let query;
         const select = "SELECT julkaisu.id FROM julkaisu" +
             " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
-            " WHERE organisaatiotunnus = ${code} AND julkaisu.id = ${julkaisuid}";
+            " WHERE organisaatiotunnus = ${code} AND julkaisu.id = ${julkaisuid} AND julkaisu.julkaisuntila = '' ";
 
         if (user.rooli === "admin") {
             query = select;
