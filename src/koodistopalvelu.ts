@@ -203,17 +203,17 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
                 }
             }
             Promise.all(proms).then((values: object []) => {
-                const somnething: object [] = [];
+                const list: object [] = [];
                 for (const j in values) {
                     try {
-                        somnething.push(JSON.parse(String(values[j])));
+                        list.push(JSON.parse(String(values[j])));
                     }
                     catch (err) {
                         console.log("EXCEPTION");
                         console.log(err);
                     }
                 }
-                client.set(redisInfo, JSON.stringify(objecthandler(somnething, orgid)));
+                client.set(redisInfo, JSON.stringify(objecthandler(list, orgid)));
                 console.log("Set info for " + redisInfo + " from Objecthandlers to redis successfully!");
                 resolve();
             }).catch((err: Error) => {
