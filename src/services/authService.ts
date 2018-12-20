@@ -108,14 +108,14 @@ async function hasAccessToPublication(user: any, id: any) {
         let query;
         const select = "SELECT julkaisu.id FROM julkaisu" +
             " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
-            " WHERE organisaatiotunnus = ${code} AND julkaisu.id = ${julkaisuid} AND julkaisu.julkaisuntila = '' ";
+            " WHERE organisaatiotunnus = ${code} AND julkaisu.id = ${julkaisuid}";
 
         if (user.rooli === "admin") {
             query = select;
         }
 
         if (user.rooli === "member") {
-            query = select + " AND kl.uid = ${uid}";
+            query = select + " AND kl.uid = ${uid} AND julkaisu.julkaisuntila = ''";
         }
 
         const data = await conn.db.any(query, params);
@@ -124,7 +124,6 @@ async function hasAccessToPublication(user: any, id: any) {
             access = true;
         }
     }
-
     return access;
 
 }
