@@ -22,8 +22,6 @@ const commonVisibleFields = [
     "kansainvalinenyhteisjulkaisu",
     "yhteisjulkaisuyrityksenkanssa",
     "avoinsaatavuus",
-    "julkaisurinnakkaistallennettu",
-    "rinnakkaistallennetunversionverkkoosoite",
     "emojulkaisunnimi",
     "emojulkaisuntoimittajat",
     "sivut",
@@ -62,7 +60,6 @@ const commonRequiredFields = [
     "kansainvalinenyhteisjulkaisu",
     "yhteisjulkaisuyrityksenkanssa",
     "avoinsaatavuus",
-    "julkaisurinnakkaistallennettu",
     "rinnakkaistallennetunversionverkkoosoite"
 ];
 
