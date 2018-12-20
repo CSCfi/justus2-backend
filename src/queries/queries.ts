@@ -282,10 +282,10 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
     const apiurlVirta = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
     console.log("This is the req query lahde: " + req.query.lahde + " And this is the req query id: " + req.query.id);
     if (req.query.lahde === "virta") {
-        kp.HTTPGETshow(apiurlVirta, res , oh.ObjectHandlerVirtaEsitäyttö);
+        kp.HTTPGETshow(apiurlVirta, res , oh.ObjectHandlerVirtaEsitaytto);
     }
     else if (req.query.lahde === "crossref") {
-        kp.HTTPGETshow(apiurlCR, res, oh.ObjectHandlerCrossrefEsitäyttö);
+        kp.HTTPGETshow(apiurlCR, res, oh.ObjectHandlerCrossrefEsitaytto);
     }
     else {
         res.send("Wrong lahde parameter, try again");

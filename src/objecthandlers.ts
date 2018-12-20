@@ -644,10 +644,10 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
             return orglistaus;
     }
 
-function ObjectHandlerVirtaEsitäyttö(obj: any): object[] {
+function ObjectHandlerVirtaEsitaytto(obj: any): object[] {
     return obj;
 }
-function ObjectHandlerCrossrefEsitäyttö(obj: any): object[] {
+function ObjectHandlerCrossrefEsitaytto(obj: any): object[] {
     return obj;
 }
 
@@ -874,8 +874,8 @@ module.exports = {
     ObjectHandlerJufoID: ObjectHandlerJufoID,
     ObjectHandlerJufoISSN: ObjectHandlerJufoISSN,
     ObjectHandlerJulkaisutVIRTACR: ObjectHandlerJulkaisutVIRTACR,
-    ObjectHandlerVirtaEsitäyttö: ObjectHandlerVirtaEsitäyttö,
-    ObjectHandlerCrossrefEsitäyttö: ObjectHandlerCrossrefEsitäyttö,
+    ObjectHandlerVirtaEsitaytto: ObjectHandlerVirtaEsitaytto,
+    ObjectHandlerCrossrefEsitaytto: ObjectHandlerCrossrefEsitaytto,
     ObjectHandlerOrgListaus: ObjectHandlerOrgListaus,
     ObjectHandlerTestVirta: ObjectHandlerTestVirta,
     ObjectHandlerJulkaisudata: ObjectHandlerJulkaisudata,
