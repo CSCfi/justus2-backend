@@ -5,18 +5,20 @@ const BASEURLJUFO =   "https://jufo-rest.csc.fi/v1.0/etsi.php?tyyppi=";
 
 const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
+const utf8 = require("utf8");
+
 
 
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
     if (req.query.lang.toLowerCase() === "fi" || req.query.lang.toLowerCase() === "sv") {
         const url: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
         const secondurl: string = BASEURLFINTO + "EN" + "&query=" + req.query.q + "*";
-        kp.HTTPGETshow(url, res, oh.ObjectHandlerAvainsanat, secondurl);
+        kp.HTTPGETshow(utf8.encode(url), res, oh.ObjectHandlerAvainsanat, utf8.encode(secondurl));
     }
     else {
         const apiurl: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
         console.log("This is the apiurl: " + apiurl);
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerAvainsanat);
+        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerAvainsanat);
     }
 }
 function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
@@ -27,7 +29,7 @@ function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
     // it returns nothing, which breaks the code, hence the odd looking error handling
 
     if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJulkaisusarjat);
+        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat);
     }
     else {
         res.send("");
@@ -41,7 +43,7 @@ function getKonferenssinimet(req: Request, res: Response, next: NextFunction) {
     // it returns nothing, which breaks the code, hence the odd looking error handling
 
     if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerKonferenssinnimet);
+        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerKonferenssinnimet);
     }
     else {
         res.send("");
@@ -55,7 +57,7 @@ function getKustantajat(req: Request, res: Response, next: NextFunction) {
     // it returns nothing, which breaks the code, hence the odd looking error handling
 
     if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerKustantajat);
+        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerKustantajat);
     }
     else {
         res.send("");
@@ -95,7 +97,7 @@ function getJulkaisutVIRTACR(req: Request, res: Response, next: NextFunction) {
 
     // The jufo rest api is kinda weird, if the query word is <5 or over 50
     // it returns nothing, which breaks the code, hence the odd looking error handling
-    kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJulkaisutVIRTACR);
+    kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisutVIRTACR);
 }
 
 // Esitäyttö, figure out how the res object should look.
@@ -104,10 +106,10 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
     const apiurlVirta = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
     console.log("This is the req query lahde: " + req.query.lahde + " And this is the req query id: " + req.query.id);
     if (req.query.lahde === "virta") {
-        kp.HTTPGETshow(apiurlVirta, res , oh.ObjectHandlerVirtaEsitaytto);
+        kp.HTTPGETshow(utf8.encode(apiurlVirta), res , oh.ObjectHandlerVirtaEsitaytto);
     }
     else if (req.query.lahde === "crossref") {
-        kp.HTTPGETshow(apiurlCR, res, oh.ObjectHandlerCrossrefEsitaytto);
+        kp.HTTPGETshow(utf8.encode(apiurlCR), res, oh.ObjectHandlerCrossrefEsitaytto);
     }
     else {
         res.send("Wrong lahde parameter, try again");
