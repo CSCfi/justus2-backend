@@ -8,6 +8,8 @@ const db = require("../queries/apiQueries");
 const koodistopalvelu = require("./../queries/koodispalveluQueries");
 // External services (jufo, virta, crossref etc)
 const ext = require("./../queries/externalServices");
+// File upload
+const fu = require("./../queries/fileUpload");
 
 // Define the routes here, all will have the prexix /api/ as per the proxypass in the apache settings
 // GET requests here
@@ -20,7 +22,7 @@ router.get("/usersession", db.getUserSessionData);
 // POST requests
 router.post("/julkaisu", db.postJulkaisu);
 router.post("/language", db.postLanguage);
-router.post("/upload", db.uploadJulkaisu);
+router.post("/upload", fu.uploadJulkaisu);
 
 // PUT requests
 router.put("/julkaisu/:id", db.updateJulkaisu);
