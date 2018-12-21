@@ -7,9 +7,6 @@ const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
 const fs = require("fs");
 
-const BASEURLFINTO = "https://api.finto.fi/rest/v1/yso/search?type=skos%3AConcept&unique=true&lang=";
-const BASEURLJUFO =   "https://jufo-rest.csc.fi/v1.0/etsi.php?tyyppi=";
-
 // Database connection from db.ts
 const connection = require("./../db");
 const pgp = connection.pgp;
@@ -145,7 +142,6 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
         const data: any = {};
 
         try {
-
             data["julkaisu"] = await db.one(query, params);
             data["tieteenala"] = await getTieteenala(req.params.id);
             data["taiteenala"] = await getTaiteenala(req.params.id);
@@ -185,112 +181,7 @@ function getUser(req: Request, res: Response, next: NextFunction) {
           });
  }
 }
-function getAvainSanat(req: Request, res: Response, next: NextFunction) {
-        if (req.query.lang.toLowerCase() === "fi" || req.query.lang.toLowerCase() === "sv") {
-           const url: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
-           const secondurl: string = BASEURLFINTO + "EN" + "&query=" + req.query.q + "*";
-           kp.HTTPGETshow(url, res, oh.ObjectHandlerAvainsanat, secondurl);
-        }
-        else {
-        const apiurl: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
-        console.log("This is the apiurl: " + apiurl);
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerAvainsanat);
-    }
-}
-function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
-        const apiurl: string = BASEURLJUFO + "1&nimi=" + req.query.q;
-        console.log("This is the apiurl: " + apiurl);
 
-        // The jufo rest api is kinda weird, if the query word is <5 or over 50
-        // it returns nothing, which breaks the code, hence the odd looking error handling
-
-        if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJulkaisusarjat);
-        }
-        else {
-            res.send("");
-        }
-}
-function getKonferenssinimet(req: Request, res: Response, next: NextFunction) {
-        const apiurl: string = BASEURLJUFO + "3&nimi=" + req.query.q;
-        console.log("This is the apiurl: " + apiurl);
-
-        // The jufo rest api is kinda weird, if the query word is <5 or over 50
-        // it returns nothing, which breaks the code, hence the odd looking error handling
-
-        if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerKonferenssinnimet);
-        }
-        else {
-            res.send("");
-        }
-}
-function getKustantajat(req: Request, res: Response, next: NextFunction) {
-        const apiurl: string = BASEURLJUFO + "2&nimi=" + req.query.q;
-        console.log("This is the apiurl: " + apiurl);
-
-        // The jufo rest api is kinda weird, if the query word is <5 or over 50
-        // it returns nothing, which breaks the code, hence the odd looking error handling
-
-        if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerKustantajat);
-        }
-        else {
-            res.send("");
-        }
-}
-function getJufo(req: Request, res: Response, next: NextFunction) {
-        const apiurl: string = "https://jufo-rest.csc.fi/v1.0/kanava/" + req.params.id;
-        console.log("This is the apiurl: " + apiurl);
-
-        // The jufo rest api is kinda weird, if the query word is <5 or over 50
-        // it returns nothing, which breaks the code, hence the odd looking error handling
-
-        if ((req.params.id).length > 0 && (req.params.id).length <= 9) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJufoID);
-        }
-        else {
-            res.send("");
-        }
-}
-function getJufotISSN(req: Request, res: Response, next: NextFunction) {
-        const apiurl: string = "https://jufo-rest.csc.fi/v1.0/etsi.php?issn=" + req.query.issn;
-        console.log("This is the apiurl: " + apiurl);
-
-        // The jufo rest api is kinda weird, if the query word is <5 or over 50
-        // it returns nothing, which breaks the code, hence the odd looking error handling
-
-        if ((req.query.issn).length >= 5 && (req.query.issn).length <= 10) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJufoISSN);
-        }
-        else {
-            res.send("");
-        }
-}
-function getJulkaisutVIRTACR(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = "https://api.crossref.org/works?sort=published&order=desc&rows=50&query.title=" + req.query.q;
-    console.log("This is the apiurl: " + apiurl);
-
-    // The jufo rest api is kinda weird, if the query word is <5 or over 50
-    // it returns nothing, which breaks the code, hence the odd looking error handling
-    kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJulkaisutVIRTACR);
-}
-
-// Esitäyttö, figure out how the res object should look.
-function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: NextFunction) {
-    const apiurlCR = "https://api.crossref.org/works/" + req.query.id;
-    const apiurlVirta = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
-    console.log("This is the req query lahde: " + req.query.lahde + " And this is the req query id: " + req.query.id);
-    if (req.query.lahde === "virta") {
-        kp.HTTPGETshow(apiurlVirta, res , oh.ObjectHandlerVirtaEsitaytto);
-    }
-    else if (req.query.lahde === "crossref") {
-        kp.HTTPGETshow(apiurlCR, res, oh.ObjectHandlerCrossrefEsitaytto);
-    }
-    else {
-        res.send("Wrong lahde parameter, try again");
-    }
-}
 
 // POST requests
 // Post a julkaisu to the database
@@ -343,6 +234,27 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
     }
 
 }
+
+function postLanguage(req: Request, res: Response) {
+
+    if (req.body.lang === "EN" || req.body.lang === "SV" || req.body.lang === "FI") {
+        // req.session.language = {};
+        const lang = req.body.lang;
+        console.log("Before post " + JSON.stringify(req.session.language));
+        req.session.language = lang;
+        console.log("The new language according to req session = " + req.session.language);
+        console.log("The JSONSTRINGIFIED session " + JSON.stringify(req.session));
+        res.status(200).send("Language switched to " + req.session.language);
+    }
+    else {
+        res.status(400).send("Wrong lang parameter posted");
+    }
+}
+
+async function uploadJulkaisu() {
+
+}
+
 
 
 // PUT requests
@@ -456,7 +368,6 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
 }
 
 // Select queries for all tables by julkaisid:
-
 async function getOrganisaatiotekija(julkaisuid: any) {
     let result = await getOrgTekijatAndAlayksikko(julkaisuid);
     result = oh.mapOrganisaatiotekijaAndAlayksikko(result);
@@ -647,46 +558,24 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
 //         res.status(400).send("Wrong lang parameter posted");
 //     }
 // }
-function postLanguage(req: Request, res: Response) {
-
-    if (req.body.lang === "EN" || req.body.lang === "SV" || req.body.lang === "FI") {
-        // req.session.language = {};
-        const lang = req.body.lang;
-        console.log("Before post " + JSON.stringify(req.session.language));
-        req.session.language = lang;
-        console.log("The new language according to req session = " + req.session.language);
-        console.log("The JSONSTRINGIFIED session " + JSON.stringify(req.session));
-        res.status(200).send("Language switched to " + req.session.language);
-    }
-    else {
-        res.status(400).send("Wrong lang parameter posted");
-    }
-}
-
 
 function getUserSessionData(req: Request, res: Response) {
     res.status(200).send(req.session);
 }
+
+
 module.exports = {
     // GET requests
     getJulkaisut: getJulkaisut,
     getJulkaisutmin: getJulkaisutmin,
     getAllPublicationDataById: getAllPublicationDataById,
-
     getUser: getUser,
-    getAvainSanat: getAvainSanat,
-    getJulkaisuSarjat: getJulkaisuSarjat,
-    getKonferenssinimet: getKonferenssinimet,
-    getKustantajat: getKustantajat,
-    getJufo: getJufo,
-    getJufotISSN: getJufotISSN,
-    getJulkaisutVIRTACR: getJulkaisutVIRTACR,
-    getJulkaisuVirtaCrossrefEsitaytto: getJulkaisuVirtaCrossrefEsitaytto,
     getUserSessionData: getUserSessionData,
     testvirta: testvirta,
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,
+    uploadJulkaisu: uploadJulkaisu,
     // PUT requests
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu
