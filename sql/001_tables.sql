@@ -200,3 +200,22 @@ WITH (
 );
 ALTER TABLE taidealantyyppikategoria
 OWNER TO appaccount;
+
+-- Table: julkaisujono
+
+-- DROP TABLE julkaisujono;
+
+CREATE TABLE julkaisujono
+(
+  id bigserial NOT NULL,
+  julkaisuid bigint NOT NULL UNIQUE,
+  CONSTRAINT julkaisujono_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)
+      REFERENCES julkaisu (id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE julkaisujono
+OWNER TO appaccount;
