@@ -1,11 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-const schedule = require("node-schedule");
-// https will be used for external API calls
-const https = require("https");
-// const promise = require("bluebird");
+
 const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
-const fs = require("fs");
 
 // Database connection from db.ts
 const connection = require("./../db");
@@ -250,12 +246,6 @@ function postLanguage(req: Request, res: Response) {
         res.status(400).send("Wrong lang parameter posted");
     }
 }
-
-async function uploadJulkaisu() {
-
-}
-
-
 
 // PUT requests
 async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
@@ -575,7 +565,6 @@ module.exports = {
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,
-    uploadJulkaisu: uploadJulkaisu,
     // PUT requests
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu
