@@ -36,6 +36,14 @@ const julkaisu = [
     "modified"
 ];
 
+const julkaisuarkisto = [
+      "julkaisuid",
+      "filename",
+      "embargo",
+      "mimetype",
+      "urn"
+];
+
 const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "rooli"];
 const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
 const taiteenala = ["julkaisuid", "taiteenalakoodi", "jnro"];
@@ -69,6 +77,7 @@ let fields = function (prefix: any) {
 
 module.exports = {
     julkaisu: julkaisu,
+    julkaisuarkisto: julkaisuarkisto,
     organisaatiotekija: organisasaatiotekija,
     tieteenala: tieteenala,
     taiteenala: taiteenala,
