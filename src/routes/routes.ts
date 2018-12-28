@@ -28,6 +28,9 @@ router.post("/upload", fu.uploadJulkaisu);
 router.put("/julkaisu/:id", db.updateJulkaisu);
 router.put("/julkaisuntila/:id", db.putJulkaisuntila);
 
+// DELETE requests
+router.delete("/julkaisu/poista/:id", fu.deleteJulkaisu);
+
 // Queries for external services
 router.get("/haku/avainsanat", ext.getAvainSanat);
 router.get("/haku/julkaisusarjat", ext.getJulkaisuSarjat);

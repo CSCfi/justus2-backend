@@ -115,7 +115,28 @@ async function validate(fileName: any, filePath: any) {
     }
 }
 
+ async function deleteJulkaisu(req: Request, res: Response) {
+
+    const julkaisuid = req.params.id;
+    const filePath = publicationFolder + "/" + julkaisuid;
+
+    try {
+        await fs.unlinkSync(filePath + "/" + savedFileName);
+        await fs.rmdir(filePath);
+        // this query removes data also from julkaisuarkisto table
+        await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
+            id: julkaisuid
+        });
+        console.log("File removed successfully");
+        return res.status(200).send("File removed successfully");
+    } catch (e) {
+        console.log(e);
+        return res.status(500).send( "Error in removing file" );
+    }
+}
+
 
 module.exports = {
-    uploadJulkaisu: uploadJulkaisu
+    uploadJulkaisu: uploadJulkaisu,
+    deleteJulkaisu: deleteJulkaisu
 };
