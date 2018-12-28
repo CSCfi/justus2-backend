@@ -218,7 +218,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             await db.any("COMMIT");
 
-            res.status(200).json({ "julkaisu_id":  julkaisuId.id, "kayttoloki_id": kayttoLokiId.id });
+            res.status(200).json({ "id":  julkaisuId.id });
 
         } catch (err) {
             await db.any("ROLLBACK");
