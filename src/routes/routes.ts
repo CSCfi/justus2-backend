@@ -40,6 +40,7 @@ router.get("/haku/jufo/:id", ext.getJufo);
 router.get("/haku/jufot", ext.getJufotISSN);
 router.get("/haku/julkaisut", ext.getJulkaisutVIRTACR);
 router.get("/haku/julkaisu", ext.getJulkaisuVirtaCrossrefEsitaytto);
+router.get("/haku/urntunnus", ext.getUrn);
 
 // KoodistoPalvelu queries
 router.get("/organisaatiolistaus", koodistopalvelu.getOrganisaatioListaus);

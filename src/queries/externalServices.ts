@@ -7,6 +7,9 @@ const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
 const utf8 = require("utf8");
 
+const https = require("https");
+const http = require("http");
+
 
 
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
@@ -116,6 +119,27 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
     }
 }
 
+function getUrn(req: Request, res: Response, next: NextFunction) {
+
+    const urnUrl = "http://generator.urn.fi/cgi-bin/urn_generator.cgi?type=nbn";
+
+    http.get(utf8.encode(urnUrl), (resp: any) => {
+        let data = "";
+
+        resp.on("data", (chunk: any) => {
+            data += chunk;
+        });
+        resp.on("end", () => {
+            console.log(data);
+            res.status(200).json({ data });
+        });
+    }).on("error", (err: any) => {
+        console.log("Error: " + err.message);
+        res.sendStatus(500);
+    });
+
+}
+
 module.exports = {
 
     getAvainSanat: getAvainSanat,
@@ -125,6 +149,7 @@ module.exports = {
     getJufo: getJufo,
     getJufotISSN: getJufotISSN,
     getJulkaisutVIRTACR: getJulkaisutVIRTACR,
-    getJulkaisuVirtaCrossrefEsitaytto: getJulkaisuVirtaCrossrefEsitaytto
+    getJulkaisuVirtaCrossrefEsitaytto: getJulkaisuVirtaCrossrefEsitaytto,
+    getUrn: getUrn
 
 };
