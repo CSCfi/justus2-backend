@@ -41,6 +41,10 @@ dist/**/*
 # Ignore output from coverage report
 coverage
 
+# Publication files
+publications/*
+temp/*
+
 *~
 .vagrant/*
 .vscode/*
