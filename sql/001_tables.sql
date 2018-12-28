@@ -219,3 +219,30 @@ WITH (
 );
 ALTER TABLE julkaisujono
 OWNER TO appaccount;
+
+-- Table: julkaisuarkisto
+
+-- DROP TABLE julkaisuarkisto;
+
+CREATE TABLE julkaisuarkisto
+(
+  id bigserial NOT NULL,
+  julkaisuid bigint NOT NULL UNIQUE,
+  itemid integer,
+  bitstreamid integer,
+  policyid character varying,
+  filename character varying,
+  mimetype character varying,
+  handle character varying,
+  urn character varying,
+  embargo timestamp with time zone,
+  CONSTRAINT julkaisuarkisto_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_julkaisujono FOREIGN KEY (julkaisuid)
+      REFERENCES julkaisujono (julkaisuid) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE julkaisuarkisto
+OWNER TO appaccount;
