@@ -68,7 +68,6 @@ async function uploadJulkaisu(req: Request, res: Response) {
                 return res.status(403).send("Invalid file");
             }
 
-
         });
     }
 }
@@ -106,51 +105,32 @@ async function postDataToArchiveTable(file: any, data: any) {
     const table = new connection.pgp.helpers.ColumnSet(tableColumns, {table: "julkaisuarkisto"});
     const query = connection.pgp.helpers.insert(data, table) + "RETURNING id";
 
-    connection.db.one(query);
+    await connection.db.one(query);
 
 }
 
-async function updateQueueTable(file: any, julkaisuid: any) {
+async function postDataToQueueTable(file: any, julkaisuid: any) {
 
-    try {
-        const tableColumns = new connection.pgp.helpers.ColumnSet(["julkaisuid"], {table: "julkaisujono"});
-        const query = connection.pgp.helpers.insert({"julkaisuid": julkaisuid }, tableColumns) + "RETURNING id";
-        await connection.db.one(query);
-    } catch (e) {
-        console.log(e);
-    }
+    const tableColumns = new connection.pgp.helpers.ColumnSet(["julkaisuid"], {table: "julkaisujono"});
+    const query = connection.pgp.helpers.insert({"julkaisuid": julkaisuid }, tableColumns) + "RETURNING id";
+    await connection.db.one(query);
+
 }
 
 async function moveFile (file: any, id: any) {
 
-   let done: boolean = true;
-   const publicationDir = publicationFolder + "/" + id;
+    const publicationDir = publicationFolder + "/" + id;
+    await  fs.mkdirSync(publicationDir);
 
-    try {
-          fs.mkdirSync(publicationDir);
-    } catch (e) {
+    const oldPath = file.path;
+    const newPath = publicationDir + "/" + savedFileName;
 
-        if (e.code === "EEXIST") {
-        //    remove old file
-        }
-        // TODO: catch error if file already exists
-        done = false;
-    }
-        // after creating folder we move publication to that folder
-        const oldPath = file.path;
-        const newPath = publicationDir + "/" + savedFileName;
+    await  fs.renameSync(oldPath, newPath);
 
-        try {
-             fs.rename(oldPath, newPath);
-        } catch (e) {
-            console.log(e);
-            done = false;
-        }
-
-    return done;
 }
 
 async function validate(fileName: any, filePath: any) {
+
     // validate that file has no file extension such as: .php, .js and .sh
     const fileExt = path.extname(fileName).toLowerCase();
     if (fileExt === ".php" || fileExt === ".js" || fileExt === ".sh" || fileExt === ".exe" ) {
@@ -168,9 +148,11 @@ async function validate(fileName: any, filePath: any) {
     const julkaisuid = req.params.id;
     const filePath = publicationFolder + "/" + julkaisuid;
 
-    try {
+     // TODO: check first if publication is already sent to Theseus
+
+     try {
         await fs.unlinkSync(filePath + "/" + savedFileName);
-        await fs.rmdir(filePath);
+        await fs.rmdirSync(filePath);
         // this query removes data also from julkaisuarkisto table
         await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
             id: julkaisuid
