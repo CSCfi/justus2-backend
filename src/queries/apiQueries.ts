@@ -127,15 +127,21 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
     if (hasOrganisation && hasAccessToPublication) {
         const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
+        const arkistoTableFields = "julkaisuarkisto.filename, julkaisuarkisto.embargo, julkaisuarkisto.urn";
 
         let params;
         let query;
+        let fileQuery;
 
         params = {"id": req.params.id};
         query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
             "${id};";
 
+        fileQuery = "SELECT " + arkistoTableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+            "${id};";
+
         const data: any = {};
+        let filedata: any = {};
 
         try {
             data["julkaisu"] = await db.one(query, params);
@@ -146,6 +152,11 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             data["lisatieto"] = await getLisatieto(req.params.id);
             data["organisaatiotekija"] = await getOrganisaatiotekija(req.params.id);
 
+            filedata = await db.oneOrNone(fileQuery, params);
+
+            if (filedata) {
+                data["filedata"] = filedata;
+            }
             res.status(200).json({"data": data});
 
         } catch (err) {
