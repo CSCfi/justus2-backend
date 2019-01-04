@@ -15,40 +15,88 @@ const publicationFolder = "publications";
 const savedFileName = "file.blob";
 
 
+
 async function uploadJulkaisu(req: Request, res: Response) {
-    upload.single("file") (req, res, async function () {
 
-        const julkaisuId = req.body.data.julkaisuid;
-        const julkaisuData = req.body.data;
-        const file = (<any>req).file;
+    // TODO: Check access rights for publication in question
 
-        const valid = await validate(file.originalname, file.path);
+    const contentType = req.headers["content-type"];
 
-        if (!valid) {
-            return res.status(403).send( "Invalid file" );
-        } else {
-            const fileMoved = await moveFile(file, julkaisuId);
-            if (fileMoved) {
-                await updateQueueTable(file, julkaisuId);
-                await updateArchiveTable(file, julkaisuData);
+    // if user sends only json object (no file), update data in julkaisuarkisto table only
+    if (contentType === "application/json") {
+       try {
+           await updateArchiveTable(req.body);
+           return res.status(200).json("OK");
+       } catch (e) {
+           console.log(e);
+           return res.status(500).send("Could not update file data");
+       }
 
-                return res.status(200).json("OK");
+    }
+
+    if (contentType.startsWith("multipart/form-data")) {
+        upload.single("file")(req, res, async function () {
+
+            const julkaisuId = req.body.data.julkaisuid;
+            const julkaisuData = req.body.data;
+            const file = (<any>req).file;
+
+            const valid = await validate(file.originalname, file.path);
+
+            if (valid) {
+                try {
+                    // first move file from temp folder to publications folder
+                    await moveFile(file, julkaisuId);
+                    // then insert id to julkaisujono table
+                    await postDataToQueueTable(file, julkaisuId);
+                    // then insert publication related other data to julkaisuarkisto table
+                    await postDataToArchiveTable(file, julkaisuData);
+
+                    return res.status(200).json("OK");
+
+                } catch (e) {
+                    console.log(e);
+                    if (e.code === "EEXIST") {
+                        console.log(e);
+                        fs.unlinkSync(file.path);
+                        return res.status(500).send("This publication has already a file");
+                    } else {
+                        return res.status(500).send("Failure in file upload");
+                    }
+                }
             } else {
-                // if file transfer leads to error, delete file from temp folder
-                fs.unlinkSync(file.path);
-                return res.status(500).send( "Failure in file transfer" );
+                return res.status(403).send("Invalid file");
             }
-        }
 
-    });
+
+        });
+    }
+}
+
+async function updateArchiveTable(data: any) {
+
+    const obj: any = {};
+
+    if (!data.embargo || data.embargo === "" ) {
+        obj["embargo"] = undefined;
+    } else {
+        obj["embargo"] = data.embargo;
+    }
+
+    obj["urn"] = data.urn;
+
+    const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn"], {table: "julkaisuarkisto"});
+    const query = connection.pgp.helpers.update(obj, table) + "WHERE julkaisuid = " +  parseInt(data.julkaisuid);
+    await connection.db.none(query);
 
 }
 
-async function updateArchiveTable(file: any, data: any) {
+
+async function postDataToArchiveTable(file: any, data: any) {
 
     const tableColumns = dbHelpers.julkaisuarkisto;
 
-    if (data.embargo === "" ) {
+    if (!data.embargo || data.embargo === "" ) {
         data["embargo"] = undefined;
     }
 
