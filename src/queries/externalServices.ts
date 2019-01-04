@@ -125,7 +125,6 @@ function getUrn(req: Request, res: Response, next: NextFunction) {
             console.log(error);
             res.sendStatus(500);
         }
-        console.log(data);
         res.status(200).json({ data });
     });
 
