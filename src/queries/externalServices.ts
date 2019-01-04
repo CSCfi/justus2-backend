@@ -3,14 +3,13 @@ import { Request, Response, NextFunction } from "express";
 const BASEURLFINTO = "https://api.finto.fi/rest/v1/yso/search?type=skos%3AConcept&unique=true&lang=";
 const BASEURLJUFO =   "https://jufo-rest.csc.fi/v1.0/etsi.php?tyyppi=";
 
+const URN_URL = process.env.URN_URL;
+
+const request = require("request");
+
 const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
 const utf8 = require("utf8");
-
-const https = require("https");
-const http = require("http");
-
-
 
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
     if (req.query.lang.toLowerCase() === "fi" || req.query.lang.toLowerCase() === "sv") {
@@ -121,21 +120,13 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
 
 function getUrn(req: Request, res: Response, next: NextFunction) {
 
-    const urnUrl = "http://generator.urn.fi/cgi-bin/urn_generator.cgi?type=nbn";
-
-    http.get(utf8.encode(urnUrl), (resp: any) => {
-        let data = "";
-
-        resp.on("data", (chunk: any) => {
-            data += chunk;
-        });
-        resp.on("end", () => {
-            console.log(data);
-            res.status(200).json({ data });
-        });
-    }).on("error", (err: any) => {
-        console.log("Error: " + err.message);
-        res.sendStatus(500);
+    request(utf8.encode(URN_URL), { json: true }, (error: any, response: any, data: any) => {
+        if (error) {
+            console.log(error);
+            res.sendStatus(500);
+        }
+        console.log(data);
+        res.status(200).json({ data });
     });
 
 }
