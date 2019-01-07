@@ -209,10 +209,7 @@ CREATE TABLE julkaisujono
 (
   id bigserial NOT NULL,
   julkaisuid bigint NOT NULL UNIQUE,
-  CONSTRAINT julkaisujono_pkey PRIMARY KEY (id),
-  CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)
-      REFERENCES julkaisu (id) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT julkaisujono_pkey PRIMARY KEY (id)
 )
 WITH (
   OIDS=FALSE
@@ -238,8 +235,7 @@ CREATE TABLE julkaisuarkisto
   embargo timestamp with time zone,
   CONSTRAINT julkaisuarkisto_pkey PRIMARY KEY (id),
   CONSTRAINT fk_julkaisujono FOREIGN KEY (julkaisuid)
-      REFERENCES julkaisujono (julkaisuid) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE
+      REFERENCES julkaisu (id) MATCH SIMPLE
 )
 WITH (
   OIDS=FALSE
