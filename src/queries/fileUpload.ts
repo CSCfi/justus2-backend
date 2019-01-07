@@ -15,7 +15,6 @@ const publicationFolder = "publications";
 const savedFileName = "file.blob";
 
 
-
 async function uploadJulkaisu(req: Request, res: Response) {
 
     // TODO: Check access rights for publication in question
@@ -148,25 +147,74 @@ async function validate(fileName: any, filePath: any) {
     const julkaisuid = req.params.id;
     const filePath = publicationFolder + "/" + julkaisuid;
 
-     // TODO: check first if publication is already sent to Theseus
+     // first delete data from julkaisuarkisto
+     await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
+         id: julkaisuid
+     });
 
-     try {
-        await fs.unlinkSync(filePath + "/" + savedFileName);
-        await fs.rmdirSync(filePath);
-        // this query removes data also from julkaisuarkisto table
-        await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
-            id: julkaisuid
-        });
-        console.log("File removed successfully");
-        return res.status(200).send("File removed successfully");
-    } catch (e) {
-        console.log(e);
-        return res.status(500).send( "Error in removing file" );
+     const isPublicatioFileInTheseus = await isPublicationInTheseus(req.params.id);
+
+     if (isPublicatioFileInTheseus) {
+      // TODO: delete publication from Theseus
+         return res.status(200).send("File removed successfully");
+     } else {
+         // file is not yet transferred to Theseus so remove file from server and id from julkaisujono table
+         try {
+             await fs.unlinkSync(filePath + "/" + savedFileName);
+             await fs.rmdirSync(filePath);
+
+             await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
+                 id: julkaisuid
+             });
+
+             return res.status(200).send("File removed successfully");
+         } catch (e) {
+             console.log(e);
+             return res.status(500).send( "Error in removing file" );
+         }
+     }
+
+
+}
+
+async function fileHasBeenUploadedToJustus(id: any) {
+
+    console.log(id);
+    const params = {"id": id};
+    const query = "SELECT 1 FROM julkaisuarkisto WHERE julkaisuid = " +
+        "${id};";
+
+    const data = await connection.db.oneOrNone(query, params);
+    console.log(data);
+
+    return data;
+}
+
+
+async function isPublicationInTheseus(id: any) {
+
+    const params = {"id": id};
+    const query = "SELECT 1 FROM julkaisujono WHERE julkaisuid = " +
+        "${id};";
+
+    const data = await connection.db.oneOrNone(query, params);
+
+    console.log(data);
+    if (data) {
+        return false;
+    } else {
+        return true;
     }
 }
 
 
+
+
+
+
 module.exports = {
     uploadJulkaisu: uploadJulkaisu,
-    deleteJulkaisu: deleteJulkaisu
+    deleteJulkaisu: deleteJulkaisu,
+    fileHasBeenUploadedToJustus: fileHasBeenUploadedToJustus,
+    isPublicationInTheseus: isPublicationInTheseus
 };
