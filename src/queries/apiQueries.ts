@@ -12,6 +12,8 @@ const dbHelpers = require("./../databaseHelpers");
 
 const authService = require("./../services/authService");
 const auditLog = require("./../services/auditLogService");
+const fileUpload = require("./../queries/fileUpload");
+
 
 let USER_DATA: any = {};
 
@@ -325,6 +327,17 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
                 await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
             }
             await insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
+
+            // TODO: check if publication is entered to justus service
+            const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
+            const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
+
+            // if publication file is originally uploaded to Justus service,
+            // and file is already transferred to Theseus
+            // we have to update data to Theseus also
+            if (isPublication && isPublicationInTheseus) {
+                // TODO: update data to Theseus
+            }
 
             await db.any("COMMIT");
             return res.sendStatus(200);
