@@ -139,11 +139,11 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
         query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
             "${id};";
 
-        fileQuery = "SELECT " + arkistoTableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
-            "${id};";
+        // fileQuery = "SELECT " + arkistoTableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+        //     "${id};";
 
         const data: any = {};
-        let filedata: any = {};
+        // let filedata: any = {};
 
         try {
             data["julkaisu"] = await db.one(query, params);
@@ -154,11 +154,11 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             data["lisatieto"] = await getLisatieto(req.params.id);
             data["organisaatiotekija"] = await getOrganisaatiotekija(req.params.id);
 
-            filedata = await db.oneOrNone(fileQuery, params);
+            // filedata = await db.oneOrNone(fileQuery, params);
 
-            if (filedata) {
-                data["filedata"] = filedata;
-            }
+            // if (filedata) {
+            //     data["filedata"] = filedata;
+            // }
             res.status(200).json({"data": data});
 
         } catch (err) {
@@ -329,15 +329,15 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             await insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
 
             // TODO: check if publication is entered to justus service
-            const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
-            const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
+            // const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
+            // const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
 
             // if publication file is originally uploaded to Justus service,
             // and file is already transferred to Theseus
             // we have to update data to Theseus also
-            if (isPublication && isPublicationInTheseus) {
-                // TODO: update data to Theseus
-            }
+            // if (isPublication && isPublicationInTheseus) {
+            //     // TODO: update data to Theseus
+            // }
 
             await db.any("COMMIT");
             return res.sendStatus(200);
