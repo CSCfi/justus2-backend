@@ -22,7 +22,6 @@ let getUserData = function(headers: any) {
 
         const role = getRole(headers["shib-group"]);
 
-
         Object.keys(domainMapping).forEach(function (val, key) {
             if (domainMapping[key].domain === domain) {
                 userData.domain = domain;
@@ -59,13 +58,8 @@ let getOrganisationId = function(params: any) {
 
 let parseDomainFromHeadersData = function(data: any) {
 
-    // for developing purposes, in production this data comes from headers, then use parameter data instead of this
-    // const testHeaderData = "@digia.com;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
-    // const testHeaderData = "@luke.fi;jira-users;https://tt.eduuni.fi/groups/justus#centria-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
-
-    const domain = data.match(/(;|^)(@[^;]+)[$;]/);
+    const domain = data.match(/(;|^)(@[^;]+)($|;)/);
     if (domain !== null) {
-        // console.log(domain[2]);
         return domain[2];
     } else {
         return false;
@@ -75,14 +69,11 @@ let parseDomainFromHeadersData = function(data: any) {
 let getRole = function(data: any) {
 
     console.log(data);
-    // for developing purposes, in production this data comes from headers, then use parameter data instead of this
-    // const testHeaderData = "@digia.com;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
-    // const testHeaderData = "@luke.fi;jira-users;https://tt.eduuni.fi/groups/justus#centria-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
 
-    if (data.match(/\/justus#group-admins[$;]/) !== null) {
+    if (data.match(/\/justus#group-admins($|;)/) !== null) {
         return "owner";
     }
-    else if (data.match(/\/justus#([^;]*)-admins[$;]/) !== null) {
+    else if (data.match(/\/justus#([^;]*)-admins($|;)/) !== null) {
         return "admin";
     }
     else {
