@@ -23,18 +23,25 @@ let getUserData = function(headers: any) {
 
         const role = getRole(headers["shib-group"]);
 
+        let domainMapped = false;
+
         Object.keys(domainMapping).forEach(function (val, key) {
             if (domainMapping[key].domain === domain) {
                 userData.domain = domain;
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
                 userData.rooli = role;
+                domainMapped = true;
             } else {
                 return false;
             }
         });
 
-    return userData;
+        if (!domainMapped) {
+            return false;
+        } else {
+            return userData;
+        }
 };
 
 
