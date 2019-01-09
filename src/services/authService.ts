@@ -2,6 +2,7 @@ const organisationConfig = require("./../organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
 const conn = require("./../db");
+const utf8 = require("utf8");
 
 let getUserData = function(headers: any) {
 
@@ -11,7 +12,7 @@ let getUserData = function(headers: any) {
             return false;
         }
 
-        const name = headers["shib-sn"] + " " + headers["shib-givenname"] ;
+        const name = utf8.decode(headers["shib-sn"]) + " " + utf8.decode(headers["shib-givenname"]);
         const userData = {
             "domain": "",
             "organisaatio": "",
