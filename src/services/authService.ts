@@ -74,6 +74,7 @@ let parseDomainFromHeadersData = function(data: any) {
 
 let getRole = function(data: any) {
 
+    console.log(data);
     // for developing purposes, in production this data comes from headers, then use parameter data instead of this
     // const testHeaderData = "@digia.com;jira-users;https://tt.eduuni.fi/groups/justus#group-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
     // const testHeaderData = "@luke.fi;jira-users;https://tt.eduuni.fi/groups/justus#centria-admins;https://tt.eduuni.fi/groups/csc#cscoppimateriaalivaranto-members;https://tt.eduuni.fi/groups/csc#cscjustus-members";
