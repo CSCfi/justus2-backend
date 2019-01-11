@@ -150,11 +150,31 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
 }
 
 function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: NextFunction) {
-    const apiurlCR = "https://api.crossref.org/works/" + req.query.id;
-    const apiurlVirta = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
-    console.log("This is the req query lahde: " + req.query.lahde + " And this is the req query id: " + req.query.id);
-    if (req.query.lahde === "virta") {
-        kp.HTTPGETshow(utf8.encode(apiurlVirta), res , oh.ObjectHandlerVirtaEsitaytto);
+
+    let url = "";
+
+    console.log(req.query.lahde);
+    console.log(req.query.id);
+
+    if (req.query.lahde.toLowerCase() === "crossref") {
+        url = crossRefUrl + "/http://dx.doi.org" + req.query.id;
+        console.log(url);
+    }
+    if (req.query.lahde.toLowerCase() === "virta") {
+        url = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
+    }
+
+    request(utf8.encode(url), { json: true }, (error: any, response: any, data: any) => {
+        if (error) {
+            console.log(error);
+            res.sendStatus(500);
+        }
+
+        const ret = parseCrossRefData(data["message"]);
+        res.status(200).json( ret );
+    });
+}
+
 function parseCrAndVirtaData(data: any) {
 
     const ret: any = [];
@@ -213,13 +233,45 @@ function parseCrAndVirtaData(data: any) {
 
     return ret;
 }
+
+function parseCrossRefData(data: any) {
+
+    const obj: any = {};
+
+    obj["doitunniste"] = data.DOI;
+    if (data.title.constructor === Array && data.title.length > 0) {
+        obj["julkaisunnimi"] = data.title[0];
+    }  else {
+        obj["julkaisunnimi"] = data.title;
     }
-    else if (req.query.lahde === "crossref") {
-        kp.HTTPGETshow(utf8.encode(apiurlCR), res, oh.ObjectHandlerCrossrefEsitaytto);
+    if (data.ISSN) {
+        if (data.ISSN.constructor === Array && data.ISSN.length > 0) {
+            obj["issn"] = data.ISSN[0];
+        }  else {
+            obj["issn"] = data.ISSN;
+        }
     }
-    else {
-        res.send("Wrong lahde parameter, try again");
+    obj["volyymi"] = data.volume || "";
+    obj["numero"] = data.issue || "";
+    obj["sivut"] = data.page || "";
+    obj["artikkelinumero"] = data["article-number"] || "";
+
+    let tekijat = "";
+    Object.keys(data.author).forEach(function (key) {
+        if (tekijat.length > 0) tekijat += "; ";
+        tekijat += data.author[key].family + ", " + data.author[key].given;
+    });
+    obj["tekijat"] = tekijat;
+
+    let vuosi;
+    if (data.issued) {
+        if (data.issued["date-parts"]) {
+            vuosi = "" + data.issued["date-parts"];
+            obj["julkaisuvuosi"] = vuosi.split(",")[0];
+        }
     }
+
+    return obj;
 }
 
 function getUrn(req: Request, res: Response, next: NextFunction) {
