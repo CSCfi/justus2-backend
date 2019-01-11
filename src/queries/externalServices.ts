@@ -4,8 +4,11 @@ const BASEURLFINTO = "https://api.finto.fi/rest/v1/yso/search?type=skos%3AConcep
 const BASEURLJUFO =   "https://jufo-rest.csc.fi/v1.0/etsi.php?tyyppi=";
 
 const URN_URL = process.env.URN_URL;
+const crossRefUrl = process.env.CROSSREF_URL;
+const virtaUrl = process.env.VIRTA_URL;
 
 const request = require("request");
+const requestPromise = require("request-promise");
 
 const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
@@ -93,22 +96,123 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
         res.send("");
     }
 }
-function getJulkaisutVIRTACR(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = "https://api.crossref.org/works?sort=published&order=desc&rows=50&query.title=" + req.query.q;
-    console.log("This is the apiurl: " + apiurl);
+ function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextFunction) {
 
-    // The jufo rest api is kinda weird, if the query word is <5 or over 50
-    // it returns nothing, which breaks the code, hence the odd looking error handling
-    kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisutVIRTACR);
+    const julkaisu = req.query.julkaisu;
+    const tekija = req.query.tekija; // VIRTA: tunnus tekijat, CROSSREF: tunnus author
+
+    if (req.query.julkaisu.length < 5) {
+        return;
+    }
+
+    const apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
+    const apiUrlVirta: string = virtaUrl + "?julkaisunNimi=" + encodeURIComponent(julkaisu);
+
+    const virtaPromise = requestPromise({
+       uri: apiUrlVirta,
+       timeout: 20000,
+        json: true
+    });
+
+    const crossRefPromise = requestPromise({
+        uri: apiUrlCrossRef,
+        json: true
+    });
+
+    const promises = [crossRefPromise, virtaPromise];
+
+    const reflect = (p: any) => p.then((v: any) => ({v, status: "resolved" }),
+        (e: any) => ({ e, status: "rejected" }));
+
+    Promise.all(promises.map(reflect)).then(function (results) {
+        const success = results.filter(x => x.status === "resolved");
+
+        const obj = {
+            "cr": "",
+            "virta": ""
+        };
+
+        if (results[0].status === "resolved") {
+            obj.cr = (results[0].v["message"].items);
+        }
+
+        if (results[1].status === "resolved") {
+            obj.virta = results[1].v;
+        }
+
+        const ret = parseCrAndVirtaData(obj);
+        res.status(200).json( ret );
+
+    }).catch(function (err) {
+        console.log(err);
+    });
+
 }
 
-// Esitäyttö, figure out how the res object should look.
 function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: NextFunction) {
     const apiurlCR = "https://api.crossref.org/works/" + req.query.id;
     const apiurlVirta = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
     console.log("This is the req query lahde: " + req.query.lahde + " And this is the req query id: " + req.query.id);
     if (req.query.lahde === "virta") {
         kp.HTTPGETshow(utf8.encode(apiurlVirta), res , oh.ObjectHandlerVirtaEsitaytto);
+function parseCrAndVirtaData(data: any) {
+
+    const ret: any = [];
+
+    Object.keys(data.cr).forEach(function (value, key) {
+        const crObj = {
+            "source": "",
+            "title": "",
+            "author": "",
+            "doi": "",
+            "identifier": ""
+            // "issn": ""
+        };
+        crObj.source = "CrossRef";
+        crObj.title = data.cr[key].title[data.cr[key].title.length - 1];
+        crObj.doi = data.cr[key].DOI;
+        crObj.identifier = data.cr[key].DOI;
+
+        // if (data.cr[key].ISSN) {
+        //     crObj.issn = data.cr[key].ISSN[0];
+        // }
+
+        if (data.cr[key].author) {
+            Object.keys(data.cr[key].author).forEach(function (aval, akey) {
+                if (crObj.author.length > 0) {
+                    crObj.author += "; ";
+                }
+                crObj.author += data.cr[key].author[akey].family + ", " + data.cr[key].author[akey].given;
+            });
+        }
+        ret.push(crObj);
+
+    });
+
+    Object.keys(data.virta).forEach(function (value, key) {
+        const virtaObj = {
+            "source": "",
+            "title": "",
+            "author": "",
+            "doi": "",
+            "identifier": ""
+            // "issn": "" // issn
+
+        };
+
+        virtaObj.source = "VIRTA";
+        if (data.virta[key].julkaisunNimi) { virtaObj.title = data.virta[key].julkaisunNimi; }
+        if (data.virta[key].tekijat) { virtaObj.author = data.virta[key].tekijat; }
+        if (data.virta[key].doi) { virtaObj.doi = data.virta[key].doi; }
+        // if (data.virta[key].issn) { virtaObj.issn = data.virta[key].issn; }
+        if (data.virta[key].julkaisunTunnus) { virtaObj.identifier = data.virta[key].julkaisunTunnus; }
+
+        ret.push(virtaObj);
+
+    });
+
+    return ret;
+}
     }
     else if (req.query.lahde === "crossref") {
         kp.HTTPGETshow(utf8.encode(apiurlCR), res, oh.ObjectHandlerCrossrefEsitaytto);
@@ -138,7 +242,7 @@ module.exports = {
     getKustantajat: getKustantajat,
     getJufo: getJufo,
     getJufotISSN: getJufotISSN,
-    getJulkaisutVIRTACR: getJulkaisutVIRTACR,
+    getJulkaisutVirtaCrossrefLista: getJulkaisutVirtaCrossrefLista,
     getJulkaisuVirtaCrossrefEsitaytto: getJulkaisuVirtaCrossrefEsitaytto,
     getUrn: getUrn
 

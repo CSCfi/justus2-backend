@@ -38,7 +38,7 @@ router.get("/haku/konferenssinnimet", ext.getKonferenssinimet);
 router.get("/haku/kustantajat", ext.getKustantajat);
 router.get("/haku/jufo/:id", ext.getJufo);
 router.get("/haku/jufot", ext.getJufotISSN);
-router.get("/haku/julkaisut", ext.getJulkaisutVIRTACR);
+router.get("/haku/julkaisut", ext.getJulkaisutVirtaCrossrefLista);
 router.get("/haku/julkaisu", ext.getJulkaisuVirtaCrossrefEsitaytto);
 router.get("/haku/urntunnus", ext.getUrn);
 
