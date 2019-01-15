@@ -125,7 +125,6 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
         (e: any) => ({ e, status: "rejected" }));
 
     Promise.all(promises.map(reflect)).then(function (results) {
-        const success = results.filter(x => x.status === "resolved");
 
         const obj = {
             "cr": "",
@@ -152,6 +151,7 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
 function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: NextFunction) {
 
     let url = "";
+    let ret = {};
 
     console.log(req.query.lahde);
     console.log(req.query.id);
@@ -169,8 +169,14 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
             console.log(error);
             res.sendStatus(500);
         }
+        if (req.query.lahde.toLowerCase() === "crossref") {
+            ret = parseCrossRefData(data["message"]);
+        }
+        if (req.query.lahde.toLowerCase() === "virta") {
+            console.log("on virta");
+            ret = parseVirtaData(data);
+        }
 
-        const ret = parseCrossRefData(data["message"]);
         res.status(200).json( ret );
     });
 }
@@ -269,6 +275,74 @@ function parseCrossRefData(data: any) {
             vuosi = "" + data.issued["date-parts"];
             obj["julkaisuvuosi"] = vuosi.split(",")[0];
         }
+    }
+
+    return obj;
+}
+
+function parseVirtaData(data: any) {
+
+    const obj: any = {"julkaisu": {}, "avainsanat": [], "tieteenala": []};
+
+    // TODO: Consider that it is possible to get two issn and isbn values
+    obj["julkaisu"]["julkaisutyyppi"] = data["JulkaisutyyppiKoodi"];
+    obj["julkaisu"]["julkaisuvuosi"] = data["JulkaisuVuosi"];
+    obj["julkaisu"]["julkaisunnimi"] = data["JulkaisunNimi"];
+    obj["julkaisu"]["tekijat"] = data["TekijatiedotTeksti"];
+    obj["julkaisu"]["julkaisuntekijoidenlukumaara"] = data["TekijoidenLkm"];
+    obj["julkaisu"]["konferenssinvakiintunutnimi"] = data["KonferenssinNimi"];
+    obj["julkaisu"]["emojulkaisunnimi"] = data["EmojulkaisunNimi"];
+    obj["julkaisu"]["isbn"] = data["ISBN"];
+    obj["julkaisu"]["lehdenjulkaisusarjannimi"] = data["LehdenNimi"];
+    obj["julkaisu"]["issn"] = data["ISSN"];
+    obj["julkaisu"]["volyymi"] = data["VolyymiTeksti"];
+    obj["julkaisu"]["numero"] = data["LehdenNumeroTeksti"];
+    obj["julkaisu"]["sivut"] = data["SivunumeroTeksti"];
+    obj["julkaisu"]["artikkelinumero"] = data["Artikkelinumero"];
+    obj["julkaisu"]["kustantaja"] = data["KustantajanNimi"];
+    obj["julkaisu"]["julkaisunkustannuspaikka"] = data["KustannuspaikkaTeksti"];
+    obj["julkaisu"]["julkaisunkieli"] = data["JulkaisunKieliKoodi"];
+    obj["julkaisu"]["julkaisunkansainvalisyys"] = data["JulkaisunKansainvalisyysKytkin"];
+    obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"];
+    obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"];
+    obj["julkaisu"]["kansainvalinenyhteisjulkaisu"] = data["YhteisjulkaisuKVKytkin"];
+    obj["julkaisu"]["yhteisjulkaisuyrityksenkanssa"] = data["YhteisjulkaisuYritysKytkin"];
+    obj["julkaisu"]["doitunniste"] = data["DOI"];
+    obj["julkaisu"]["pysyvaverkkoosoite"] = data["PysyvaOsoiteTeksti"];
+    obj["julkaisu"]["avoinsaatavuus"] = data["AvoinSaatavuusKoodi"];
+    obj["julkaisu"]["julkaisurinnakkaistallennettu"] = data["RinnakkaistallennettuKytkin"];
+    obj["julkaisu"]["jufotunnus"] = data["JufoTunnus"];
+    obj["julkaisu"]["jufoluokitus"] = data["JufoLuokkaKoodi"];
+    obj["julkaisu"]["julkaisuntila"] = data["JulkaisunTilaKoodi"];
+
+    if (data["Rinnakkaistallennettu"]) {
+        if (data["Rinnakkaistallennettu"]["RinnakkaistallennusOsoiteTeksti"].length > 1) {
+            obj["julkaisu"]["rinnakkaistallennetunversionverkkoosoite"] = data["Rinnakkaistallennettu"]["RinnakkaistallennusOsoiteTeksti"][0];
+        } else {
+            obj["julkaisu"]["rinnakkaistallennetunversionverkkoosoite"] = data["Rinnakkaistallennettu"]["RinnakkaistallennusOsoiteTeksti"];
+        }
+    }
+
+    if (data["Avainsanat"]) {
+        obj["avainsanat"] = data["Avainsanat"]["AvainsanaTeksti"];
+    } else {
+        delete obj["avainsanat"];
+    }
+
+    if (data["TieteenalaKoodit"]) {
+        if (data["TieteenalaKoodit"]["TieteenalaKoodi"].length > 1) {
+            for (let i = 0; i < data["TieteenalaKoodit"]["TieteenalaKoodi"].length; i++) {
+                obj["tieteenala"].push( {"jnro": "", "tieteenalakoodi": "" });
+                obj["tieteenala"][i].jnro = data["TieteenalaKoodit"]["TieteenalaKoodi"][i]["JNro"];
+                obj["tieteenala"][i].tieteenalakoodi = data["TieteenalaKoodit"]["TieteenalaKoodi"][i]["content"];
+            }
+        } else {
+            obj["tieteenala"].push( {"jnro": "", "tieteenalakoodi": "" });
+            obj["tieteenala"][0]["jnro"] = data["TieteenalaKoodit"]["TieteenalaKoodi"]["JNro"];
+            obj["tieteenala"][0]["tieteenalakoodi"] = data["TieteenalaKoodit"]["TieteenalaKoodi"]["content"];
+        }
+    } else {
+        delete obj["tieteenala"];
     }
 
     return obj;
