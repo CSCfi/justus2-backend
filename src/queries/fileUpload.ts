@@ -185,7 +185,6 @@ async function fileHasBeenUploadedToJustus(id: any) {
         "${id};";
 
     const data = await connection.db.oneOrNone(query, params);
-    console.log(data);
 
     return data;
 }
@@ -199,7 +198,6 @@ async function isPublicationInTheseus(id: any) {
 
     const data = await connection.db.oneOrNone(query, params);
 
-    console.log(data);
     if (data) {
         return false;
     } else {

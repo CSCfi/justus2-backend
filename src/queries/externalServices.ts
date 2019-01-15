@@ -161,7 +161,6 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
 
     if (req.query.lahde.toLowerCase() === "crossref") {
         url = crossRefUrl + "/http://dx.doi.org" + req.query.id;
-        console.log(url);
     }
     if (req.query.lahde.toLowerCase() === "virta") {
         url = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
@@ -176,7 +175,6 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
             ret = parseCrossRefData(data["message"]);
         }
         if (req.query.lahde.toLowerCase() === "virta") {
-            console.log("on virta");
             ret = parseVirtaData(data);
         }
 
