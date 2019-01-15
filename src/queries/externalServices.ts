@@ -99,16 +99,19 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
  function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextFunction) {
 
     const julkaisu = req.query.julkaisu;
-
-    // TODO: Limit search results with author
     const tekija = req.query.tekija;
 
     if (req.query.julkaisu.length < 5) {
         return;
     }
 
-    const apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
-    const apiUrlVirta: string = virtaUrl + "?julkaisunNimi=" + encodeURIComponent(julkaisu);
+     let apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
+     let apiUrlVirta: string = virtaUrl + "?julkaisunNimi=" + encodeURIComponent(julkaisu);
+
+     if (tekija && tekija !== "undefined" && tekija !== "") {
+         apiUrlCrossRef = apiUrlCrossRef + "&query.author=" + encodeURIComponent(tekija);
+         apiUrlVirta = apiUrlVirta + "&henkiloHaku=" + encodeURIComponent(tekija);
+     }
 
     const virtaPromise = requestPromise({
         uri: apiUrlVirta,
