@@ -99,7 +99,9 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
  function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextFunction) {
 
     const julkaisu = req.query.julkaisu;
-    const tekija = req.query.tekija; // VIRTA: tunnus tekijat, CROSSREF: tunnus author
+
+    // TODO: Limit search results with author
+    const tekija = req.query.tekija;
 
     if (req.query.julkaisu.length < 5) {
         return;
@@ -109,13 +111,14 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
     const apiUrlVirta: string = virtaUrl + "?julkaisunNimi=" + encodeURIComponent(julkaisu);
 
     const virtaPromise = requestPromise({
-       uri: apiUrlVirta,
-       timeout: 20000,
+        uri: apiUrlVirta,
+        timeout: 8000,
         json: true
     });
 
     const crossRefPromise = requestPromise({
         uri: apiUrlCrossRef,
+        timeout: 8000,
         json: true
     });
 
