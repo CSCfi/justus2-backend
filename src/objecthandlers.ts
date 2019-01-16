@@ -345,8 +345,6 @@ function ObjectHandlerAvainsanat(obj: any): object[] {
 function ObjectHandlerJulkaisusarjat(obj: any): object[] {
     const julkaisusarjat: object [] = [
     ];
-    console.log("typeof obj: " + typeof obj);
-    console.log("stringified julkaisunsarjat" + JSON.stringify(obj));
     if (obj instanceof Array) {
     obj.forEach((e: any)  => {
         const values = {
@@ -356,7 +354,7 @@ function ObjectHandlerJulkaisusarjat(obj: any): object[] {
         };
         julkaisusarjat.push(values);
     });
-    return julkaisusarjat;
+        return julkaisusarjat.slice(0, 20);
     }
     else {
         return obj;
