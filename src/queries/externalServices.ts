@@ -225,7 +225,8 @@ function parseCrAndVirtaData(data: any) {
             "title": "",
             "author": "",
             "doi": "",
-            "identifier": ""
+            "identifier": "",
+            "organisation": ""
             // "issn": "" // issn
 
         };
@@ -236,6 +237,7 @@ function parseCrAndVirtaData(data: any) {
         if (data.virta[key].doi) { virtaObj.doi = data.virta[key].doi; }
         // if (data.virta[key].issn) { virtaObj.issn = data.virta[key].issn; }
         if (data.virta[key].julkaisunTunnus) { virtaObj.identifier = data.virta[key].julkaisunTunnus; }
+        if (data.virta[key].organisaatioTunnus) { virtaObj.organisation = data.virta[key].organisaatioTunnus; }
 
         ret.push(virtaObj);
 
