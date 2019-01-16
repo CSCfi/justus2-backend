@@ -290,34 +290,34 @@ function parseVirtaData(data: any) {
 
     // TODO: Consider that it is possible to get two issn and isbn values
     obj["julkaisu"]["julkaisutyyppi"] = data["JulkaisutyyppiKoodi"];
-    obj["julkaisu"]["julkaisuvuosi"] = data["JulkaisuVuosi"];
-    obj["julkaisu"]["julkaisunnimi"] = data["JulkaisunNimi"];
-    obj["julkaisu"]["tekijat"] = data["TekijatiedotTeksti"];
-    obj["julkaisu"]["julkaisuntekijoidenlukumaara"] = data["TekijoidenLkm"];
-    obj["julkaisu"]["konferenssinvakiintunutnimi"] = data["KonferenssinNimi"];
-    obj["julkaisu"]["emojulkaisunnimi"] = data["EmojulkaisunNimi"];
-    obj["julkaisu"]["isbn"] = data["ISBN"];
-    obj["julkaisu"]["lehdenjulkaisusarjannimi"] = data["LehdenNimi"];
-    obj["julkaisu"]["issn"] = data["ISSN"];
-    obj["julkaisu"]["volyymi"] = data["VolyymiTeksti"];
-    obj["julkaisu"]["numero"] = data["LehdenNumeroTeksti"];
-    obj["julkaisu"]["sivut"] = data["SivunumeroTeksti"];
-    obj["julkaisu"]["artikkelinumero"] = data["Artikkelinumero"];
-    obj["julkaisu"]["kustantaja"] = data["KustantajanNimi"];
-    obj["julkaisu"]["julkaisunkustannuspaikka"] = data["KustannuspaikkaTeksti"];
-    obj["julkaisu"]["julkaisunkieli"] = data["JulkaisunKieliKoodi"];
-    obj["julkaisu"]["julkaisunkansainvalisyys"] = data["JulkaisunKansainvalisyysKytkin"];
-    obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"];
-    obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"];
-    obj["julkaisu"]["kansainvalinenyhteisjulkaisu"] = data["YhteisjulkaisuKVKytkin"];
-    obj["julkaisu"]["yhteisjulkaisuyrityksenkanssa"] = data["YhteisjulkaisuYritysKytkin"];
-    obj["julkaisu"]["doitunniste"] = data["DOI"];
-    obj["julkaisu"]["pysyvaverkkoosoite"] = data["PysyvaOsoiteTeksti"];
-    obj["julkaisu"]["avoinsaatavuus"] = data["AvoinSaatavuusKoodi"];
-    obj["julkaisu"]["julkaisurinnakkaistallennettu"] = data["RinnakkaistallennettuKytkin"];
-    obj["julkaisu"]["jufotunnus"] = data["JufoTunnus"];
-    obj["julkaisu"]["jufoluokitus"] = data["JufoLuokkaKoodi"];
-    obj["julkaisu"]["julkaisuntila"] = data["JulkaisunTilaKoodi"];
+    if (data["JulkaisuVuosi"])obj["julkaisu"]["julkaisuvuosi"] = data["JulkaisuVuosi"];
+    if (data["JulkaisunNimi"])obj["julkaisu"]["julkaisunnimi"] = data["JulkaisunNimi"];
+    if (data["TekijatiedotTeksti"])obj["julkaisu"]["tekijat"] = data["TekijatiedotTeksti"];
+    if (data["TekijoidenLkm"])obj["julkaisu"]["julkaisuntekijoidenlukumaara"] = data["TekijoidenLkm"];
+    if (data["KonferenssinNimi"])obj["julkaisu"]["konferenssinvakiintunutnimi"] = data["KonferenssinNimi"];
+    if (data["EmojulkaisunNimi"])obj["julkaisu"]["emojulkaisunnimi"] = data["EmojulkaisunNimi"];
+    if (data["ISBN"])obj["julkaisu"]["isbn"] = data["ISBN"];
+    if (data["LehdenNimi"])obj["julkaisu"]["lehdenjulkaisusarjannimi"] = data["LehdenNimi"];
+    if (data["ISSN"])obj["julkaisu"]["issn"] = data["ISSN"];
+    if (data["VolyymiTeksti"])obj["julkaisu"]["volyymi"] = data["VolyymiTeksti"];
+    if (data["LehdenNumeroTeksti"])obj["julkaisu"]["numero"] = data["LehdenNumeroTeksti"];
+    if (data["SivunumeroTeksti"])obj["julkaisu"]["sivut"] = data["SivunumeroTeksti"];
+    if (enableZeroValue(data["Artikkelinumero"])) obj["julkaisu"]["artikkelinumero"] = data["Artikkelinumero"].toString();
+    if (data["KustantajanNimi"])obj["julkaisu"]["kustantaja"] = data["KustantajanNimi"];
+    if (data["KustannuspaikkaTeksti"])obj["julkaisu"]["julkaisunkustannuspaikka"] = data["KustannuspaikkaTeksti"];
+    if (data["JulkaisunKieliKoodi"])obj["julkaisu"]["julkaisunkieli"] = data["JulkaisunKieliKoodi"];
+    if (enableZeroValue(data["JulkaisunKansainvalisyysKytkin"])) obj["julkaisu"]["julkaisunkansainvalisyys"] = data["JulkaisunKansainvalisyysKytkin"].toString();
+    if (data["JulkaisumaaKoodi"])obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"];
+    if (data["JulkaisumaaKoodi"])obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"].toString();
+    if (enableZeroValue(data["YhteisjulkaisuKVKytkin"])) obj["julkaisu"]["kansainvalinenyhteisjulkaisu"] = data["YhteisjulkaisuKVKytkin"].toString();
+    if (enableZeroValue(data["YhteisjulkaisuYritysKytkin"])) obj["julkaisu"]["yhteisjulkaisuyrityksenkanssa"] = data["YhteisjulkaisuYritysKytkin"].toString();
+    if (data["DOI"])obj["julkaisu"]["doitunniste"] = data["DOI"];
+    if (data["PysyvaOsoiteTeksti"])obj["julkaisu"]["pysyvaverkkoosoite"] = data["PysyvaOsoiteTeksti"];
+    if (enableZeroValue(data["AvoinSaatavuusKoodi"])) obj["julkaisu"]["avoinsaatavuus"] = data["AvoinSaatavuusKoodi"].toString();
+    if (enableZeroValue(data["RinnakkaistallennettuKytkin"])) obj["julkaisu"]["julkaisurinnakkaistallennettu"] = data["RinnakkaistallennettuKytkin"].toString();
+    if (enableZeroValue(data["JufoTunnus"])) { obj["julkaisu"]["jufotunnus"] = data["JufoTunnus"].toString(); }
+    if (enableZeroValue(data["JufoLuokkaKoodi"])) { obj["julkaisu"]["jufoluokitus"] = data["JufoLuokkaKoodi"].toString(); }
+    if (enableZeroValue(data["JulkaisunTilaKoodi"])) obj["julkaisu"]["julkaisuntila"] = data["JulkaisunTilaKoodi"].toString();
 
     if (data["Rinnakkaistallennettu"]) {
         if (data["Rinnakkaistallennettu"]["RinnakkaistallennusOsoiteTeksti"].length > 1) {
@@ -350,6 +350,22 @@ function parseVirtaData(data: any) {
     }
 
     return obj;
+}
+
+function enableZeroValue(field: any) {
+
+    let ret;
+
+    // return false if field doesn't exist
+    if (field === false || field === null || typeof(field) === "undefined" ) {
+        return false;
+    }
+
+    ret = field + "";
+
+    // return true if field length is greater than zero
+    return ret.length > 0;
+
 }
 
 function getUrn(req: Request, res: Response, next: NextFunction) {
