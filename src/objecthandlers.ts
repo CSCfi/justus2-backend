@@ -716,7 +716,6 @@ function ObjectHandlerJulkaisudata(obj: any) {
         for (let i = 0; i < obj.length; i++) {
             tyyppikategoriat.push(obj[i].tyyppikategoria);
         }
-        console.log(tyyppikategoriat);
       return tyyppikategoriat;
     }
 
@@ -738,7 +737,6 @@ function ObjectHandlerJulkaisudata(obj: any) {
         const avainsanaObj: any =  [];
 
         for (let i = 0; i < obj.length; i++) {
-            console.log(obj[i]);
             avainsanaObj.push(obj[i].avainsana);
         }
         return avainsanaObj;
@@ -750,6 +748,19 @@ function ObjectHandlerJulkaisudata(obj: any) {
         } else {
             return obj;
         }
+    }
+
+    function mapIssnAndIsbn (identifier: any, obj: any) {
+    const ret = [];
+        if (obj.length < 2)  {
+            ret.push(obj[0][identifier]);
+        } else {
+            for (let i = 0; i < obj.length; i ++) {
+                console.log(obj[i]);
+                ret.push(obj[i][identifier]);
+            }
+        }
+        return ret;
     }
 
 function ObjectHandlerUser(perustiedot: any, callback: any) {
@@ -871,9 +882,6 @@ module.exports = {
     ObjectHandlerKustantajat: ObjectHandlerKustantajat,
     ObjectHandlerJufoID: ObjectHandlerJufoID,
     ObjectHandlerJufoISSN: ObjectHandlerJufoISSN,
-    ObjectHandlerJulkaisutVIRTACR: ObjectHandlerJulkaisutVIRTACR,
-    ObjectHandlerVirtaEsitaytto: ObjectHandlerVirtaEsitaytto,
-    ObjectHandlerCrossrefEsitaytto: ObjectHandlerCrossrefEsitaytto,
     ObjectHandlerOrgListaus: ObjectHandlerOrgListaus,
     ObjectHandlerTestVirta: ObjectHandlerTestVirta,
     ObjectHandlerJulkaisudata: ObjectHandlerJulkaisudata,
@@ -881,6 +889,7 @@ module.exports = {
     mapTaideAlanTyyppikategoria: mapTaideAlanTyyppikategoria,
     mapLisatietoData: mapLisatietoData,
     mapAvainsanat: mapAvainsanat,
+    mapIssnAndIsbn: mapIssnAndIsbn,
     checkIfEmpty: checkIfEmpty,
     mapOrganisaatiotekijaAndAlayksikko: mapOrganisaatiotekijaAndAlayksikko
 };

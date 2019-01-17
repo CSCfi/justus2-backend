@@ -147,6 +147,8 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
         try {
             data["julkaisu"] = await db.one(query, params);
+            data["julkaisu"]["issn"] = await getIssn(req.params.id);
+            data["julkaisu"]["isbn"] = await getIsbn(req.params.id);
             data["tieteenala"] = await getTieteenala(req.params.id);
             data["taiteenala"] = await getTaiteenala(req.params.id);
             data["taidealantyyppikategoria"] = await getTyyppikategoria(req.params.id);
@@ -381,7 +383,20 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
 
 }
 
-// Select queries for all tables by julkaisid:
+async function getIssn(julkaisuid: any) {
+    const query = "SELECT issn FROM julkaisu_issn WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await db.any(query);
+    result = oh.mapIssnAndIsbn("issn", result);
+    return result;
+}
+
+async function getIsbn(julkaisuid: any) {
+    const query = "SELECT isbn FROM julkaisu_isbn WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await db.any(query);
+    result = oh.mapIssnAndIsbn("isbn", result);
+    return result;
+}
+
 async function getOrganisaatiotekija(julkaisuid: any) {
     let result = await getOrgTekijatAndAlayksikko(julkaisuid);
     result = oh.mapOrganisaatiotekijaAndAlayksikko(result);
