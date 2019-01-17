@@ -242,3 +242,44 @@ WITH (
 );
 ALTER TABLE julkaisuarkisto
 OWNER TO appaccount;
+
+-- Table: julkaisu_issn
+
+-- DROP TABLE julkaisu_issn;
+
+CREATE TABLE julkaisu_issn
+(
+  id bigserial NOT NULL,
+  julkaisuid bigint NOT NULL,
+  issn character varying(12),
+  CONSTRAINT julkaisu_issn_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)
+      REFERENCES julkaisu (id) MATCH SIMPLE
+	  ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE julkaisu_issn
+OWNER TO appaccount;
+
+-- Table: julkaisu_isbn
+
+-- DROP TABLE julkaisu_isbn;
+
+
+CREATE TABLE julkaisu_isbn
+(
+  id bigserial NOT NULL,
+  julkaisuid bigint NOT NULL,
+  isbn character varying(15),
+  CONSTRAINT julkaisu_issn_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)
+      REFERENCES julkaisu (id) MATCH SIMPLE
+	  ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE julkaisu_isbn
+OWNER TO appaccount;
