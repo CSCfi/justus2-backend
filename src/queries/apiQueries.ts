@@ -224,6 +224,8 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             await db.one(insertAccessId);
 
+            await insertIssnAndIsbn(req.body.julkaisu, julkaisuId.id, req.headers, "issn");
+            await insertIssnAndIsbn(req.body.julkaisu, julkaisuId.id, req.headers, "isbn");
             await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
             await insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
             await insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
@@ -465,6 +467,31 @@ async function getAllData(data: any) {
 }
 
 // Insert functions, used both in update and post requests:
+async function insertIssnAndIsbn(julkaisu: any, jid: any, headers: any, identifier: any) {
+
+    const obj: any = [];
+
+    // if value is empty string return
+    if (!julkaisu[identifier] || !julkaisu[identifier][0] || julkaisu[identifier][0] === "" ) {
+        console.log("tultiinko tänne");
+        return;
+    }
+
+    for (let i = 0; i < julkaisu[identifier].length; i++) {
+        if (julkaisu[identifier][i] !== "") {
+            obj.push({"julkaisuid": jid, [identifier]: julkaisu[identifier][i]});
+        }
+    }
+
+    const table = "julkaisu_" + identifier;
+    const columns = new pgp.helpers.ColumnSet(["julkaisuid", identifier], {table: table});
+    const save = pgp.helpers.insert(obj, columns) + "RETURNING id";
+    await db.many(save);
+
+    // Todo: Add data to audit log
+
+}
+
 
 async function insertTieteenala(obj: any, jid: any, headers: any) {
 
