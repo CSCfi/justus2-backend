@@ -388,15 +388,26 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
 async function getIssn(julkaisuid: any) {
     const query = "SELECT issn FROM julkaisu_issn WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
-    result = oh.mapIssnAndIsbn("issn", result);
-    return result;
+    if (result.length < 1) {
+        return [""];
+    } else {
+        result = oh.mapIssnAndIsbn("issn", result);
+        console.log(result);
+        return result;
+    }
 }
 
 async function getIsbn(julkaisuid: any) {
     const query = "SELECT isbn FROM julkaisu_isbn WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
-    result = oh.mapIssnAndIsbn("isbn", result);
-    return result;
+    console.log(result);
+    if (result.length < 1) {
+        return [""];
+    } else {
+        result = oh.mapIssnAndIsbn("isbn", result);
+        console.log(result);
+        return result;
+    }
 }
 
 async function getOrganisaatiotekija(julkaisuid: any) {
