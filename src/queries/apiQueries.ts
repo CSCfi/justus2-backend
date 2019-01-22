@@ -283,6 +283,26 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, req.body.julkaisu);
 
+            const deletedIssnRows = await db.result("DELETE FROM julkaisu_issn WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+
+            if (deletedIssnRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_issn", req.params.id, [undefined]);
+            }
+
+            await insertIssnAndIsbn(req.body.julkaisu, req.params.id, req.headers, "issn");
+
+            const deletedIsbnRows = await db.result("DELETE FROM julkaisu_isbn WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+
+            if (deletedIsbnRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_isbn", req.params.id, [undefined]);
+            }
+
+            await insertIssnAndIsbn(req.body.julkaisu, req.params.id, req.headers, "isbn");
+
             const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
                 id: req.params.id
             });
