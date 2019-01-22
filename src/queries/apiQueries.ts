@@ -504,7 +504,6 @@ async function insertIssnAndIsbn(julkaisu: any, jid: any, headers: any, identifi
 
     // if value is empty string return
     if (!julkaisu[identifier] || !julkaisu[identifier][0] || julkaisu[identifier][0] === "" ) {
-        console.log("tultiinko tänne");
         return;
     }
 
@@ -519,10 +518,9 @@ async function insertIssnAndIsbn(julkaisu: any, jid: any, headers: any, identifi
     const save = pgp.helpers.insert(obj, columns) + "RETURNING id";
     await db.many(save);
 
-    // Todo: Add data to audit log
+    await auditLog.postAuditData(headers, "POST", table, jid, obj);
 
 }
-
 
 async function insertTieteenala(obj: any, jid: any, headers: any) {
 
