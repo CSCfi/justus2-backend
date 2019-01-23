@@ -196,16 +196,11 @@ function parseCrAndVirtaData(data: any) {
             "author": "",
             "doi": "",
             "identifier": ""
-            // "issn": ""
         };
         crObj.source = "CrossRef";
         crObj.title = data.cr[key].title[data.cr[key].title.length - 1];
         crObj.doi = data.cr[key].DOI;
         crObj.identifier = data.cr[key].DOI;
-
-        // if (data.cr[key].ISSN) {
-        //     crObj.issn = data.cr[key].ISSN[0];
-        // }
 
         if (data.cr[key].author) {
             Object.keys(data.cr[key].author).forEach(function (aval, akey) {
@@ -227,15 +222,12 @@ function parseCrAndVirtaData(data: any) {
             "doi": "",
             "identifier": "",
             "organisation": ""
-            // "issn": "" // issn
-
         };
 
         virtaObj.source = "VIRTA";
         if (data.virta[key].julkaisunNimi) { virtaObj.title = data.virta[key].julkaisunNimi; }
         if (data.virta[key].tekijat) { virtaObj.author = data.virta[key].tekijat; }
         if (data.virta[key].doi) { virtaObj.doi = data.virta[key].doi; }
-        // if (data.virta[key].issn) { virtaObj.issn = data.virta[key].issn; }
         if (data.virta[key].julkaisunTunnus) { virtaObj.identifier = data.virta[key].julkaisunTunnus; }
         if (data.virta[key].organisaatioTunnus) { virtaObj.organisation = data.virta[key].organisaatioTunnus; }
 
