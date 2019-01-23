@@ -256,13 +256,29 @@ function parseCrossRefData(data: any) {
     }  else {
         obj["julkaisunnimi"] = data.title;
     }
+
+    obj["issn"] = [];
     if (data.ISSN) {
-        if (data.ISSN.constructor === Array && data.ISSN.length > 0) {
-            obj["issn"] = data.ISSN[0];
-        }  else {
+        if (data.ISSN.constructor === Array ) {
             obj["issn"] = data.ISSN;
+        }  else {
+            obj["issn"].push(data.ISSN);
         }
+    } else {
+        obj["issn"] = [""];
     }
+
+    obj["isbn"] = [];
+    if (data.ISBN) {
+        if (data.ISBN.constructor === Array ) {
+            obj["isbn"] = data.ISBN;
+        }  else {
+            obj["isbn"].push(data.ISBN);
+        }
+    } else {
+        obj["isbn"] = [""];
+    }
+
     obj["volyymi"] = data.volume || "";
     obj["numero"] = data.issue || "";
     obj["sivut"] = data.page || "";
@@ -288,9 +304,8 @@ function parseCrossRefData(data: any) {
 
 function parseVirtaData(data: any) {
 
-    const obj: any = {"julkaisu": {}, "avainsanat": [], "tieteenala": []};
+    const obj: any = {"julkaisu": { "issn": [], "isbn": []}, "avainsanat": [], "tieteenala": [] };
 
-    // TODO: Consider that it is possible to get two issn and isbn values
     obj["julkaisu"]["julkaisutyyppi"] = data["JulkaisutyyppiKoodi"];
     if (data["JulkaisuVuosi"])obj["julkaisu"]["julkaisuvuosi"] = data["JulkaisuVuosi"];
     if (data["JulkaisunNimi"])obj["julkaisu"]["julkaisunnimi"] = data["JulkaisunNimi"];
@@ -298,9 +313,7 @@ function parseVirtaData(data: any) {
     if (data["TekijoidenLkm"])obj["julkaisu"]["julkaisuntekijoidenlukumaara"] = data["TekijoidenLkm"];
     if (data["KonferenssinNimi"])obj["julkaisu"]["konferenssinvakiintunutnimi"] = data["KonferenssinNimi"];
     if (data["EmojulkaisunNimi"])obj["julkaisu"]["emojulkaisunnimi"] = data["EmojulkaisunNimi"];
-    if (data["ISBN"])obj["julkaisu"]["isbn"] = data["ISBN"];
     if (data["LehdenNimi"])obj["julkaisu"]["lehdenjulkaisusarjannimi"] = data["LehdenNimi"];
-    if (data["ISSN"])obj["julkaisu"]["issn"] = data["ISSN"];
     if (data["VolyymiTeksti"])obj["julkaisu"]["volyymi"] = data["VolyymiTeksti"];
     if (data["LehdenNumeroTeksti"])obj["julkaisu"]["numero"] = data["LehdenNumeroTeksti"];
     if (data["SivunumeroTeksti"])obj["julkaisu"]["sivut"] = data["SivunumeroTeksti"];
@@ -320,6 +333,30 @@ function parseVirtaData(data: any) {
     if (enableZeroValue(data["JufoTunnus"])) { obj["julkaisu"]["jufotunnus"] = data["JufoTunnus"].toString(); }
     if (enableZeroValue(data["JufoLuokkaKoodi"])) { obj["julkaisu"]["jufoluokitus"] = data["JufoLuokkaKoodi"].toString(); }
     if (enableZeroValue(data["JulkaisunTilaKoodi"])) obj["julkaisu"]["julkaisuntila"] = data["JulkaisunTilaKoodi"].toString();
+
+
+    if (data["ISSN"]) {
+        if (data["ISSN"].constructor === Array ) {
+            obj["julkaisu"]["issn"] = data["ISSN"];
+        }  else {
+            obj["julkaisu"].issn.push(data["ISSN"]);
+        }
+    }
+    else {
+        obj["julkaisu"]["issn"] = [""];
+    }
+
+    if (data["ISBN"]) {
+        if (data["ISBN"].constructor === Array ) {
+            obj["julkaisu"]["isbn"] = data["ISBN"];
+        }  else {
+            obj["julkaisu"].isbn.push(data["ISBN"]);
+        }
+    }
+    else {
+        obj["julkaisu"]["isbn"] = [""];
+        console.log("isbn on tyhjä");
+    }
 
     if (data["Rinnakkaistallennettu"]) {
         if (data["Rinnakkaistallennettu"]["RinnakkaistallennusOsoiteTeksti"].length > 1) {
