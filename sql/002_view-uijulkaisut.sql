@@ -92,27 +92,24 @@ CREATE VIEW v_sa_tieteenalat  AS
    ALTER TABLE v_sa_tieteenalat
   OWNER TO sql_sync;
   
--- View: v_sa_tieteenalat
+-- View: v_sa_taiteenalat
 
--- DROP VIEW v_sa_tieteenalat;
+-- DROP VIEW v_sa_taiteenalat;
   
-CREATE VIEW v_sa_tieteenalat AS
-	SELECT
-	NULL::unknown AS julkaisuntunnus,
-	taiteenala.julkaisuid AS rivi,
-	taiteenala.tieteenalakoodi AS tieteenala,
-	taiteenala.jnro,
-	NULL::unknown AS lataus_id
-	FROM taiteenala;
+CREATE VIEW v_sa_taiteenalat AS
+	 SELECT NULL::unknown AS julkaisuntunnus, taiteenala.julkaisuid AS rivi,
+    taiteenala.taiteenalakoodi AS taiteenala, taiteenala.jnro,
+    NULL::unknown AS lataus_id
+   FROM taiteenala;
 	
 ALTER TABLE v_sa_taiteenalat
   OWNER TO sql_sync;
   
--- View: v_sa_tieteenalat
+-- View: v_sa_avainsanat
 
--- DROP VIEW v_sa_tieteenalat;
+-- DROP VIEW v_sa_avainsanat;
   
-CREATE VIEW v_sa_tieteenalat AS
+CREATE VIEW v_sa_avainsanat AS
 	SELECT avainsana.julkaisuid AS rivi,
 	NULL::unknown AS julkaisuntunnus,
 	avainsana.avainsana,
