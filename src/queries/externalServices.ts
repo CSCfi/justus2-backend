@@ -352,7 +352,6 @@ function parseVirtaData(data: any) {
     }
     else {
         obj["julkaisu"]["isbn"] = [""];
-        console.log("isbn on tyhjä");
     }
 
     if (data["Rinnakkaistallennettu"]) {
