@@ -285,10 +285,15 @@ function parseCrossRefData(data: any) {
     obj["artikkelinumero"] = data["article-number"] || "";
 
     let tekijat = "";
-    Object.keys(data.author).forEach(function (key) {
-        if (tekijat.length > 0) tekijat += "; ";
-        tekijat += data.author[key].family + ", " + data.author[key].given;
-    });
+
+    if (data.author) {
+        Object.keys(data.author).forEach(function (key) {
+            if (tekijat.length > 0) tekijat += "; ";
+            tekijat += data.author[key].family + ", " + data.author[key].given;
+        });
+
+    }
+
     obj["tekijat"] = tekijat;
 
     let vuosi;
