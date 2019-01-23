@@ -272,8 +272,8 @@ CREATE TABLE julkaisu_isbn
 (
   id bigserial NOT NULL,
   julkaisuid bigint NOT NULL,
-  isbn character varying(15),
-  CONSTRAINT julkaisu_issn_pkey PRIMARY KEY (id),
+  isbn character varying(20),
+  CONSTRAINT julkaisu_isbn_pkey PRIMARY KEY (id),
   CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)
       REFERENCES julkaisu (id) MATCH SIMPLE
 	  ON UPDATE CASCADE ON DELETE CASCADE
