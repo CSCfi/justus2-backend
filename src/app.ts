@@ -29,12 +29,12 @@ const RedisStore = require("connect-redis")(session);
 
 
 app.use(session({
-  store: new RedisStore(),
-  secret: "test",
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 1 day
-  resave: true,
-  autoreconnect: true,
-  saveUninitialized: true,
+    store: new RedisStore(),
+    secret: "test",
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 1 day
+    resave: true,
+    autoreconnect: true,
+    saveUninitialized: true,
 
 }));
 
@@ -47,7 +47,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("port", 3000);
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
-app.use(require("./services/populateUserData"));
+// app.use(require("./services/populateUserData"));
 app.get("/", homeController.index);
 app.use("/", apiRouter);
 app.use(expressValidator);
