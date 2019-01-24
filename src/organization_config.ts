@@ -264,6 +264,12 @@ const domainMappings = [
         "code": "02471",
         "email": ""
     },
+    {
+        // 	Geologian tutkimuskeskus #gtk-admins
+        "domain": "@gtk.fi",
+        "code": "5040011",
+        "email": ""
+    }
 
 
 ];

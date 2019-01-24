@@ -195,7 +195,7 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
         if (objecthandler.name === "ObjectHandlerOrgListaus") {
             const proms: object [] = [];
             for (const i in orgid) {
-                if (orgid[i][0] === "4") {
+                if (orgid[i].length > 5) {
                     proms.push(HTTPSUBGET(koodistoUrl + "/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + orgid[i]));
                 }
                 else {
@@ -312,7 +312,7 @@ function setAlaYksikot(res: Response) {
 }
  function setOrgListaus(res: Response) {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET(koodistoUrl + "/oppilaitosnumero/koodi/oppilaitosnumero_" , res, "getOrgListaus", OH.ObjectHandlerOrgListaus, "FI", orgid);
+    return HTTPGET(koodistoUrl, res, "getOrgListaus", OH.ObjectHandlerOrgListaus, "FI", orgid);
 }
 
 // function setAvainSanat(res: Response) {
