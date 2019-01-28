@@ -89,7 +89,7 @@ function getValtiot(req: Request, res: Response, next: NextFunction) {
         redisKey = "getValtiotFI";
     }
     else {
-        redisKey = "getValtio" + req.session.language;
+        redisKey = "getValtiot" + req.session.language;
     }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
