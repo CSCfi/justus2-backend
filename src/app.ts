@@ -25,13 +25,14 @@ import * as homeController from "./controllers/home";
 
 const apiRouter = require("./routes/routes");
 const session = require ("express-session");
+const cookieParser = require("cookie-parser");
 const RedisStore = require("connect-redis")(session);
 
-
+app.use(cookieParser());
 app.use(session({
     store: new RedisStore(),
     secret: "test",
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 1 day
+    cookie: { maxAge: 24 * 60 * 60 * 1000, secure: false }, // 1 day
     resave: true,
     autoreconnect: true,
     saveUninitialized: true,
