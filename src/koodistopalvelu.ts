@@ -28,7 +28,14 @@ const organisationConfig = require("./organization_config");
 // });
 
 function UpdateOrgListaus(res: Response) {
-    return setOrgListaus(res);
+    return new Promise((resolve, reject) => {
+        setOrgListausFI(res).then(() => {
+            return setOrgListausSV(res);
+        }).then(() => {
+            return setOrgListausEN(res);
+        });
+
+    });
 }
 
 UpdateKoodistopalveluRedis(undefined).then(function() {
@@ -213,8 +220,8 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
                         console.log(err);
                     }
                 }
-                client.set(redisInfo, JSON.stringify(objecthandler(list, orgid)));
-                console.log("Set info for " + redisInfo + " from Objecthandlers to redis successfully!");
+                client.set(redisInfo, JSON.stringify(objecthandler(list, orgid, lang)));
+                client.set("getOrgNames", JSON.stringify(OH.ObjectHandlerOrgNames(list, orgid, lang)));
                 resolve();
             }).catch((err: Error) => {
                 console.log("Error: " + err);
@@ -310,10 +317,20 @@ function setJulkaisunLuokatSV(res: Response) {
 function setAlaYksikot(res: Response) {
     return HTTPGET(koodistoUrl +  "/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
 }
- function setOrgListaus(res: Response) {
+ function setOrgListausFI(res: Response) {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET(koodistoUrl, res, "getOrgListaus", OH.ObjectHandlerOrgListaus, "FI", orgid);
+    return HTTPGET(koodistoUrl, res, "getOrgListausFI", OH.ObjectHandlerOrgListaus, "FI", orgid);
 }
+
+function setOrgListausSV(res: Response) {
+    const orgid = organisationConfig.getOrganisationCodes();
+    return HTTPGET(koodistoUrl, res, "getOrgListausSV", OH.ObjectHandlerOrgListaus, "SV", orgid);
+}
+function setOrgListausEN(res: Response) {
+    const orgid = organisationConfig.getOrganisationCodes();
+    return HTTPGET(koodistoUrl, res, "getOrgListausEN", OH.ObjectHandlerOrgListaus, "EN", orgid);
+}
+
 
 // function setAvainSanat(res: Response) {
 //     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");

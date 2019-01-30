@@ -528,9 +528,10 @@ function getrediscallback(key: string, callbacker: Function) {
     });
 }
 
-function ObjectHandlerOrgListaus(obj: any, orgid: any) {
+function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
     const orglistaus: object [] = [
     ];
+
     obj.forEach((e: any) => {
         getrediscallback("getAlayksikot", getData);
             function getData(reply: any) {
@@ -597,13 +598,15 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
             if (yksikot2016 && yksikot2017 && yksikot2018  && yksikot2016.length || yksikot2017.length || yksikot2018.length) {
                 visibleFields.push("alayksikko");
                 requiredFields.push("alayksikko");
-            const oneorg = {
-                arvo: e.koodiArvo,
-                selite: e.metadata[0].nimi,
-                kuvaus: e.metadata[0].kuvaus,
-                alayksikot: yksikotarray,
-                visibleFields,
-                requiredFields,
+
+                const organisationName = setOrganisationName(e, lang);
+                const oneorg = {
+                    arvo: e.koodiArvo,
+                    selite: organisationName,
+                    kuvaus: e.metadata[0].kuvaus,
+                    alayksikot: yksikotarray,
+                    visibleFields,
+                    requiredFields,
             };
             orglistaus.push(oneorg);
             orglistaus.sort((a: any, b: any) => {
@@ -617,9 +620,11 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
             });
         }
            else {
+
+            const organisationName = setOrganisationName(e, lang);
             const oneorg = {
                 arvo: e.koodiArvo,
-                selite: e.metadata[0].nimi,
+                selite: organisationName,
                 kuvaus: e.metadata[0].kuvaus,
                 alayksikot: yksikotarray,
                 visibleFields,
@@ -636,10 +641,38 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any) {
             return 0;
         });
     }
-            settoRedis("getOrgListaus", orglistaus);
+            const redisKey = "getOrgListaus" + lang;
+            settoRedis(redisKey, orglistaus);
         }
-});
+    });
             return orglistaus;
+}
+
+
+    function setOrganisationName(obj: any, lang: any) {
+
+        let name = "";
+
+        const checkIfFiExists = (o: any) => o.kieli === "FI";
+        const fi = obj.metadata.some(checkIfFiExists);
+
+        if (!fi) {
+            for (let i = 0; i < obj.metadata.length; i++) {
+                if (obj.metadata[i].kieli === "SV") {
+                    name = obj.metadata[i].nimi;
+                }
+            }
+        }
+
+        if (fi) {
+            for (let i = 0; i < obj.metadata.length; i++) {
+                if (obj.metadata[i].kieli === lang) {
+                    name = obj.metadata[i].nimi;
+                }
+            }
+        }
+
+        return name;
     }
 
 function ObjectHandlerVirtaEsitaytto(obj: any): object[] {
@@ -862,7 +895,76 @@ function ObjectHandlerUser(perustiedot: any, callback: any) {
 
             }
         }
- }
+    }
+}
+
+function ObjectHandlerOrgNames(obj: any, orgid: any, lang: any) {
+
+    const list: any  = [];
+
+    if (lang === "FI") {
+        obj.forEach((value: any) => {
+            const checkIfFiExists = (o: any) => o.kieli === "FI";
+            const fi = value.metadata.some(checkIfFiExists);
+            if (fi) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "SV") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+        });
+    }
+    if (lang === "SV") {
+        obj.forEach((value: any) => {
+            const checkIfFiExists = (o: any) => o.kieli === "SV";
+            const sv = value.metadata.some(checkIfFiExists);
+            if (sv) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "FI") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+
+        });
+    }
+    if (lang === "EN") {
+        obj.forEach((value: any) => {
+            const checkIfFiExists = (o: any) => o.kieli === "EN";
+            const en = value.metadata.some(checkIfFiExists);
+            if (en) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "FI") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+
+        });
+    }
+
+    list.sort();
+    settoRedis("getOrgNames" + lang, list);
+    return list;
 }
 
 
@@ -886,6 +988,7 @@ module.exports = {
     ObjectHandlerTestVirta: ObjectHandlerTestVirta,
     ObjectHandlerJulkaisudata: ObjectHandlerJulkaisudata,
     ObjectHandlerUser: ObjectHandlerUser,
+    ObjectHandlerOrgNames: ObjectHandlerOrgNames,
     mapTaideAlanTyyppikategoria: mapTaideAlanTyyppikategoria,
     mapLisatietoData: mapLisatietoData,
     mapAvainsanat: mapAvainsanat,

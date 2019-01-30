@@ -21,7 +21,34 @@ const getRedis = (rediskey: string, success: any, error: any) => {
 
 // GET ORGANISAATIOLISTAUS
 function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction) {
-    getRedis("getOrgListaus", function success(reply: any) {
+
+    let redisKey;
+    if (!req.session.language) {
+        redisKey = "getOrgListausFI";
+    }
+    else {
+        redisKey = "getOrgListaus" + req.session.language;
+    }
+    getRedis(redisKey, function success(reply: any) {
+        res.status(200).json(
+            JSON.parse(reply)
+        );
+    }, function error(err: Error) {
+        console.log("Something went wrong");
+    });
+
+}
+
+function getOrganisaatioNames(req: Request, res: Response, next: NextFunction) {
+
+    let redisKey;
+    if (!req.session.language) {
+        redisKey = "getOrgNamesFI";
+    }
+    else {
+        redisKey = "getOrgNames" + req.session.language;
+    }
+    getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
         );
@@ -29,8 +56,6 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
         console.log("Something went wrong");
     });
 }
-
-
 
 // KOODISTOPALVELU GETS
 function getJulkaisunTilat(req: Request, res: Response, next: NextFunction) {
@@ -191,4 +216,5 @@ module.exports = {
     getTieteenalat: getTieteenalat,
     getAlaYksikot: getAlaYksikot,
     getOrganisaatioListaus: getOrganisaatioListaus,
+    getOrganisaatioNames: getOrganisaatioNames
 };

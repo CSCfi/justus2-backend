@@ -44,6 +44,7 @@ router.get("/haku/urntunnus", ext.getUrn);
 
 // KoodistoPalvelu queries
 router.get("/organisaatiolistaus", koodistopalvelu.getOrganisaatioListaus);
+router.get("/organisaationimet", koodistopalvelu.getOrganisaatioNames);
 router.get("/haku/julkaisunluokat", koodistopalvelu.getJulkaisunLuokat);
 router.get("/haku/julkaisuntilat", koodistopalvelu.getJulkaisunTilat);
 router.get("/haku/tekijanrooli", koodistopalvelu.getTekijanRooli);
