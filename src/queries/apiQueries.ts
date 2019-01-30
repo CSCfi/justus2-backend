@@ -20,6 +20,26 @@ let USER_DATA: any = {};
 
 // Add Query functions here and define them in the module.exports at the end
 // All GET requests first
+
+
+function getUser(req: Request, res: Response, next: NextFunction) {
+
+    const userData = authService.getUserData(req.headers);
+
+    if (!userData) {
+        return res.status(401).send("Unauthorized");
+    }
+    else {
+        userData.kieli = req.session.language;
+        oh.ObjectHandlerUser(userData, req.session.language, function(result: any) {
+            res.status(200).json(
+                result
+            );
+        });
+    }
+}
+
+
 // Get all julkaisut
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
@@ -64,6 +84,11 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+
+    if (!req.session.userData) {
+        return res.status(403).send("Permission denied");
+    }
+
     const hasOrganisation = authService.hasOrganisation(USER_DATA);
 
     if (hasOrganisation) {
@@ -177,24 +202,7 @@ function testvirta(res: Response) {
 }
 
 
-function getUser(req: Request, res: Response, next: NextFunction) {
 
-    const userData = authService.getUserData(req.headers);
-
-    if (!userData) {
-        return res.status(401).send("Unauthorized");
-    }
-    else {
-        req.session.userData = authService.getUserData(req.headers);
-        req.session.userData.uid = req.headers["shib-uid"];
-        req.session.userData.ip = req.headers["x-forwarded-for"] || (req.connection && req.connection.remoteAddress) || "";
-        oh.ObjectHandlerUser(userData, function(result: any) {
-            res.status(200).json(
-                result
-            );
-          });
- }
-}
 
 
 // POST requests

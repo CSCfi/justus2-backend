@@ -796,9 +796,9 @@ function ObjectHandlerJulkaisudata(obj: any) {
         return ret;
     }
 
-function ObjectHandlerUser(perustiedot: any, callback: any) {
+function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
     const org = perustiedot.organisaatio;
-    getrediscallback("getOrgListaus", addorgname);
+    getrediscallback("getOrgListaus" + lang, addorgname);
     function addorgname(reply: any) {
         reply.forEach((s: any) =>  {
             if (s.arvo === org) {
