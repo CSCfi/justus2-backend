@@ -259,10 +259,10 @@ const domainMappings = [
         "email": "leena.byholm@luke.fi"
     },
     {
-        // Oulun ammattikorkeakoulu
+        // Oulun ammattikorkeakoulu #oamk-admins
         "domain": "@oamk.fi",
         "code": "02471",
-        "email": ""
+        "email": "justus@oamk.fi"
     },
     {
         // 	Geologian tutkimuskeskus #gtk-admins
