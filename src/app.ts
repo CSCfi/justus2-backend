@@ -6,10 +6,8 @@ import flash from "express-flash";
 import path from "path";
 import expressValidator from "express-validator";
 
-if (typeof process.env.NODE_ENV === "undefined" || process.env.NODE_ENV != "prod") {
-    // Load environment variables from .env file, where API keys and passwords are configured
-    dotenv.config({ path: ".env.variables" });
-}
+dotenv.config({ path: ".env.variables" });
+
 const redis = require("redis");
 const client = redis.createClient();
 // Create express server
