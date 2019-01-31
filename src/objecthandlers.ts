@@ -653,27 +653,139 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
 
         let name = "";
 
-        const checkIfFiExists = (o: any) => o.kieli === "FI";
-        const fi = obj.metadata.some(checkIfFiExists);
+        if (lang === "FI") {
 
-        if (!fi) {
-            for (let i = 0; i < obj.metadata.length; i++) {
-                if (obj.metadata[i].kieli === "SV") {
-                    name = obj.metadata[i].nimi;
+            const checkIfFiExists = (o: any) => o.kieli === "FI";
+            const fi = obj.metadata.some(checkIfFiExists);
+
+            if (!fi) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === "SV") {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            }
+
+            if (fi) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === lang) {
+                        name = obj.metadata[i].nimi;
+                    }
                 }
             }
         }
 
-        if (fi) {
-            for (let i = 0; i < obj.metadata.length; i++) {
-                if (obj.metadata[i].kieli === lang) {
-                    name = obj.metadata[i].nimi;
+        if (lang === "SV") {
+
+            const checkIfSvExists = (o: any) => o.kieli === "SV";
+            const sv = obj.metadata.some(checkIfSvExists);
+
+            if (sv) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === lang) {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            } else {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === "FI") {
+                        name = obj.metadata[i].nimi;
+                    }
                 }
             }
         }
 
+        if (lang === "EN") {
+
+            const checkIfEnExists = (o: any) => o.kieli === "EN";
+            const sv = obj.metadata.some(checkIfEnExists);
+
+            if (sv) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === lang) {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            } else {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === "FI") {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            }
+        }
         return name;
     }
+
+function ObjectHandlerOrgNames(obj: any, orgid: any, lang: any) {
+
+    const list: any  = [];
+
+    if (lang === "FI") {
+        obj.forEach((value: any) => {
+            const checkIfFiExists = (o: any) => o.kieli === "FI";
+            const fi = value.metadata.some(checkIfFiExists);
+            if (fi) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "SV") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+        });
+    }
+    if (lang === "SV") {
+        obj.forEach((value: any) => {
+            const checkIfFiExists = (o: any) => o.kieli === "SV";
+            const sv = value.metadata.some(checkIfFiExists);
+            if (sv) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "FI") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+
+        });
+    }
+    if (lang === "EN") {
+        obj.forEach((value: any) => {
+            const checkIfEnExists = (o: any) => o.kieli === "EN";
+            const en = value.metadata.some(checkIfEnExists);
+            if (en) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "FI") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+
+        });
+    }
+
+
+    list.sort();
+    settoRedis("getOrgNames" + lang, list);
+    return list;
+}
 
 function ObjectHandlerVirtaEsitaytto(obj: any): object[] {
     return obj;
@@ -896,75 +1008,6 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
             }
         }
     }
-}
-
-function ObjectHandlerOrgNames(obj: any, orgid: any, lang: any) {
-
-    const list: any  = [];
-
-    if (lang === "FI") {
-        obj.forEach((value: any) => {
-            const checkIfFiExists = (o: any) => o.kieli === "FI";
-            const fi = value.metadata.some(checkIfFiExists);
-            if (fi) {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === lang) {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            } else {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === "SV") {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            }
-        });
-    }
-    if (lang === "SV") {
-        obj.forEach((value: any) => {
-            const checkIfFiExists = (o: any) => o.kieli === "SV";
-            const sv = value.metadata.some(checkIfFiExists);
-            if (sv) {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === lang) {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            } else {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === "FI") {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            }
-
-        });
-    }
-    if (lang === "EN") {
-        obj.forEach((value: any) => {
-            const checkIfFiExists = (o: any) => o.kieli === "EN";
-            const en = value.metadata.some(checkIfFiExists);
-            if (en) {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === lang) {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            } else {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === "FI") {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            }
-
-        });
-    }
-
-    list.sort();
-    settoRedis("getOrgNames" + lang, list);
-    return list;
 }
 
 
