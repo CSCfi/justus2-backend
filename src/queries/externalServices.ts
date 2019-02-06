@@ -329,8 +329,6 @@ function parseVirtaData(data: any) {
     if (enableZeroValue(data["RinnakkaistallennettuKytkin"])) obj["julkaisu"]["julkaisurinnakkaistallennettu"] = data["RinnakkaistallennettuKytkin"].toString();
     if (enableZeroValue(data["JufoTunnus"])) { obj["julkaisu"]["jufotunnus"] = data["JufoTunnus"].toString(); }
     if (enableZeroValue(data["JufoLuokkaKoodi"])) { obj["julkaisu"]["jufoluokitus"] = data["JufoLuokkaKoodi"].toString(); }
-    if (enableZeroValue(data["JulkaisunTilaKoodi"])) obj["julkaisu"]["julkaisuntila"] = data["JulkaisunTilaKoodi"].toString();
-
 
     if (data["ISSN"]) {
         if (data["ISSN"].constructor === Array ) {
