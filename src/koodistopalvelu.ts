@@ -6,7 +6,7 @@ const https = require("https");
 // Redis client
 const redis = require("redis");
 const client = redis.createClient();
-
+const ts = require("./services/TheseusSender");
 // Prefix for objecthandler import
 const OH = require("./objecthandlers");
 
@@ -26,6 +26,10 @@ const organisationConfig = require("./organization_config");
 // schedule.scheduleJob("45 * * * * *", function(res: Response) {
 //    UpdateOrgListaus(res);
 // });
+function testInterval() {
+    return console.log("MAKE IT RAIN");
+}
+setInterval(() => ts.checkQueue(), 30000);
 
 function UpdateOrgListaus(res: Response) {
     return new Promise((resolve, reject) => {
@@ -353,4 +357,5 @@ function setOrgListausEN(res: Response) {
 
 module.exports = {
 HTTPGETshow: HTTPGETshow,
+HTTPGET: HTTPGET,
 };
