@@ -183,13 +183,13 @@ const domainMappings = [
         "domain": "@tamk.fi",
         "code": "02630",
         "email": "tiina.kenttala-koivumaki@tamk.fi"
+    {
+        // Tampereen ammattikorkeakoulu  #tamk-admins
+        "domain": "@tuni.fi",
+        "code": "02630",
+        "email": "tiina.kenttala-koivumaki@tamk.fi",
+        "showPublicationInput": true
     },
-    // {
-    //     // Tampereen ammattikorkeakoulu  #tamk-admins
-    //     "domain": "@tuni.fi",
-    //     "code": "02630",
-    //     "email": "tiina.kenttala-koivumaki@tamk.fi"
-    // },
     {
         // Yrkeshögskolan Novia  #novia-admins
         "domain": "@novia.fi",
