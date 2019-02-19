@@ -549,6 +549,12 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                 ];
                 const yksikot2018: object [] = [
                 ];
+                const yksikot2019: object [] = [
+                ];
+                const twntynine = {
+                    vuosi: "2019",
+                    yksikot: yksikot2019,
+                };
                 const twntyeight = {
                     vuosi: "2018",
                     yksikot: yksikot2018,
@@ -579,6 +585,13 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                     };
                     yksikot2018.push(yksikot28);
                 }
+                else if (e.koodiArvo === determinatormatch && year === "2019") {
+                    const yksikot29 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    yksikot2019.push(yksikot29);
+                }
                 else if (e.koodiArvo === determinatormatch && year != "2017" && year != "2018") {
                     const yksikot26 = {
                         arvo: x.arvo,
@@ -592,14 +605,16 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                 const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
                 const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
 
+                yksikotarray.push(twntynine);
                 yksikotarray.push(twntyeight);
                 yksikotarray.push(twntyseven);
                 yksikotarray.push(twntysix);
-            if (yksikot2016 && yksikot2017 && yksikot2018  && yksikot2016.length || yksikot2017.length || yksikot2018.length) {
+            if (yksikot2016 && yksikot2017 && yksikot2018 && yksikot2019  && yksikot2016.length || yksikot2017.length || yksikot2018.length || yksikot2019.length) {
                 visibleFields.push("alayksikko");
                 requiredFields.push("alayksikko");
 
                 const organisationName = setOrganisationName(e, lang);
+
                 const oneorg = {
                     arvo: e.koodiArvo,
                     selite: organisationName,
@@ -935,6 +950,11 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
         ];
         const y2018: object [] = [
         ];
+        const y2019: object [] = [];
+        const twonine = {
+            vuosi: "2019",
+            yksikot: y2019,
+        };
         const twoeight = {
             vuosi: "2018",
             yksikot: y2018,
@@ -966,6 +986,13 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
                     };
                     y2018.push(y28);
                 }
+                else if (orgid === match && year === "2019") {
+                    const y29 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    y2019.push(y29);
+                }
                 else if (orgid === match && year != "2017" && year != "2018") {
                     const y26 = {
                         arvo: x.arvo,
@@ -980,10 +1007,11 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
         const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
         const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
 
+              yarray.push(twonine);
               yarray.push(twoeight);
               yarray.push(twoseven);
               yarray.push(twosix);
-              if (y2017.length || y2018.length || y2017.length) {
+              if (y2016.length || y2017.length || y2018.length || y2019.length) {
                   visibleFields.push("alayksikko");
                   requiredFields.push("alayksikko");
               const orgall =  {
