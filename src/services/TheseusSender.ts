@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { isFor } from "babel-types";
 const request = require("request");
 const rp = require("request-promise");
 const path = require("path");
@@ -8,11 +9,10 @@ const fs = require("fs");
 
 // Database connection
 const connection = require("./../db");
-const testtoken = "adaf29a2-3652-4da0-928c-0a830cf1bda4";
+const testtoken = "260ae73b-2546-45ca-aa57-6a23484feee5";
 
 const BASEURL = "https://ds5-am-kktest.lib.helsinki.fi/rest/";
-const publicationFolder = "publications";
-const savedFileName = "file.blob";
+const fu = require("../queries/fileUpload");
 
 
 // For development purposes
@@ -22,8 +22,11 @@ function IntervalTest() {
 // setInterval(() => IntervalTest, 1000);
 
 async function checkQueue() {
-const julkaisuIDt = await connection.db.query("SELECT id from julkaisu WHERE julkaisuntila::integer > 0", "RETURNING ID");
-console.log(JSON.stringify(julkaisuIDt));
+    // Token checker function
+// const julkaisuIDt = await connection.db.query("SELECT id from julkaisu WHERE julkaisuntila::integer > 0", "RETURNING ID");
+
+const julkaisuIDt = await connection.db.query("SELECT julkaisu.id FROM julkaisu, julkaisujono WHERE (julkaisu.julkaisuntila::integer > 0 AND julkaisu.id = julkaisujono.julkaisuid)", "RETURNING julkaisu.id");
+console.log("The join SELECT: " + JSON.stringify(julkaisuIDt));
 
 julkaisuIDt.forEach(async function (e: any ) {
     console.log("The id inside the for loop: " + e.id);
@@ -31,13 +34,13 @@ julkaisuIDt.forEach(async function (e: any ) {
 });
 }
 async function postJulkaisuTheseus(julkaisunID: any) {
-    const collectionsUrl = "colletions/";
+    // const collectionsUrl = "colletions/";
+
 
     // TODO ADD SPECIFIC ORG COLLECTION ID HERE
     // Add unique collections ID:s that are matched according to the organisational id
     // The organisational id is inside the julkaisu taulukko
     // const orgCollection = "something";
-    // console.log("yes: " + julkaisunID);
     const params = {"id": julkaisunID};
     // ALL queries for the metadataobject
     const queryJulkaisu = "SELECT * FROM julkaisu WHERE id = " +
@@ -114,79 +117,90 @@ async function sendPostReqTheseus(sendObject: any, julkaisuID: any) {
         encoding: "utf8",
     };
     rp(options)
-    .then(async function(res: Response, req: Request) {
-        // TODO catch the response, extract itemid and handle, insert into julkaisuarkisto
-        console.log(req);
-        // Request returns undefined body, fix!
-        const itemID = req.body.id;
-        const handle = req.body.handle;
-        await insertIntoTempTable(julkaisuID, itemID, handle);
-
-
+    .then(async function(res: Response) {
+        const itemID = (res as any)["id"];
+        console.log("The itemid: " + itemID);
+        const handle = (res as any)["handle"];
+        console.log("The handle: " + handle);
+        console.log(res);
+        await insertIntoArchiveTable(julkaisuID, itemID, handle);
     })
     .catch(function (err: Error) {
-        console.log("Soemthing went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/13/items" + err);
+        console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/13/items " + err);
     });
 }
 
 
-async function insertIntoTempTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any ) {
+async function insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any ) {
     // TODO, combine both queries into one
-    const columnitemid = "itemid";
-    const columnhandle = "handle";
-    const paramsItemID = {"id": julkaisuID, "table": columnitemid, "thesID": theseusItemID};
-    const paramsHandle = {"id": julkaisuID, "table": columnhandle, "thesID": theseusHandleID};
-    const queryitemid = "INSERT INTO julkaisuarkisto (" + "${table}" + " ) VALUES (" + "${thesID}" + ") WHERE julkaisuid = " +
+    const paramss = {"id": julkaisuID};
+    const queryitemid = "UPDATE julkaisuarkisto SET itemid=" + theseusItemID + "WHERE julkaisuid = " +
     "${id};";
-    const queryhandle = "INSERT INTO julkaisuarkisto (" + "${table}" + " ) VALUES (" + "${thesID}" + ") WHERE julkaisuid = " +
+    const queryhandle = "UPDATE julkaisuarkisto SET handle=" + "'" + theseusHandleID + "'" + "WHERE julkaisuid = " +
     "${id};";
-    await connection.db.any(queryitemid, paramsItemID);
-    await connection.db.any(queryhandle, paramsHandle);
+    await connection.db.any(queryitemid, paramss);
+    await connection.db.any(queryhandle, paramss);
 
     // TODO check if file exists, if so. Fire the request to send item to theseus
+    // Else, do nothing (This should never happen though, iirc.)
+    console.log("The stuff in inserttemptable: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
 
-    // if (itemexistsjotain){
-    //     sendBitstreamToItem(julkaisuID, theseusID);
-    // }
-    // sendBitstreamToItem(julkaisuID, theseusID);
-
+    if (fu.isPublicationInTheseus(julkaisuID)) {
+        sendBitstreamToItem(julkaisuID, theseusItemID);
+        console.log("IT IS IN THESEUS: " + julkaisuID);
+    }
+    else {
+    console.log("Metadata for item updated");
+    }
 }
 async function sendBitstreamToItem(julkaisuID: any, theseusID: any) {
+    console.log("The julkaisuID when we are sending bistream: " + julkaisuID + " and the theseusID: " + theseusID);
     const params = {"id": julkaisuID};
     const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
     const filenamequery = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-    const embargo = await connection.db.any(embargoquery, params);
+    // const embargo = await connection.db.any(embargoquery, params);
     const filename = await connection.db.any(filenamequery, params);
+    const filenamecleaned = filename[0]["filename"].replace(/^"(.*)"$/, "$1");
 
     // TODO SPLIT EMBARGO FOR URLFINAL
+    const filepath = "/opt/sources/publications/" + julkaisuID + "/" + filenamecleaned;
 
-
-    const urlFinal = BASEURL + "/items/" + theseusID + "/bitstreams?name=" + filename + "&description=file&groupId=0&year";
+    const urlFinal = BASEURL + "/items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=2019&month=2&day=20";
+    console.log("Thefinalurl: " + urlFinal);
     const headersOpt = {
         "rest-dspace-token": testtoken,
         "content-type": "application/json"
     };
     const options = {
+        rejectUnauthorized: false,
         method: "POST",
         uri: urlFinal,
         headers: headersOpt,
-        formData: fs.createReadStream(publicationFolder)
+        json: true,
+        formData: {
+            file: fs.createReadStream(filepath)
+        }
     };
         rp(options)
         .then(async function(res: Response, req: Request) {
             // TODO add catching of bitstreamid, also maybe policyid
             console.log(res);
             // If both are needed, merge insert into one statement.
-            const bitstreamid = req.body.bitstreamid;
-            const policyid = req.body.policyid;
+            const bitstreamid = (res as any)["id"];
+            console.log("catching the bitstream id from response" + bitstreamid);
+            // const policyid = (res as any)["policyid"];
             const params = {"id": julkaisuID};
-            const bitstreamquery = "INSERT INTO julkaisuarkisto (bitstreamid) VALUES (" + bitstreamid + " ) WHERE julkaisuid = " + "${id};";
-            const policyidquery = "INSERT INTO julkaisuarkisto (policyid) VALUES (" + policyid + " ) WHERE julkaisuid = " + "${id};";
+            const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
+            // const policyidquery = "INSERT INTO julkaisuarkisto (policyid) VALUES (" + policyid + " ) WHERE julkaisuid = " + "${id};";
             await connection.db.any(bitstreamquery, params);
-            await connection.db.any(policyidquery, params);
 
-            // TODO initiate deletefromjonohere, function base exists in fileupload.ts
-
+        })
+        .then(async function() {
+            console.log("im here");
+            const deletefromJonoQuery = "DELETE from julkaisujono WHERE julkaisuid = " + "${id};";
+            await connection.db.any(deletefromJonoQuery, params);
+            // TESTING PURPOSE
+            // DeleteFromTheseus(julkaisuID);
         })
         .catch(function(err: Error) {
             console.log("Something went wrong with sending file: " + err);
@@ -199,9 +213,33 @@ async function sendBitstreamToItem(julkaisuID: any, theseusID: any) {
 function getToken(res: Response) {
     // TODO ADD CODE HERE
 }
+async function DeleteFromTheseus(id: any) {
+    const params = {"id": id};
+    const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+    const itemid = await connection.db.any(itemidquery, params);
+    const urlFinal = BASEURL + "items/" + itemid[0]["itemid"];
+    const headersOpt = {
+        "rest-dspace-token": testtoken,
+        "content-type": "application/json"
+    };
+    const options = {
+        rejectUnauthorized: false,
+        method: "DELETE",
+        uri: urlFinal,
+        headers: headersOpt,
+    };
+    rp(options)
+    .then(async function(res: Response, req: Request) {
+        console.log(res);
+    })
+    .catch(function(err: Error) {
+        console.log("Error while deleting julkaisu: " + id);
+    });
+}
 module.exports = {
     IntervalTest: IntervalTest,
-    checkQueue: checkQueue
+    checkQueue: checkQueue,
+    DeleteFromTheseus: DeleteFromTheseus
 };
 
 

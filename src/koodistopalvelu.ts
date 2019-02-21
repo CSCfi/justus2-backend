@@ -29,6 +29,8 @@ const organisationConfig = require("./organization_config");
 function testInterval() {
     return console.log("MAKE IT RAIN");
 }
+
+// Interval timer for checking julkaisujono
 setInterval(() => ts.checkQueue(), 30000);
 
 function UpdateOrgListaus(res: Response) {
