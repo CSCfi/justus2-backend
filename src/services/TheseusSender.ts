@@ -9,7 +9,7 @@ const fs = require("fs");
 
 // Database connection
 const connection = require("./../db");
-const testtoken = "260ae73b-2546-45ca-aa57-6a23484feee5";
+const testtoken = "18555d36-3263-4a42-b705-dd77fcdbb18c";
 
 const BASEURL = "https://ds5-am-kktest.lib.helsinki.fi/rest/";
 const fu = require("../queries/fileUpload");
@@ -158,14 +158,21 @@ async function sendBitstreamToItem(julkaisuID: any, theseusID: any) {
     const params = {"id": julkaisuID};
     const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
     const filenamequery = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-    // const embargo = await connection.db.any(embargoquery, params);
+    const embargo = await connection.db.any(embargoquery, params);
     const filename = await connection.db.any(filenamequery, params);
     const filenamecleaned = filename[0]["filename"].replace(/^"(.*)"$/, "$1");
 
     // TODO SPLIT EMBARGO FOR URLFINAL
+    const embargodate = JSON.stringify(embargo[0]["embargo"]).split("T")[0];
+    console.log("The embargodate: " + embargodate);
+    const embargodatecleaned = embargodate.replace(/\"/g, "");
+    console.log("The embargodatecleaned: " + embargodatecleaned);
+    const year = embargodatecleaned.split("-")[0];
+    const month = embargodatecleaned.split("-")[1];
+    const day = embargodatecleaned.split("-")[2];
     const filepath = "/opt/sources/publications/" + julkaisuID + "/" + filenamecleaned;
 
-    const urlFinal = BASEURL + "/items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=2019&month=2&day=20";
+    const urlFinal = BASEURL + "/items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day;
     console.log("Thefinalurl: " + urlFinal);
     const headersOpt = {
         "rest-dspace-token": testtoken,
