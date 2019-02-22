@@ -314,8 +314,7 @@ function settoRedis(rediskey: string, obj: object[]) {
 
 // Objecthandler for Avainsanat from FINTO
 function ObjectHandlerAvainsanat(obj: any): object[] {
-    const avainsanat: object [] = [
-    ];
+    const avainsanat: object [] = [];
         if (obj instanceof Array) {
             obj.forEach((e: any) => {
                 e[0].results.forEach((x: any ) => {
@@ -325,21 +324,20 @@ function ObjectHandlerAvainsanat(obj: any): object[] {
                         altLabel: x.altLabel,
                     };
                     avainsanat.push(vals);
-            // });
-        });
-    });
-            return avainsanat;
+                });
+            });
+            return Object.values( avainsanat.reduce( ( acc: any, cur: any ) => Object.assign( acc, { [ cur.prefLabel ]: cur }), {} ));
         }
         else {
-        return obj.results.map((e: any) => {
-            return {
-                localname: e.localname,
-                prefLabel: e.prefLabel,
-                altLabel: e.altLabel,
+            return obj.results.map((e: any) => {
+                return {
+                    localname: e.localname,
+                    prefLabel: e.prefLabel,
+                    altLabel: e.altLabel,
                 };
              });
-            }
         }
+    }
 
 // Objecthandler for Julkaisusarjat from JUFO
 function ObjectHandlerJulkaisusarjat(obj: any): object[] {
