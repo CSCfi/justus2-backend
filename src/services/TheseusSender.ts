@@ -217,9 +217,34 @@ async function sendBitstreamToItem(julkaisuID: any, theseusID: any) {
 
 }
 
-function getToken(res: Response) {
+function checkToken(res: Response) {
     // TODO ADD CODE HERE
+    const urlFinal = BASEURL + "status";
+    const headersOpt = {
+        "rest-dspace-token": testtoken,
+        "content-type": "application/json"
+    };
+    const options = {
+        rejectUnauthorized: false,
+        method: "GET",
+        uri: urlFinal,
+        headers: headersOpt,
+        json: true,
+    };
+
+    rp(options)
+    .then(async function(res: Response) {
+        const authenticated = (res as any)["authenticated"];
+        if (authenticated === "true") {
+            return true;
+
+        }
+        else {
+            return false;
+        }
+    });
 }
+
 async function DeleteFromTheseus(id: any) {
     const params = {"id": id};
     const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
