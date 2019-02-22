@@ -34,7 +34,7 @@ function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
     // it returns nothing, which breaks the code, hence the odd looking error handling
 
     if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat);
+        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat, undefined, req.query.q);
     }
     else {
         res.send("");
