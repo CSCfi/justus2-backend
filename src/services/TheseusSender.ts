@@ -172,7 +172,7 @@ async function sendBitstreamToItem(julkaisuID: any, theseusID: any) {
     const day = embargodatecleaned.split("-")[2];
     const filepath = "/opt/sources/publications/" + julkaisuID + "/" + filenamecleaned;
 
-    const urlFinal = BASEURL + "/items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day;
+    const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day;
     console.log("Thefinalurl: " + urlFinal);
     const headersOpt = {
         "rest-dspace-token": testtoken,
@@ -217,7 +217,7 @@ async function sendBitstreamToItem(julkaisuID: any, theseusID: any) {
 
 }
 
-function checkToken(res: Response) {
+function checkToken() {
     // TODO ADD CODE HERE
     const urlFinal = BASEURL + "status";
     const headersOpt = {
@@ -242,6 +242,32 @@ function checkToken(res: Response) {
         else {
             return false;
         }
+    })
+    .catch(function(err: Error) {
+        console.log("Error while checking token status: " + err);
+    });
+}
+function getToken() {
+    const urlFinal = BASEURL + "login";
+    const metadataobj = {"email": "test@test.com", "password": "test"};
+    const headersOpt = {
+        "content-type": "application/json",
+    };
+    const options = {
+        rejectUnauthorized: false,
+        method: "POST",
+        uri: urlFinal,
+        headers: headersOpt,
+        body: metadataobj,
+        encoding: "utf8",
+    };
+    rp(options)
+    .then(async function(res: Response) {
+        console.log(res);
+        return res;
+    })
+    .catch(function(err: Error) {
+        console.log("Error while deleting julkaisu: " + err);
     });
 }
 
@@ -265,7 +291,7 @@ async function DeleteFromTheseus(id: any) {
         console.log(res);
     })
     .catch(function(err: Error) {
-        console.log("Error while deleting julkaisu: " + id);
+        console.log("Error while deleting julkaisu: " + id + " with error: " + err);
     });
 }
 module.exports = {
