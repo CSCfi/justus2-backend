@@ -340,18 +340,32 @@ function ObjectHandlerAvainsanat(obj: any): object[] {
     }
 
 // Objecthandler for Julkaisusarjat from JUFO
-function ObjectHandlerJulkaisusarjat(obj: any): object[] {
+function ObjectHandlerJulkaisusarjat(obj: any, query: any): object[] {
+
     const julkaisusarjat: object [] = [
     ];
+
     if (obj instanceof Array) {
-    obj.forEach((e: any)  => {
-        const values = {
-            Jufo_ID: e.Jufo_ID,
-            Name: e.Name,
-            Type: e.Type,
-        };
-        julkaisusarjat.push(values);
-    });
+        obj.forEach((e: any)  => {
+            const values = {
+                Jufo_ID: e.Jufo_ID,
+                Name: e.Name,
+                Type: e.Type,
+            };
+            julkaisusarjat.push(values);
+        });
+
+        const tempArray: any = [];
+        julkaisusarjat.forEach((e: any) => {
+            if (query.toLowerCase() === e.Name.toLowerCase()) {
+                tempArray.push(e);
+                julkaisusarjat.splice(julkaisusarjat.indexOf(e), 1);
+            }
+        });
+
+        for (let i = 0; i < tempArray.length; i++) {
+            julkaisusarjat.unshift(tempArray[i]);
+        }
         return julkaisusarjat.slice(0, 20);
     }
     else {
