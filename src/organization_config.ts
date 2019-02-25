@@ -85,7 +85,7 @@ const domainMappings = [
         // Centria-ammattikorkeakoulu  #centria-admins
         "domain": "@centria.fi",
         "code": "02536",
-        "email": "marjo.pekola@centria"
+        "email": "hanna-riina.aho@centria"
     },
     {
         // Diakonia-ammattikorkeakoulu  #diak-admins
