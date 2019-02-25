@@ -431,12 +431,10 @@ async function getIssn(julkaisuid: any) {
 async function getIsbn(julkaisuid: any) {
     const query = "SELECT isbn FROM julkaisu_isbn WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
-    console.log(result);
     if (result.length < 1) {
         return [""];
     } else {
         result = oh.mapIssnAndIsbn("isbn", result);
-        console.log(result);
         return result;
     }
 }
