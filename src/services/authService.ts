@@ -6,6 +6,11 @@ const utf8 = require("utf8");
 
 const getUserData = function (headers: any) {
 
+
+    if (!headers["shib-group"]) {
+        return false;
+    }
+
     const domain =  parseDomainFromHeadersData(headers["shib-group"]);
 
         if (!domain) {
