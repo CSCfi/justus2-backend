@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 const authService = require("./authService");
 module.exports = (req: Request, res: Response, next: NextFunction) => {
 
+    console.log("populate user data");
+
     // return data from this route before user is authenticated
     if (req.originalUrl === "/public/organisaationimet") {
         console.log(req.originalUrl);
