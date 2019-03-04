@@ -3,13 +3,14 @@ const authService = require("./authService");
 module.exports = (req: Request, res: Response, next: NextFunction) => {
 
     console.log("populate user data");
-    console.log(req.originalUrl);
-    console.log(req.headers);
+    // console.log(req.originalUrl);
+    // console.log(req.headers);
 
     // return data from this route before user is authenticated
     if (req.originalUrl === "/organisaationimet") {
+        console.log("Organisaationimet is original url");
         console.log(req.originalUrl);
-        next();
+        return next();
     }
 
     if (!authService.getUserData(req.headers)) {
