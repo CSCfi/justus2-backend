@@ -10,7 +10,8 @@ module.exports = (req: Request, res: Response, next: NextFunction) => {
     if (req.originalUrl === "/organisaationimet") {
         console.log("Organisaationimet is original url");
         console.log(req.originalUrl);
-        return next();
+        console.log(next());
+        next();
     }
 
     if (!authService.getUserData(req.headers)) {

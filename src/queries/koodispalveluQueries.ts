@@ -53,6 +53,7 @@ function getOrganisaatioNames(req: Request, res: Response, next: NextFunction) {
         redisKey = "getOrgNames" + req.session.language;
     }
     getRedis(redisKey, function success(reply: any) {
+        console.log(reply);
         res.status(200).json(
             JSON.parse(reply)
         );
@@ -201,6 +202,7 @@ function getJulkaisunLuokat(req: Request, res: Response, next: NextFunction) {
 
 function getAlaYksikot(req: Request, res: Response, next: NextFunction) {
     getRedis("getAlayksikot", function success(reply: any) {
+
         res.status(200).json(
             JSON.parse(reply)
         );
