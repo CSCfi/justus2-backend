@@ -7,7 +7,7 @@ module.exports = (req: Request, res: Response, next: NextFunction) => {
     console.log(req.headers);
 
     // return data from this route before user is authenticated
-    if (req.originalUrl === "/public/organisaationimet") {
+    if (req.originalUrl === "/organisaationimet") {
         console.log(req.originalUrl);
         next();
     }
