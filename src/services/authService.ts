@@ -8,6 +8,7 @@ const getUserData = function (headers: any) {
 
 
     if (!headers["shib-group"]) {
+        console.log("No shib-group provided");
         return false;
     }
 
