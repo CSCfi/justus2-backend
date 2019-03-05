@@ -41,19 +41,16 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 
 function getOrganisaatioNames(req: Request, res: Response, next: NextFunction) {
 
-    console.log("Fetching organisation names");
-    console.log(req.session);
-
     let redisKey;
-    if (!req.session.language) {
-        console.log("No session language");
-        redisKey = "getOrgNamesFI";
+    if (req.session.language) {
+        redisKey = "getOrgNames" + req.session.language;
+    } else if (req.query.lang) {
+        redisKey = "getOrgNames" + req.query.lang;
     }
     else {
-        redisKey = "getOrgNames" + req.session.language;
+        redisKey = "getOrgNamesFI";
     }
     getRedis(redisKey, function success(reply: any) {
-        console.log(reply);
         res.status(200).json(
             JSON.parse(reply)
         );
