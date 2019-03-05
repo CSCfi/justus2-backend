@@ -95,8 +95,6 @@ function UpdateKoodistopalveluRedis(res: Response) {
             }).then(() => {
                 return setJulkaisunLuokatSV(res);
             }).then(() => {
-                return TestFunction();
-            }).then(() => {
                 console.log("Data from Koodistopalvelu updated");
                 resolve();
             });
