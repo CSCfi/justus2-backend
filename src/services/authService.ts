@@ -24,7 +24,8 @@ const getUserData = function (headers: any) {
             "organisaatio": "",
             "email": "",
             "rooli": "",
-            "nimi": name
+            "nimi": name,
+            "showPublicationInput": <boolean> undefined
         };
 
         const role = getRole(headers["shib-group"]);
@@ -37,6 +38,7 @@ const getUserData = function (headers: any) {
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
                 userData.rooli = role;
+                userData.showPublicationInput = domainMapping[key].showPublicationInput;
                 domainMapped = true;
             } else {
                 return false;
