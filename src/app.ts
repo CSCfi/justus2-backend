@@ -6,15 +6,14 @@ import flash from "express-flash";
 import path from "path";
 import expressValidator from "express-validator";
 
-if (typeof process.env.NODE_ENV === "undefined" || process.env.NODE_ENV != "prod") {
-    // Load environment variables from .env file, where API keys and passwords are configured
-    dotenv.config({ path: ".env.variables" });
-}
+dotenv.config({ path: ".env.variables" });
+const sessionSecret = process.env.SESSION_SECRET;
+
 const redis = require("redis");
 const client = redis.createClient();
+
 // Create express server
 const app = express();
-// const cookieSession = require("cookie-session");
 const morgan = require("morgan");
 
 // Require bodyparser for every request
@@ -31,7 +30,7 @@ const RedisStore = require("connect-redis")(session);
 app.use(cookieParser());
 app.use(session({
     store: new RedisStore(),
-    secret: "test",
+    secret: sessionSecret,
     cookie: { maxAge: 24 * 60 * 60 * 1000, secure: false }, // 1 day
     resave: true,
     autoreconnect: true,

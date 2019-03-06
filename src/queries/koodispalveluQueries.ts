@@ -42,11 +42,13 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 function getOrganisaatioNames(req: Request, res: Response, next: NextFunction) {
 
     let redisKey;
-    if (!req.session.language) {
-        redisKey = "getOrgNamesFI";
+    if (req.session.language) {
+        redisKey = "getOrgNames" + req.session.language;
+    } else if (req.query.lang) {
+        redisKey = "getOrgNames" + req.query.lang;
     }
     else {
-        redisKey = "getOrgNames" + req.session.language;
+        redisKey = "getOrgNamesFI";
     }
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
@@ -197,6 +199,7 @@ function getJulkaisunLuokat(req: Request, res: Response, next: NextFunction) {
 
 function getAlaYksikot(req: Request, res: Response, next: NextFunction) {
     getRedis("getAlayksikot", function success(reply: any) {
+
         res.status(200).json(
             JSON.parse(reply)
         );

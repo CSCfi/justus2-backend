@@ -314,8 +314,7 @@ function settoRedis(rediskey: string, obj: object[]) {
 
 // Objecthandler for Avainsanat from FINTO
 function ObjectHandlerAvainsanat(obj: any): object[] {
-    const avainsanat: object [] = [
-    ];
+    const avainsanat: object [] = [];
         if (obj instanceof Array) {
             obj.forEach((e: any) => {
                 e[0].results.forEach((x: any ) => {
@@ -325,35 +324,48 @@ function ObjectHandlerAvainsanat(obj: any): object[] {
                         altLabel: x.altLabel,
                     };
                     avainsanat.push(vals);
-            // });
-        });
-    });
-            return avainsanat;
+                });
+            });
+            return Object.values( avainsanat.reduce( ( acc: any, cur: any ) => Object.assign( acc, { [ cur.prefLabel ]: cur }), {} ));
         }
         else {
-        return obj.results.map((e: any) => {
-            return {
-                localname: e.localname,
-                prefLabel: e.prefLabel,
-                altLabel: e.altLabel,
+            return obj.results.map((e: any) => {
+                return {
+                    localname: e.localname,
+                    prefLabel: e.prefLabel,
+                    altLabel: e.altLabel,
                 };
              });
-            }
         }
+    }
 
 // Objecthandler for Julkaisusarjat from JUFO
-function ObjectHandlerJulkaisusarjat(obj: any): object[] {
+function ObjectHandlerJulkaisusarjat(obj: any, query: any): object[] {
+
     const julkaisusarjat: object [] = [
     ];
+
     if (obj instanceof Array) {
-    obj.forEach((e: any)  => {
-        const values = {
-            Jufo_ID: e.Jufo_ID,
-            Name: e.Name,
-            Type: e.Type,
-        };
-        julkaisusarjat.push(values);
-    });
+        obj.forEach((e: any)  => {
+            const values = {
+                Jufo_ID: e.Jufo_ID,
+                Name: e.Name,
+                Type: e.Type,
+            };
+            julkaisusarjat.push(values);
+        });
+
+        const tempArray: any = [];
+        julkaisusarjat.forEach((e: any) => {
+            if (query.toLowerCase() === e.Name.toLowerCase()) {
+                tempArray.push(e);
+                julkaisusarjat.splice(julkaisusarjat.indexOf(e), 1);
+            }
+        });
+
+        for (let i = 0; i < tempArray.length; i++) {
+            julkaisusarjat.unshift(tempArray[i]);
+        }
         return julkaisusarjat.slice(0, 20);
     }
     else {
@@ -549,6 +561,12 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                 ];
                 const yksikot2018: object [] = [
                 ];
+                const yksikot2019: object [] = [
+                ];
+                const twntynine = {
+                    vuosi: "2019",
+                    yksikot: yksikot2019,
+                };
                 const twntyeight = {
                     vuosi: "2018",
                     yksikot: yksikot2018,
@@ -579,6 +597,13 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                     };
                     yksikot2018.push(yksikot28);
                 }
+                else if (e.koodiArvo === determinatormatch && year === "2019") {
+                    const yksikot29 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    yksikot2019.push(yksikot29);
+                }
                 else if (e.koodiArvo === determinatormatch && year != "2017" && year != "2018") {
                     const yksikot26 = {
                         arvo: x.arvo,
@@ -592,14 +617,16 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                 const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
                 const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
 
+                yksikotarray.push(twntynine);
                 yksikotarray.push(twntyeight);
                 yksikotarray.push(twntyseven);
                 yksikotarray.push(twntysix);
-            if (yksikot2016 && yksikot2017 && yksikot2018  && yksikot2016.length || yksikot2017.length || yksikot2018.length) {
+            if (yksikot2016 && yksikot2017 && yksikot2018 && yksikot2019  && yksikot2016.length || yksikot2017.length || yksikot2018.length || yksikot2019.length) {
                 visibleFields.push("alayksikko");
                 requiredFields.push("alayksikko");
 
                 const organisationName = setOrganisationName(e, lang);
+
                 const oneorg = {
                     arvo: e.koodiArvo,
                     selite: organisationName,
@@ -653,27 +680,139 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
 
         let name = "";
 
-        const checkIfFiExists = (o: any) => o.kieli === "FI";
-        const fi = obj.metadata.some(checkIfFiExists);
+        if (lang === "FI") {
 
-        if (!fi) {
-            for (let i = 0; i < obj.metadata.length; i++) {
-                if (obj.metadata[i].kieli === "SV") {
-                    name = obj.metadata[i].nimi;
+            const checkIfFiExists = (o: any) => o.kieli === "FI";
+            const fi = obj.metadata.some(checkIfFiExists);
+
+            if (!fi) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === "SV") {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            }
+
+            if (fi) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === lang) {
+                        name = obj.metadata[i].nimi;
+                    }
                 }
             }
         }
 
-        if (fi) {
-            for (let i = 0; i < obj.metadata.length; i++) {
-                if (obj.metadata[i].kieli === lang) {
-                    name = obj.metadata[i].nimi;
+        if (lang === "SV") {
+
+            const checkIfSvExists = (o: any) => o.kieli === "SV";
+            const sv = obj.metadata.some(checkIfSvExists);
+
+            if (sv) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === lang) {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            } else {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === "FI") {
+                        name = obj.metadata[i].nimi;
+                    }
                 }
             }
         }
 
+        if (lang === "EN") {
+
+            const checkIfEnExists = (o: any) => o.kieli === "EN";
+            const sv = obj.metadata.some(checkIfEnExists);
+
+            if (sv) {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === lang) {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            } else {
+                for (let i = 0; i < obj.metadata.length; i++) {
+                    if (obj.metadata[i].kieli === "FI") {
+                        name = obj.metadata[i].nimi;
+                    }
+                }
+            }
+        }
         return name;
     }
+
+function ObjectHandlerOrgNames(obj: any, orgid: any, lang: any) {
+
+    const list: any  = [];
+
+    if (lang === "FI") {
+        obj.forEach((value: any) => {
+            const checkIfFiExists = (o: any) => o.kieli === "FI";
+            const fi = value.metadata.some(checkIfFiExists);
+            if (fi) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "SV") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+        });
+    }
+    if (lang === "SV") {
+        obj.forEach((value: any) => {
+            const checkIfFiExists = (o: any) => o.kieli === "SV";
+            const sv = value.metadata.some(checkIfFiExists);
+            if (sv) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "FI") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+
+        });
+    }
+    if (lang === "EN") {
+        obj.forEach((value: any) => {
+            const checkIfEnExists = (o: any) => o.kieli === "EN";
+            const en = value.metadata.some(checkIfEnExists);
+            if (en) {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === lang) {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            } else {
+                for (let i = 0; i < value.metadata.length; i++) {
+                    if (value.metadata[i].kieli === "FI") {
+                        list.push(value.metadata[i].nimi);
+                    }
+                }
+            }
+
+        });
+    }
+
+
+    list.sort();
+    settoRedis("getOrgNames" + lang, list);
+    return list;
+}
 
 function ObjectHandlerVirtaEsitaytto(obj: any): object[] {
     return obj;
@@ -823,6 +962,11 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
         ];
         const y2018: object [] = [
         ];
+        const y2019: object [] = [];
+        const twonine = {
+            vuosi: "2019",
+            yksikot: y2019,
+        };
         const twoeight = {
             vuosi: "2018",
             yksikot: y2018,
@@ -854,6 +998,13 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
                     };
                     y2018.push(y28);
                 }
+                else if (orgid === match && year === "2019") {
+                    const y29 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    y2019.push(y29);
+                }
                 else if (orgid === match && year != "2017" && year != "2018") {
                     const y26 = {
                         arvo: x.arvo,
@@ -868,10 +1019,11 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
         const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
         const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
 
+              yarray.push(twonine);
               yarray.push(twoeight);
               yarray.push(twoseven);
               yarray.push(twosix);
-              if (y2017.length || y2018.length || y2017.length) {
+              if (y2016.length || y2017.length || y2018.length || y2019.length) {
                   visibleFields.push("alayksikko");
                   requiredFields.push("alayksikko");
               const orgall =  {
@@ -896,75 +1048,6 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
             }
         }
     }
-}
-
-function ObjectHandlerOrgNames(obj: any, orgid: any, lang: any) {
-
-    const list: any  = [];
-
-    if (lang === "FI") {
-        obj.forEach((value: any) => {
-            const checkIfFiExists = (o: any) => o.kieli === "FI";
-            const fi = value.metadata.some(checkIfFiExists);
-            if (fi) {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === lang) {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            } else {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === "SV") {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            }
-        });
-    }
-    if (lang === "SV") {
-        obj.forEach((value: any) => {
-            const checkIfFiExists = (o: any) => o.kieli === "SV";
-            const sv = value.metadata.some(checkIfFiExists);
-            if (sv) {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === lang) {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            } else {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === "FI") {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            }
-
-        });
-    }
-    if (lang === "EN") {
-        obj.forEach((value: any) => {
-            const checkIfFiExists = (o: any) => o.kieli === "EN";
-            const en = value.metadata.some(checkIfFiExists);
-            if (en) {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === lang) {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            } else {
-                for (let i = 0; i < value.metadata.length; i++) {
-                    if (value.metadata[i].kieli === "FI") {
-                        list.push(value.metadata[i].nimi);
-                    }
-                }
-            }
-
-        });
-    }
-
-    list.sort();
-    settoRedis("getOrgNames" + lang, list);
-    return list;
 }
 
 

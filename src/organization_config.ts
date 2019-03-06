@@ -85,7 +85,7 @@ const domainMappings = [
         // Centria-ammattikorkeakoulu  #centria-admins
         "domain": "@centria.fi",
         "code": "02536",
-        "email": "marjo.pekola@centria"
+        "email": "hanna-riina.aho@centria"
     },
     {
         // Diakonia-ammattikorkeakoulu  #diak-admins
@@ -184,12 +184,12 @@ const domainMappings = [
         "code": "02630",
         "email": "tiina.kenttala-koivumaki@tamk.fi"
     },
-    // {
-    //     // Tampereen ammattikorkeakoulu  #tamk-admins
-    //     "domain": "@tuni.fi",
-    //     "code": "02630",
-    //     "email": "tiina.kenttala-koivumaki@tamk.fi"
-    // },
+    {
+        // Tampereen ammattikorkeakoulu  #tamk-admins
+        "domain": "@tuni.fi",
+        "code": "02630",
+        "email": "tiina.kenttala-koivumaki@tamk.fi"
+    },
     {
         // Yrkeshögskolan Novia  #novia-admins
         "domain": "@novia.fi",
@@ -259,10 +259,10 @@ const domainMappings = [
         "email": "leena.byholm@luke.fi"
     },
     {
-        // Oulun ammattikorkeakoulu
+        // Oulun ammattikorkeakoulu #oamk-admins
         "domain": "@oamk.fi",
         "code": "02471",
-        "email": ""
+        "email": "justus@oamk.fi"
     },
     {
         // 	Geologian tutkimuskeskus #gtk-admins
