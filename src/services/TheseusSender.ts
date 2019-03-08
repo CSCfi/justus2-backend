@@ -78,7 +78,6 @@ async function postJulkaisuTheseus(julkaisunID: any) {
     {"key": "dc.title", "value": julkData["julkaisunnimi"]},
     {"key": "dc.type.okm", "value": julkData["julkaisutyyppi"]},
     {"key": "dc.date.issued", "value": julkData["julkaisuvuosi"]},
-    {"key": "dc.contributor.author", "value": julkData["tekijat"]}, // formaatti, sukunimi, etunimi
     {"key": "dc.relation.conference", "value": julkData["konferenssinvakiintunutnimi"]},
     {"key": "dc.relation.ispartof", "value": julkData["emojulkaisunnimi"]},
     {"key": "dc.contributor.editor", "value": julkData["emojulkaisuntoimittajat"]},
@@ -94,11 +93,24 @@ async function postJulkaisuTheseus(julkaisunID: any) {
     {"key": "dc.identifier.uri", "value": julkData["rinnakkaistallennetunversionverkkoosoite"]},
     {"key": "dc.identifier.isbn", "value": ISBNdata["isbn"]},
     {"key": "dc.identifier.issn", "value": ISSNdata["issn"]},
-    {"key": "dc.subject", "value": avainsData["avainsana"]}
 
 ]};
+avainsanadata.forEach((e: any) => {
+    const singleavainsana = e.avainsana;
+    const avainsanaobject = {"key": "dc.subject", "value": singleavainsana};
+    metadataobject.metadata.push(avainsanaobject);
+});
+const str = julkData["tekijat"];
+const onetekija = str.split(";");
+
+
+onetekija.forEach((e: any) => {
+const tekijatobject = {"key": "dc.contributor.author", "value": e};
+metadataobject.metadata.push(tekijatobject);
+});
+
 console.log(metadataobject);
-await sendPostReqTheseus(metadataobject, julkaisunID);
+// await sendPostReqTheseus(metadataobject, julkaisunID);
 }
 
 async function sendPostReqTheseus(sendObject: any, julkaisuID: any) {
@@ -288,7 +300,7 @@ async function DeleteFromTheseus(id: any) {
     };
     rp(options)
     .then(async function(res: Response, req: Request) {
-        console.log(res);
+        console.log("Successful delete" + res);
     })
     .catch(function(err: Error) {
         console.log("Error while deleting julkaisu: " + id + " with error: " + err);
