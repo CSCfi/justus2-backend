@@ -17,7 +17,6 @@ router.get("/julkaisut/lista/all", db.getJulkaisut);
 router.get("/julkaisut/lista/:organisaatiotunnus?", db.getJulkaisutmin);
 router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
 router.get("/user", db.getUser);
-router.get("/usersession", db.getUserSessionData);
 
 // POST requests
 router.post("/julkaisu", db.postJulkaisu);
@@ -54,9 +53,6 @@ router.get("/haku/taidealantyyppikategoria", koodistopalvelu.getTaideAlanTyyppiK
 router.get("/haku/taiteenalat", koodistopalvelu.getTaiteenalat);
 router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
 router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
-
-// For develeopping purposes
-router.get("/testvirta", db.testvirta);
 
 export = router;
 

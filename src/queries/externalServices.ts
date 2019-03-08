@@ -34,7 +34,7 @@ function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
     // it returns nothing, which breaks the code, hence the odd looking error handling
 
     if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat);
+        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat, undefined, req.query.q);
     }
     else {
         res.send("");
@@ -329,8 +329,6 @@ function parseVirtaData(data: any) {
     if (enableZeroValue(data["RinnakkaistallennettuKytkin"])) obj["julkaisu"]["julkaisurinnakkaistallennettu"] = data["RinnakkaistallennettuKytkin"].toString();
     if (enableZeroValue(data["JufoTunnus"])) { obj["julkaisu"]["jufotunnus"] = data["JufoTunnus"].toString(); }
     if (enableZeroValue(data["JufoLuokkaKoodi"])) { obj["julkaisu"]["jufoluokitus"] = data["JufoLuokkaKoodi"].toString(); }
-    if (enableZeroValue(data["JulkaisunTilaKoodi"])) obj["julkaisu"]["julkaisuntila"] = data["JulkaisunTilaKoodi"].toString();
-
 
     if (data["ISSN"]) {
         if (data["ISSN"].constructor === Array ) {

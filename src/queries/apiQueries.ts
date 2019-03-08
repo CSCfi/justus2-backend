@@ -431,12 +431,10 @@ async function getIssn(julkaisuid: any) {
 async function getIsbn(julkaisuid: any) {
     const query = "SELECT isbn FROM julkaisu_isbn WHERE julkaisuid =  " + julkaisuid + ";";
     let result = await db.any(query);
-    console.log(result);
     if (result.length < 1) {
         return [""];
     } else {
         result = oh.mapIssnAndIsbn("isbn", result);
-        console.log(result);
         return result;
     }
 }
@@ -644,20 +642,6 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
     await auditLog.postAuditData(headers, "POST", "alayksikko", jid, alayksikkoObj);
 }
 
-// function postLanguage(req: Request, res: Response) {
-//     if (req.params.lang === "EN" || req.params.lang === "SV" || req.params.lang === "FI") {
-//         language = req.params.lang;
-//         console.log("The new language = " + language);
-//         res.status(200).send("Language switched to " + req.params.lang);
-//     }
-//     else {
-//         res.status(400).send("Wrong lang parameter posted");
-//     }
-// }
-
-function getUserSessionData(req: Request, res: Response) {
-    res.status(200).send(req.session);
-}
 
 
 module.exports = {
@@ -666,8 +650,6 @@ module.exports = {
     getJulkaisutmin: getJulkaisutmin,
     getAllPublicationDataById: getAllPublicationDataById,
     getUser: getUser,
-    getUserSessionData: getUserSessionData,
-    testvirta: testvirta,
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,

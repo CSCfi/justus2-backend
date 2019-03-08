@@ -101,8 +101,6 @@ function UpdateKoodistopalveluRedis(res: Response) {
             }).then(() => {
                 return setJulkaisunLuokatSV(res);
             }).then(() => {
-                return TestFunction();
-            }).then(() => {
                 console.log("Data from Koodistopalvelu updated");
                 resolve();
             });
@@ -133,7 +131,7 @@ function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, l
     });
 }
 
-function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String) {
+function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
     if (secondURL) {
         const urls = [URL, secondURL];
         const first: object []  = [
@@ -176,7 +174,7 @@ function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secon
         });
         resp.on("end", () => {
             const newdata = JSON.parse(data);
-            res.send(objecthandler(newdata));
+            res.send(objecthandler(newdata, queryParams));
         });
     })
     .on("error", (err: Error) => {

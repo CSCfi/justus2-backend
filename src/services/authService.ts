@@ -4,7 +4,13 @@ const domainMapping = organisationConfig.domainMappings;
 const conn = require("./../db");
 const utf8 = require("utf8");
 
-let getUserData = function(headers: any) {
+const getUserData = function (headers: any) {
+
+
+    if (!headers["shib-group"]) {
+        console.log("No shib-group provided");
+        return false;
+    }
 
     const domain =  parseDomainFromHeadersData(headers["shib-group"]);
 
@@ -18,7 +24,8 @@ let getUserData = function(headers: any) {
             "organisaatio": "",
             "email": "",
             "rooli": "",
-            "nimi": name
+            "nimi": name,
+            "showPublicationInput": <boolean> undefined
         };
 
         const role = getRole(headers["shib-group"]);
@@ -31,6 +38,7 @@ let getUserData = function(headers: any) {
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
                 userData.rooli = role;
+                userData.showPublicationInput = domainMapping[key].showPublicationInput;
                 domainMapped = true;
             } else {
                 return false;
@@ -45,7 +53,7 @@ let getUserData = function(headers: any) {
 };
 
 
-let getOrganisationId = function(params: any) {
+const getOrganisationId = function(params: any) {
 
     const domain =  parseDomainFromHeadersData(params);
     let organisationCode = "";
@@ -64,7 +72,7 @@ let getOrganisationId = function(params: any) {
 };
 
 
-let parseDomainFromHeadersData = function(data: any) {
+const parseDomainFromHeadersData = function(data: any) {
 
     const domain = data.match(/(;|^)(@[^;]+)($|;)/);
     if (domain !== null) {
@@ -74,7 +82,7 @@ let parseDomainFromHeadersData = function(data: any) {
     }
 };
 
-let getRole = function(data: any) {
+const getRole = function(data: any) {
 
     console.log(data);
 
