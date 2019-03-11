@@ -42,71 +42,52 @@ async function postJulkaisuTheseus(julkaisunID: any) {
     // const orgCollection = "something";
     const params = {"id": julkaisunID};
     // ALL queries for the metadataobject
-    const queryJulkaisu = "SELECT * FROM julkaisu WHERE id = " +
-        "${id};";
-    // const queryOrgTek = "SELECT * FROM organisaatiotekija WHERE id = " +
-    //     "${id};";
-    const queryISBN = "SELECT * FROM julkaisu_isbn WHERE julkaisuid = " +
-        "${id};";
-    const queryISSN = "SELECT * FROM julkaisu_issn WHERE julkaisuid = " +
-        "${id};";
-    const queryAvainsana = "SELECT * FROM avainsana WHERE julkaisuid = " +
+    const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
+    const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
         "${id};";
 
-    // All db array objects
-    const julkaisudata  = await connection.db.any(queryJulkaisu, params);
-    // const organisaatiotekijadata  = await connection.db.any(queryOrgTek, params);
-    const isbndata  = await connection.db.any(queryISBN, params);
-    const issndata  = await connection.db.any(queryISSN, params);
-    const avainsanadata  = await connection.db.any(queryAvainsana, params);
+    let julkaisuData: any = {};
+    let avainsanaData = [];
+    let isbnData = [];
+    let issnData = [];
 
 
-    const julkData = julkaisudata[0];
-    console.log("the julkData:" + julkData);
+    try {
+        julkaisuData  = await connection.db.one(queryJulkaisu, params);
+        avainsanaData  = await api.getAvainsana(julkaisunID);
+        isbnData  = await api.getIsbn(julkaisunID);
+        issnData  = await api.getIssn(julkaisunID);
+    } catch (e) {
+        console.log(e);
+    }
+
+    // console.log("the julkData:" + julkaisuData);
     // Not used for now, declaration unclear on which ones to be used for dc.contributor.author
     // const orgTekData = organisaatiotekijadata[0];
-    const ISBNdata = isbndata[0];
-    console.log("The isbndata: " + ISBNdata);
-    const ISSNdata = issndata[0];
-    console.log("The issndata: " + ISSNdata);
-    const avainsData = avainsanadata[0];
 
-    // let metadataobject = {};
-    const metadataobject = {"name": julkData["julkaisunnimi"], "metadata": [
-    {"key": "dc.source.identifier", "value": julkData["id"]},
-    {"key": "dc.title", "value": julkData["julkaisunnimi"]},
-    {"key": "dc.type.okm", "value": julkData["julkaisutyyppi"]},
-    {"key": "dc.date.issued", "value": julkData["julkaisuvuosi"]},
-    {"key": "dc.relation.conference", "value": julkData["konferenssinvakiintunutnimi"]},
-    {"key": "dc.relation.ispartof", "value": julkData["emojulkaisunnimi"]},
-    {"key": "dc.contributor.editor", "value": julkData["emojulkaisuntoimittajat"]},
-    {"key": "dc.relation.ispartofjournal", "value": julkData["lehdenjulkaisusarjannimi"]},
-    {"key": "dc.relation.volume", "value": julkData["volyymi"]},
-    {"key": "dc.relation.issue", "value": julkData["numero"]},
-    {"key": "dc.relation.pagerange", "value": julkData["sivut"]},
-    {"key": "dc.relation.articlenumber", "value": julkData["artikkelinumero"]},
-    {"key": "dc.publisher", "value": julkData["kustantaja"]},
-    {"key": "dc.language.iso", "value": julkData["julkaisunkieli"]},
-    {"key": "dc.relation.doi", "value": julkData["doitunniste"]},
-    {"key": "dc.okm.selfarchived", "value": julkData["julkaisurinnakkaistallennettu"]},
-    {"key": "dc.identifier.uri", "value": julkData["rinnakkaistallennetunversionverkkoosoite"]},
-    {"key": "dc.identifier.isbn", "value": ISBNdata["isbn"]},
-    {"key": "dc.identifier.issn", "value": ISSNdata["issn"]},
-
-]};
-avainsanadata.forEach((e: any) => {
-    const singleavainsana = e.avainsana;
-    const avainsanaobject = {"key": "dc.subject", "value": singleavainsana};
-    metadataobject.metadata.push(avainsanaobject);
-});
-const str = julkData["tekijat"];
-const onetekija = str.split(";");
+    const metadataobject = {
+        "name": julkaisuData["julkaisunnimi"], "metadata": [
+            {"key": "dc.source.identifier", "value": julkaisuData["id"]},
+            {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
+            {"key": "dc.type.okm", "value": julkaisuData["julkaisutyyppi"]},
+            {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
+            {"key": "dc.relation.conference", "value": julkaisuData["konferenssinvakiintunutnimi"]},
+            {"key": "dc.relation.ispartof", "value": julkaisuData["emojulkaisunnimi"]},
+            {"key": "dc.contributor.editor", "value": julkaisuData["emojulkaisuntoimittajat"]},
+            {"key": "dc.relation.ispartofjournal", "value": julkaisuData["lehdenjulkaisusarjannimi"]},
+            {"key": "dc.relation.volume", "value": julkaisuData["volyymi"]},
+            {"key": "dc.relation.issue", "value": julkaisuData["numero"]},
+            {"key": "dc.relation.pagerange", "value": julkaisuData["sivut"]},
+            {"key": "dc.relation.articlenumber", "value": julkaisuData["artikkelinumero"]},
+            {"key": "dc.publisher", "value": julkaisuData["kustantaja"]},
+            {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
+            {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
+            {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
+            {"key": "dc.identifier.uri", "value": julkaisuData["rinnakkaistallennetunversionverkkoosoite"]},
+        ]};
 
 
-onetekija.forEach((e: any) => {
-const tekijatobject = {"key": "dc.contributor.author", "value": e};
-metadataobject.metadata.push(tekijatobject);
-});
+
 
 console.log(metadataobject);
 // await sendPostReqTheseus(metadataobject, julkaisunID);
