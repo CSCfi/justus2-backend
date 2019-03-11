@@ -42,6 +42,27 @@ const julkaisuarkisto = [
       "urn"
 ];
 
+const theseusJulkaisuFields = [
+    "julkaisutyyppi",
+    "julkaisuvuosi",
+    "julkaisunnimi",
+    "tekijat",
+    "konferenssinvakiintunutnimi",
+    "emojulkaisunnimi",
+    "emojulkaisuntoimittajat",
+    "lehdenjulkaisusarjannimi",
+    "volyymi",
+    "numero",
+    "sivut",
+    "artikkelinumero",
+    "kustantaja",
+    "julkaisunkieli",
+    "doitunniste",
+    "julkaisurinnakkaistallennettu",
+    "rinnakkaistallennetunversionverkkoosoite"
+];
+
+
 const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "rooli"];
 const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
 const taiteenala = ["julkaisuid", "taiteenalakoodi", "jnro"];
@@ -67,9 +88,14 @@ let constructObject = function(obj: any, jid: any, value: any) {
     return finalObject;
 };
 
-let fields = function (prefix: any) {
+let fields = function (prefix: any, theseus?: boolean) {
     if (!prefix) prefix = "julkaisu";
-    return prefix + "." + julkaisu.join("," + prefix + ".");
+    if (!theseus) {
+        return prefix + "." + julkaisu.join("," + prefix + ".");
+
+    } else {
+        return prefix + "." + theseusJulkaisuFields.join("," + prefix + ".");
+    }
 };
 
 
@@ -80,6 +106,7 @@ module.exports = {
     tieteenala: tieteenala,
     taiteenala: taiteenala,
     kaytto_loki: kaytto_loki,
+    theseusJulkaisuFields: theseusJulkaisuFields,
     addJulkaisuIdToObject: addJulkaisuIdToObject,
     constructObject: constructObject,
     getTableFields: fields
