@@ -22,16 +22,15 @@ function IntervalTest() {
 // setInterval(() => IntervalTest, 1000);
 
 async function checkQueue() {
-    // Token checker function
-// const julkaisuIDt = await connection.db.query("SELECT id from julkaisu WHERE julkaisuntila::integer > 0", "RETURNING ID");
+    const julkaisuIDt = await connection.db.query(
+        "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
+        "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
+    console.log("The join SELECT: " + JSON.stringify(julkaisuIDt));
 
-const julkaisuIDt = await connection.db.query("SELECT julkaisu.id FROM julkaisu, julkaisujono WHERE (julkaisu.julkaisuntila::integer > 0 AND julkaisu.id = julkaisujono.julkaisuid)", "RETURNING julkaisu.id");
-console.log("The join SELECT: " + JSON.stringify(julkaisuIDt));
-
-julkaisuIDt.forEach(async function (e: any ) {
-    console.log("The id inside the for loop: " + e.id);
-    await postJulkaisuTheseus(e.id);
-});
+    julkaisuIDt.forEach(async function (e: any ) {
+        console.log("The id inside the for loop: " + e.julkaisuid);
+        await postJulkaisuTheseus(e.julkaisuid);
+    });
 }
 async function postJulkaisuTheseus(julkaisunID: any) {
     // const collectionsUrl = "colletions/";
