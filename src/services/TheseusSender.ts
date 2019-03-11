@@ -320,12 +320,13 @@ async function DeleteFromTheseus(id: any) {
         headers: headersOpt,
     };
     rp(options)
-    .then(async function(res: Response, req: Request) {
-        console.log("Successful delete" + res);
-    })
-    .catch(function(err: Error) {
-        console.log("Error while deleting julkaisu: " + id + " with error: " + err);
-    });
+        .then(async function(res: Response, req: Request) {
+            console.log("Successful delete" + res);
+        })
+        .catch(function(err: Error) {
+            console.log("Error while deleting julkaisu: " + id + " with error: " + err);
+        });
+//    TODO: remove handle from julkaisuarkisto table
 }
 module.exports = {
     IntervalTest: IntervalTest,

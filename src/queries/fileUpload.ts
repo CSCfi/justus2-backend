@@ -87,7 +87,8 @@ async function updateArchiveTable(data: any) {
     const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn"], {table: "julkaisuarkisto"});
     const query = connection.pgp.helpers.update(obj, table) + "WHERE julkaisuid = " +  parseInt(data.julkaisuid);
     await connection.db.none(query);
-    // TODO Invoke embargo post here (if data.julkaisuid is not in julkaisujono)
+//    TODO: check if publication is in queue, if is update embargo time
+
 }
 
 
@@ -157,7 +158,8 @@ async function validate(fileName: any, filePath: any) {
 
      if (isPublicatioFileInTheseus) {
       // TODO: delete publication from Theseus
-      ts.DeleteFromTheseus(julkaisuid);
+      // ts.DeleteFromTheseus(julkaisuid);
+         // TODO: delete handle from julkaisuarkisto table
          return res.status(200).send("File removed successfully");
      } else {
          // file is not yet transferred to Theseus so remove file from server and id from julkaisujono table
