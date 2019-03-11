@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 
 const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
+const sq = require("./../queries/subQueries");
 
 // Database connection from db.ts
 const connection = require("./../db");
@@ -164,6 +165,7 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
         query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
             "${id};";
 
+        // TODO: ensure that handle exists, if not, publication is removed from Theseus
         // fileQuery = "SELECT " + arkistoTableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
         //     "${id};";
 
@@ -172,14 +174,14 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
         try {
             data["julkaisu"] = await db.one(query, params);
-            data["julkaisu"]["issn"] = await getIssn(req.params.id);
-            data["julkaisu"]["isbn"] = await getIsbn(req.params.id);
-            data["tieteenala"] = await getTieteenala(req.params.id);
-            data["taiteenala"] = await getTaiteenala(req.params.id);
-            data["taidealantyyppikategoria"] = await getTyyppikategoria(req.params.id);
-            data["avainsanat"] = await getAvainsana(req.params.id);
-            data["lisatieto"] = await getLisatieto(req.params.id);
-            data["organisaatiotekija"] = await getOrganisaatiotekija(req.params.id);
+            data["julkaisu"]["issn"] = await sq.getIssn(req.params.id);
+            data["julkaisu"]["isbn"] = await sq.getIsbn(req.params.id);
+            data["tieteenala"] = await sq.getTieteenala(req.params.id);
+            data["taiteenala"] = await sq.getTaiteenala(req.params.id);
+            data["taidealantyyppikategoria"] = await sq.getTyyppikategoria(req.params.id);
+            data["avainsanat"] = await sq.getAvainsana(req.params.id);
+            data["lisatieto"] = await sq.getLisatieto(req.params.id);
+            data["organisaatiotekija"] = await sq.getOrganisaatiotekija(req.params.id);
 
             // filedata = await db.oneOrNone(fileQuery, params);
 
@@ -416,92 +418,17 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
 
 }
 
-async function getIssn(julkaisuid: any) {
-    const query = "SELECT issn FROM julkaisu_issn WHERE julkaisuid =  " + julkaisuid + ";";
-    let result = await db.any(query);
-    if (result.length < 1) {
-        return [""];
-    } else {
-        result = oh.mapIssnAndIsbn("issn", result);
-        console.log(result);
-        return result;
-    }
-}
 
-async function getIsbn(julkaisuid: any) {
-    const query = "SELECT isbn FROM julkaisu_isbn WHERE julkaisuid =  " + julkaisuid + ";";
-    let result = await db.any(query);
-    if (result.length < 1) {
-        return [""];
-    } else {
-        result = oh.mapIssnAndIsbn("isbn", result);
-        return result;
-    }
-}
-
-async function getOrganisaatiotekija(julkaisuid: any) {
-    let result = await getOrgTekijatAndAlayksikko(julkaisuid);
-    result = oh.mapOrganisaatiotekijaAndAlayksikko(result);
-    return result;
-}
-
-async function getTieteenala(julkaisuid: any) {
-    const query =  "SELECT jnro, tieteenalakoodi  FROM tieteenala WHERE julkaisuid =  " + julkaisuid + ";";
-    let result = await db.any(query);
-    result = oh.checkIfEmpty(result);
-    return result;
-}
-
-async function getTaiteenala(julkaisuid: any) {
-    const query =  "SELECT jnro, taiteenalakoodi  FROM taiteenala WHERE julkaisuid =  " + julkaisuid + ";";
-    let result = await db.any(query);
-    result = oh.checkIfEmpty(result);
-    return result;
-}
-
-async function getTyyppikategoria(julkaisuid: any) {
-    const query =  "SELECT tyyppikategoria FROM taidealantyyppikategoria WHERE julkaisuid =  " + julkaisuid + ";";
-    let result = await db.any(query);
-    result = oh.mapTaideAlanTyyppikategoria(result);
-    return result;
-}
-
-async function getAvainsana(julkaisuid: any) {
-    const query =  "SELECT avainsana FROM avainsana WHERE julkaisuid =  " + julkaisuid + ";";
-    let result = await db.any(query);
-    result = oh.mapAvainsanat(result);
-    return result;
-}
-
-async function getLisatieto(julkaisuid: any) {
-    const query = "SELECT lisatietotyyppi, lisatietoteksti FROM lisatieto WHERE julkaisuid =  " + julkaisuid + ";";
-    let result = await db.any(query);
-    result = oh.mapLisatietoData(result);
-    return result;
-}
-
-function getOrgTekijatAndAlayksikko(id: any) {
-    return db.task((t: any) => {
-        return t.map("SELECT id, etunimet, sukunimi, orcid, rooli FROM organisaatiotekija WHERE julkaisuid=$1", id, (orgtekija: any) => {
-            return t.any("SELECT alayksikko FROM alayksikko WHERE organisaatiotekijaid=$1", orgtekija.id)
-                .then((res: any) => {
-                    orgtekija.tempalayksikko = res;
-                    return orgtekija;
-                });
-        }).then(t.batch);
-    });
-
-}
 
 async function getAllData(data: any) {
     for (let i = 0; i < data.length; i++) {
-        data[i]["tieteenala"] = await getTieteenala(data[i].julkaisu.id);
-        data[i]["tieteenala"] = await getTieteenala(data[i].julkaisu.id);
-        data[i]["taiteenala"] = await getTaiteenala(data[i].julkaisu.id);
-        data[i]["taidealantyyppikategoria"] = await getTyyppikategoria(data[i].julkaisu.id);
-        data[i]["avainsanat"] = await getAvainsana(data[i].julkaisu.id);
-        data[i]["lisatieto"] = await getLisatieto(data[i].julkaisu.id);
-        data[i]["organisaatiotekija"] = await getOrganisaatiotekija(data[i].julkaisu.id);
+        data[i]["tieteenala"] = await sq.getTieteenala(data[i].julkaisu.id);
+        data[i]["tieteenala"] = await sq.getTieteenala(data[i].julkaisu.id);
+        data[i]["taiteenala"] = await sq.getTaiteenala(data[i].julkaisu.id);
+        data[i]["taidealantyyppikategoria"] = await sq.getTyyppikategoria(data[i].julkaisu.id);
+        data[i]["avainsanat"] = await sq.getAvainsana(data[i].julkaisu.id);
+        data[i]["lisatieto"] = await sq.getLisatieto(data[i].julkaisu.id);
+        data[i]["organisaatiotekija"] = await sq.getOrganisaatiotekija(data[i].julkaisu.id);
     }
     return data;
 }
