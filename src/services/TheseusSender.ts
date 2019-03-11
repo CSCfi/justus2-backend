@@ -9,11 +9,13 @@ const fs = require("fs");
 
 // Database connection
 const connection = require("./../db");
-const testtoken = "18555d36-3263-4a42-b705-dd77fcdbb18c";
+const testtoken = "4287fe2a-b6e5-4c58-8e10-b55e22f2aaed";
 
 const BASEURL = "https://ds5-am-kktest.lib.helsinki.fi/rest/";
 const fu = require("../queries/fileUpload");
+const api = require("./../queries/subQueries");
 
+const dbHelpers = require("./../databaseHelpers");
 
 // For development purposes
 function IntervalTest() {
@@ -87,11 +89,50 @@ async function postJulkaisuTheseus(julkaisunID: any) {
         ]};
 
 
+    if (!arrayIsEmpty(avainsanaData)) {
+        avainsanaData.forEach((value: any) => {
+            const avainsanaobject = {"key": "dc.subject", "value": value};
+            metadataobject.metadata.push(avainsanaobject);
+        });
+    }
+
+    if (!arrayIsEmpty(isbnData)) {
+        isbnData.forEach((value: any) => {
+            // console.log(value);
+            const isbnobject = {"key": "dc.identifier.isbn", "value": value};
+            metadataobject.metadata.push(isbnobject);
+        });
+    }
+
+    if (!arrayIsEmpty(issnData)) {
+        issnData.forEach((value: any) => {
+            // console.log(value);
+            const issnobject = {"key": "dc.identifier.issn", "value": value};
+            metadataobject.metadata.push(issnobject);
+        });
+    }
 
 
-console.log(metadataobject);
+    const str = julkaisuData["tekijat"];
+    const onetekija = str.split("; ");
+
+    onetekija.forEach((value: any) => {
+        const tekijatobject = {"key": "dc.contributor.author", "value": value}; // formaatti, sukunimi, etunimi
+        metadataobject.metadata.push(tekijatobject);
+    });
+
+    console.log(metadataobject);
 // await sendPostReqTheseus(metadataobject, julkaisunID);
 }
+
+function arrayIsEmpty(arr: any) {
+    if (!arr || !arr[0] || arr[0] === "") {
+        return true;
+    }   else {
+        return false;
+    }
+}
+
 
 async function sendPostReqTheseus(sendObject: any, julkaisuID: any) {
 
