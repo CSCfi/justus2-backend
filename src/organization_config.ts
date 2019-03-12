@@ -269,6 +269,12 @@ const domainMappings = [
         "domain": "@gtk.fi",
         "code": "5040011",
         "email": ""
+    },
+    {
+        // 	Terveyden ja hyvinvoinnin laitos #thl-admins
+        "domain": "@thl.fi",
+        "code": "5610017",
+        "email": ""
     }
 
 
