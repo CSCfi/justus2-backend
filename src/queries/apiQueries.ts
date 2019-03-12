@@ -159,15 +159,23 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
         let params;
         let query;
-        // let fileQuery;
+        let fileQuery;
 
         params = {"id": req.params.id};
         query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
             "${id};";
 
-        // TODO: ensure that handle exists, if not, publication is removed from Theseus
         // fileQuery = "SELECT " + arkistoTableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
         //     "${id};";
+        //
+        // const handleQuery = "SELECT  handle FROM julkaisuarkisto WHERE julkaisuid = " +
+        //     "${id};";
+        //
+        // const publicationQueueQuery = "SELECT  id FROM julkaisujono WHERE julkaisuid = " +
+        //     "${id};";
+        //
+        // const handleExists = await db.oneOrNone(handleQuery, params);
+        // const publicationIsInQueue = await db.oneOrNone(publicationQueueQuery, params);
 
         const data: any = {};
         // let filedata: any = {};
@@ -183,9 +191,8 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             data["lisatieto"] = await sq.getLisatieto(req.params.id);
             data["organisaatiotekija"] = await sq.getOrganisaatiotekija(req.params.id);
 
-            // filedata = await db.oneOrNone(fileQuery, params);
-
-            // if (filedata) {
+            // if (handleExists || publicationIsInQueue) {
+            //     filedata = await db.oneOrNone(fileQuery, params);
             //     data["filedata"] = filedata;
             // }
             res.status(200).json({"data": data});
