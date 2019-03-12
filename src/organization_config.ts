@@ -309,7 +309,8 @@ const domainMappings = [
         // 	Terveyden ja hyvinvoinnin laitos #thl-admins
         "domain": "@thl.fi",
         "code": "5610017",
-        "email": ""
+        "email": "",
+        "showPublicationInput": true
     }
 
 
