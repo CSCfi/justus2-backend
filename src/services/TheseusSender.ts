@@ -67,9 +67,7 @@ async function postJulkaisuTheseus(julkaisunID: any) {
     // Not used for now, declaration unclear on which ones to be used for dc.contributor.author
     // const orgTekData = organisaatiotekijadata[0];
 
-    const metadataobject = {
-        "name": julkaisuData["julkaisunnimi"], "metadata": [
-            {"key": "dc.source.identifier", "value": julkaisuData["id"]},
+    const tempMetadataObject = [
             {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
             {"key": "dc.type.okm", "value": julkaisuData["julkaisutyyppi"]},
             {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
@@ -86,13 +84,23 @@ async function postJulkaisuTheseus(julkaisunID: any) {
             {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
             {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
             {"key": "dc.identifier.uri", "value": julkaisuData["rinnakkaistallennetunversionverkkoosoite"]},
-        ]};
+        ];
 
+
+    const metadataObject = {
+        "name": julkaisuData["julkaisunnimi"], "metadata": [ {"key": "dc.source.identifier", "value": julkaisuData["id"]}] };
+
+
+    for (let i = 0; i < tempMetadataObject.length; i++) {
+        if (tempMetadataObject[i]["value"] && tempMetadataObject[i]["value"] !== "" ) {
+            metadataObject.metadata.push(tempMetadataObject[i]);
+        }
+    }
 
     if (!arrayIsEmpty(avainsanaData)) {
         avainsanaData.forEach((value: any) => {
             const avainsanaobject = {"key": "dc.subject", "value": value};
-            metadataobject.metadata.push(avainsanaobject);
+            metadataObject.metadata.push(avainsanaobject);
         });
     }
 
@@ -100,7 +108,7 @@ async function postJulkaisuTheseus(julkaisunID: any) {
         isbnData.forEach((value: any) => {
             // console.log(value);
             const isbnobject = {"key": "dc.identifier.isbn", "value": value};
-            metadataobject.metadata.push(isbnobject);
+            metadataObject.metadata.push(isbnobject);
         });
     }
 
@@ -108,21 +116,20 @@ async function postJulkaisuTheseus(julkaisunID: any) {
         issnData.forEach((value: any) => {
             // console.log(value);
             const issnobject = {"key": "dc.identifier.issn", "value": value};
-            metadataobject.metadata.push(issnobject);
+            metadataObject.metadata.push(issnobject);
         });
     }
-
 
     const str = julkaisuData["tekijat"];
     const onetekija = str.split("; ");
 
     onetekija.forEach((value: any) => {
         const tekijatobject = {"key": "dc.contributor.author", "value": value}; // formaatti, sukunimi, etunimi
-        metadataobject.metadata.push(tekijatobject);
+        metadataObject.metadata.push(tekijatobject);
     });
 
-    console.log(metadataobject);
-// await sendPostReqTheseus(metadataobject, julkaisunID);
+    console.log(metadataObject);
+// await sendPostReqTheseus(metadataObject, julkaisunID);
 }
 
 function arrayIsEmpty(arr: any) {
