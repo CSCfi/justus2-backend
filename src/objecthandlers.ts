@@ -928,7 +928,6 @@ function ObjectHandlerJulkaisudata(obj: any) {
             ret.push(obj[0][identifier]);
         } else {
             for (let i = 0; i < obj.length; i ++) {
-                console.log(obj[i]);
                 ret.push(obj[i][identifier]);
             }
         }
