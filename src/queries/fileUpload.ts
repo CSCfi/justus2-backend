@@ -157,9 +157,14 @@ async function validate(fileName: any, filePath: any) {
      const isPublicatioFileInTheseus = await isPublicationInTheseus(req.params.id);
 
      if (isPublicatioFileInTheseus) {
-      // TODO: delete publication from Theseus
-      // ts.DeleteFromTheseus(julkaisuid);
-         // TODO: delete handle from julkaisuarkisto table
+
+         // ts.DeleteFromTheseus(julkaisuid);
+
+         // Set handle as null so we know that publication is removed from Theseus
+         await connection.db.one("UPDATE julkaisuarkisto SET handle = null WHERE julkaisuid = ${id}", {
+             id: julkaisuid
+         });
+
          return res.status(200).send("File removed successfully");
      } else {
          // file is not yet transferred to Theseus so remove file from server and id from julkaisujono table
