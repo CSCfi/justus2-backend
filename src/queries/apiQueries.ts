@@ -15,6 +15,8 @@ const authService = require("./../services/authService");
 const auditLog = require("./../services/auditLogService");
 const fileUpload = require("./../queries/fileUpload");
 
+const handleLink = process.env.HANDLE_LINK;
+
 
 let USER_DATA: any = {};
 
@@ -155,7 +157,7 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
     if (hasOrganisation && hasAccessToPublication) {
         const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
-        const arkistoTableFields = "julkaisuarkisto.filename, julkaisuarkisto.embargo, julkaisuarkisto.urn";
+        const arkistoTableFields = "julkaisuarkisto.filename, julkaisuarkisto.embargo, julkaisuarkisto.urn, julkaisuarkisto.handle";
 
         let params;
         let query;
@@ -165,20 +167,20 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
         query = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
             "${id};";
 
-        // fileQuery = "SELECT " + arkistoTableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
-        //     "${id};";
-        //
-        // const handleQuery = "SELECT  handle FROM julkaisuarkisto WHERE julkaisuid = " +
-        //     "${id};";
-        //
-        // const publicationQueueQuery = "SELECT  id FROM julkaisujono WHERE julkaisuid = " +
-        //     "${id};";
-        //
-        // const handleExists = await db.oneOrNone(handleQuery, params);
-        // const publicationIsInQueue = await db.oneOrNone(publicationQueueQuery, params);
+        fileQuery = "SELECT " + arkistoTableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+            "${id};";
+
+        const handleQuery = "SELECT  handle FROM julkaisuarkisto WHERE julkaisuid = " +
+            "${id};";
+
+        const publicationQueueQuery = "SELECT  id FROM julkaisujono WHERE julkaisuid = " +
+            "${id};";
+
+        const handleExists = await db.oneOrNone(handleQuery, params);
+        const publicationIsInQueue = await db.oneOrNone(publicationQueueQuery, params);
 
         const data: any = {};
-        // let filedata: any = {};
+        let filedata: any = {};
 
         try {
             data["julkaisu"] = await db.one(query, params);
@@ -191,10 +193,12 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             data["lisatieto"] = await sq.getLisatieto(req.params.id);
             data["organisaatiotekija"] = await sq.getOrganisaatiotekija(req.params.id);
 
-            // if (handleExists || publicationIsInQueue) {
-            //     filedata = await db.oneOrNone(fileQuery, params);
-            //     data["filedata"] = filedata;
-            // }
+            if (handleExists || publicationIsInQueue) {
+                filedata = await db.oneOrNone(fileQuery, params);
+                data["filedata"] = filedata;
+                const handle = data["filedata"].handle;
+                data["filedata"].handle = handleLink + handle;
+            }
             res.status(200).json({"data": data});
 
         } catch (err) {
