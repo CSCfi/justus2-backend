@@ -96,7 +96,7 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     if (hasOrganisation) {
 
-        const julkaisuTableFields = dbHelpers.getTableFields("j");
+        const julkaisuTableFields = dbHelpers.getListFields("j");
         let query;
 
         // owners can see all data in julkaisu table
@@ -204,7 +204,6 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
                 data["filedata"].handle = handleLink + handle;
             }
             res.status(200).json({"data": data});
-
         } catch (err) {
             console.log(err);
         }
@@ -217,9 +216,6 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 function testvirta(res: Response) {
     kp.HTTPGETshow("https://virta-jtp.csc.fi/api/julkaisut/haku?julkaisunNimi=explicit", res, oh.ObjectHandlerTestVirta);
 }
-
-
-
 
 
 // POST requests
