@@ -9,6 +9,7 @@ const redis = require("redis");
 const client = redis.createClient();
 const organisationConfig = require("./organization_config");
 
+const handleLink = process.env.HANDLE_LINK;
 
 const getRedis = (rediskey: string, success: any, error: any) => {
     client.mget(rediskey, function (err: Error, reply: any) {
@@ -823,7 +824,14 @@ function ObjectHandlerCrossrefEsitaytto(obj: any): object[] {
 
 function ObjectHandlerJulkaisudata(obj: any) {
     return obj.map((x: any) => {
-                return {
+
+        let fullHandleLink;
+        if (x.handle) {
+            fullHandleLink = handleLink +  x.handle;
+        } else {
+            fullHandleLink =  x.handle;
+        }
+            return {
                     julkaisu: {
                         id: x.id,
                         organisaatiotunnus: x.organisaatiotunnus,
@@ -860,7 +868,11 @@ function ObjectHandlerJulkaisudata(obj: any) {
                         username: x.username,
                         modified: x.modified,
                         lisatieto: x.lisatieto
+                    },
+                    filedata: {
+                        handle: fullHandleLink
                     }
+
                 };
             });
 }

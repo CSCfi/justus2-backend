@@ -96,21 +96,26 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     if (hasOrganisation) {
 
-        const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
+        const julkaisuTableFields = dbHelpers.getTableFields("j");
         let query;
 
         // owners can see all data in julkaisu table
-        const queryAllOrganisations = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu ORDER BY julkaisu.id;";
+        const queryAllOrganisations = "SELECT j.id, " + julkaisuTableFields + ", a.handle FROM julkaisu AS j" +
+            " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
+            " ORDER BY j.id;";
 
         // admins can see all publications for organisation
-        const queryByOrganisationCode = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE organisaatiotunnus = " +
-            "${code} ORDER BY julkaisu.id;";
+        const queryByOrganisationCode = "SELECT j.id, " + julkaisuTableFields + ", a.handle FROM julkaisu AS j" +
+            " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
+            " WHERE j.organisaatiotunnus = " +
+            "${code} ORDER BY j.id;";
 
-        // members can only see own publications, so ensure that uid in kaytto_loki table matches current users uid
-        const queryForMembers = "SELECT julkaisu.id, julkaisu.accessid, " + julkaisuTableFields + " FROM julkaisu" +
-            " INNER JOIN kaytto_loki AS kl on julkaisu.accessid = kl.id" +
+        // members can only see own publications, so verify that uid in kaytto_loki table matches current users uid
+        const queryForMembers = "SELECT j.id, j.accessid, " + julkaisuTableFields + ", a.handle FROM julkaisu AS j" +
+            " INNER JOIN kaytto_loki AS kl on j.accessid = kl.id" +
+            " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
             " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
-            " ORDER BY julkaisu.id;";
+            " ORDER BY j.id;";
 
         let params = {};
 
@@ -127,7 +132,6 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
             query = queryByOrganisationCode;
         }
         if (USER_DATA.rooli === "member") {
-            console.log("rooli on member");
             params = {"code": USER_DATA.organisaatio, "uid": USER_DATA.uid};
             query = queryForMembers;
         }
