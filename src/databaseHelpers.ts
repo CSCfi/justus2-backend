@@ -34,6 +34,16 @@ const julkaisu = [
     "modified"
 ];
 
+const julkaisuListFields = [
+    "organisaatiotunnus",
+    "julkaisuvuosi",
+    "julkaisunnimi",
+    "tekijat",
+    "julkaisuntila",
+    "username",
+    "modified"
+];
+
 const julkaisuarkisto = [
       "julkaisuid",
       "filename",
@@ -72,9 +82,14 @@ let fields = function (prefix: any) {
     return prefix + "." + julkaisu.join("," + prefix + ".");
 };
 
+let minFields = function (prefix: any) {
+    if (!prefix) prefix = "julkaisu";
+    return prefix + "." + julkaisuListFields.join("," + prefix + ".");
+};
 
 module.exports = {
     julkaisu: julkaisu,
+    julkaisuListFields: julkaisuListFields,
     julkaisuarkisto: julkaisuarkisto,
     organisaatiotekija: organisasaatiotekija,
     tieteenala: tieteenala,
@@ -82,7 +97,8 @@ module.exports = {
     kaytto_loki: kaytto_loki,
     addJulkaisuIdToObject: addJulkaisuIdToObject,
     constructObject: constructObject,
-    getTableFields: fields
+    getTableFields: fields,
+    getListFields: minFields
 
 
 };
