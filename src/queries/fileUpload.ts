@@ -87,7 +87,8 @@ async function updateArchiveTable(data: any) {
     const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn"], {table: "julkaisuarkisto"});
     const query = connection.pgp.helpers.update(obj, table) + "WHERE julkaisuid = " +  parseInt(data.julkaisuid);
     await connection.db.none(query);
-//    TODO: check if publication is in queue, if is update embargo time
+
+    // TODO: if publication is already transferred to Theseus, update embargo time to Theseus also
 
 }
 
