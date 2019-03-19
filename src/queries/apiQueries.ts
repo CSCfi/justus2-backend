@@ -200,8 +200,12 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             if (handleExists || publicationIsInQueue) {
                 filedata = await db.oneOrNone(fileQuery, params);
                 data["filedata"] = filedata;
-                const handle = data["filedata"].handle;
-                data["filedata"].handle = handleLink + handle;
+                const tempHandle = data["filedata"].handle;
+                if (tempHandle) {
+                    data["filedata"].handle = handleLink + tempHandle;
+                } else {
+                    data["filedata"].handle = "";
+                }
             }
             res.status(200).json({"data": data});
         } catch (err) {
