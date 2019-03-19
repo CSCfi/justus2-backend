@@ -825,56 +825,32 @@ function ObjectHandlerCrossrefEsitaytto(obj: any): object[] {
 function ObjectHandlerJulkaisudata(obj: any) {
     return obj.map((x: any) => {
 
-        let fullHandleLink;
-        if (x.handle) {
-            fullHandleLink = handleLink +  x.handle;
-        } else {
-            fullHandleLink =  x.handle;
-        }
-            return {
-                    julkaisu: {
-                        id: x.id,
-                        organisaatiotunnus: x.organisaatiotunnus,
-                        julkaisutyyppi: x.julkaisutyyppi,
-                        julkaisuvuosi: x.julkaisuvuosi,
-                        julkaisunnimi: x.julkaisunnimi,
-                        tekijat: x.tekijat,
-                        julkaisuntekijoidenlukumaara: x.julkaisuntekijoidenlukumaara,
-                        konferenssinvakiintunutnimi: x.konferenssinvakiintunutnimi,
-                        emojulkaisunnimi: x.emojulkaisunnimi,
-                        isbn: x.isbn,
-                        emojulkaisuntoimittajat: x.emojulkaisuntoimittajat,
-                        lehdenjulkaisusarjannimi: x.lehdenjulkaisusarjannimi,
-                        issn: x.issn,
-                        volyymi: x.volyymi,
-                        numero: x.numero,
-                        sivut: x.sivut,
-                        artikkelinumero: x.artikkelinumero,
-                        kustantaja: x.kustantaja,
-                        julkaisunkustannuspaikka: x.julkaisunkustannuspaikka,
-                        julkaisunkieli: x.julkaisunkieli,
-                        julkaisunkansainvalisyys: x.julkaisunkansainvalisyys,
-                        julkaisumaa: x.julkaisumaa,
-                        kansainvalinenyhteisjulkaisu: x.kansainvalinenyhteisjulkaisu,
-                        yhteisjulkaisuyrityksenkanssa: x.yhteisjulkaisuyrityksenkanssa,
-                        doitunniste: x.doitunniste,
-                        pysyvaverkkoosoite: x.pysyvaverkkoosoite,
-                        avoinsaatavuus: x.avoinsaatavuus,
-                        julkaisurinnakkaistallennettu: x.julkaisurinnakkaistallennettu,
-                        rinnakkaistallennetunversionverkkoosoite: x.rinnakkaistallennetunversionverkkoosoite,
-                        jufotunnus: x.jufotunnus,
-                        jufoluokitus: x.jufoluokitus,
-                        julkaisuntila: x.julkaisuntila,
-                        username: x.username,
-                        modified: x.modified,
-                        lisatieto: x.lisatieto
-                    },
-                    filedata: {
-                        handle: fullHandleLink
-                    }
+        const data: any = {};
+        const julkaisu = {
+                id: x.id,
+                organisaatiotunnus: x.organisaatiotunnus,
+                julkaisuvuosi: x.julkaisuvuosi,
+                julkaisunnimi: x.julkaisunnimi,
+                tekijat: x.tekijat,
+                julkaisuntila: x.julkaisuntila,
+                username: x.username,
+                modified: x.modified
+        };
 
-                };
-            });
+        if (x.handle && x.aid) {
+            data["julkaisu"] = julkaisu;
+            data["filedata"] = { "handle":  handleLink +  x.handle };
+            return data;
+        } else if (x.aid) {
+            data["julkaisu"] = julkaisu;
+            data["filedata"] = { "handle":  "" };
+            return data;
+        } else {
+            data["julkaisu"] = julkaisu;
+            return data;
+        }
+
+    });
 }
 
     function  mapOrganisaatiotekijaAndAlayksikko(obj: any) {

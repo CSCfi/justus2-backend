@@ -100,18 +100,21 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
         let query;
 
         // owners can see all data in julkaisu table
-        const queryAllOrganisations = "SELECT j.id, " + julkaisuTableFields + ", a.handle FROM julkaisu AS j" +
+        const queryAllOrganisations = "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
+            " FROM julkaisu AS j" +
             " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
             " ORDER BY j.id;";
 
         // admins can see all publications for organisation
-        const queryByOrganisationCode = "SELECT j.id, " + julkaisuTableFields + ", a.handle FROM julkaisu AS j" +
+        const queryByOrganisationCode = "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
+            " FROM julkaisu AS j" +
             " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
             " WHERE j.organisaatiotunnus = " +
             "${code} ORDER BY j.id;";
 
-        // members can only see own publications, so verify that uid in kaytto_loki table matches current users uid
-        const queryForMembers = "SELECT j.id, j.accessid, " + julkaisuTableFields + ", a.handle FROM julkaisu AS j" +
+        // members can only see own publications, so verify that uid in kaytto_loki table matches current user's uid
+        const queryForMembers = "SELECT j.id, j.accessid, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
+            " FROM julkaisu AS j" +
             " INNER JOIN kaytto_loki AS kl on j.accessid = kl.id" +
             " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
             " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
