@@ -160,29 +160,27 @@ async function validate(fileName: any, filePath: any) {
              await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
                  id: julkaisuid
              });
+             return res.status(200).send("File removed successfully");
          } catch (err) {
              console.log(err);
+             return res.sendStatus(500);
          }
-
-         return res.status(200).send("File removed successfully");
      } else {
          // file is not yet transferred to Theseus so remove file from server and id from julkaisujono table
          try {
-
              await deleteJulkaisuFile(filePath, savedFileName);
-
              await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
                  id: julkaisuid
              });
              await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
                  id: julkaisuid
              });
-
              return res.status(200).send("File removed successfully");
-         } catch (e) {
-             console.log(e);
-             return res.status(500).send( "Error in removing file" );
+         } catch (err) {
+             console.log(err);
+             return res.sendStatus(500);
          }
+
      }
 
 }
