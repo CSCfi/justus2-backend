@@ -6,7 +6,9 @@ const path = require("path");
 // File upload dependencies
 const multer  = require("multer");
 const upload = multer({ dest: "temp/" });
-const ts = require("../services/TheseusSender");
+
+// Import TheseusSender class
+import { theseus as ts } from "./../services/TheseusSender";
 
 // Database connection
 const connection = require("./../db");
@@ -184,8 +186,14 @@ async function validate(fileName: any, filePath: any) {
          }
      }
 
-
 }
+
+
+async function deleteJulkaisuFile(fPath: any, fName: any) {
+    await fs.unlinkSync(fPath + "/" + fName);
+    await fs.rmdirSync(fPath);
+}
+
 
 async function fileHasBeenUploadedToJustus(id: any) {
 
@@ -224,5 +232,7 @@ module.exports = {
     uploadJulkaisu: uploadJulkaisu,
     deleteJulkaisu: deleteJulkaisu,
     fileHasBeenUploadedToJustus: fileHasBeenUploadedToJustus,
-    isPublicationInTheseus: isPublicationInTheseus
+    isPublicationInTheseus: isPublicationInTheseus,
+    deleteJulkaisuFile: deleteJulkaisuFile
+
 };

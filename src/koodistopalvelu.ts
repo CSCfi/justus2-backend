@@ -1,18 +1,21 @@
 import { Request, Response, NextFunction, json } from "express";
 import { resolve } from "path";
+
 const schedule = require("node-schedule");
 const https = require("https");
 
 // Redis client
 const redis = require("redis");
 const client = redis.createClient();
-const ts = require("./services/TheseusSender");
+
 // Prefix for objecthandler import
 const OH = require("./objecthandlers");
 
 const koodistoUrl = process.env.KOODISTO_URL;
-
 const organisationConfig = require("./organization_config");
+
+// Import TheseusSender class
+import { theseus as ts } from "./services/TheseusSender";
 
 // REMEMBER THIS
 // (node:1239) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connect listeners added. Use emitter.setMaxListeners() to increase limit
