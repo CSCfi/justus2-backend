@@ -152,30 +152,29 @@ async function validate(fileName: any, filePath: any) {
     const julkaisuid = req.params.id;
     const filePath = publicationFolder + "/" + julkaisuid;
 
-     // first delete data from julkaisuarkisto
-     await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
-         id: julkaisuid
-     });
-
      const isPublicatioFileInTheseus = await isPublicationInTheseus(req.params.id);
 
      if (isPublicatioFileInTheseus) {
-
-         // ts.DeleteFromTheseus(julkaisuid);
-
-         // Set handle as null so we know that publication is removed from Theseus
-         await connection.db.one("UPDATE julkaisuarkisto SET handle = null WHERE julkaisuid = ${id}", {
-             id: julkaisuid
-         });
+         try {
+             await ts.DeleteFromTheseus(julkaisuid);
+             await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
+                 id: julkaisuid
+             });
+         } catch (err) {
+             console.log(err);
+         }
 
          return res.status(200).send("File removed successfully");
      } else {
          // file is not yet transferred to Theseus so remove file from server and id from julkaisujono table
          try {
-             await fs.unlinkSync(filePath + "/" + savedFileName);
-             await fs.rmdirSync(filePath);
+
+             await deleteJulkaisuFile(filePath, savedFileName);
 
              await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
+                 id: julkaisuid
+             });
+             await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
                  id: julkaisuid
              });
 
