@@ -232,6 +232,7 @@ CREATE TABLE julkaisuarkisto
   mimetype character varying,
   handle character varying,
   urn character varying,
+  abstract text,
   embargo timestamp with time zone,
   CONSTRAINT julkaisuarkisto_pkey PRIMARY KEY (id),
   CONSTRAINT fk_julkaisujono FOREIGN KEY (julkaisuid)
