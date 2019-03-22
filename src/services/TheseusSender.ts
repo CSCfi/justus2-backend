@@ -75,14 +75,18 @@ const savedFileName = "file.blob";
          const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
              "${id};";
 
+         const queryAbstract = "SELECT abstract FROM julkaisuarkisto WHERE julkaisuid = " +
+             "${id};";
+
          let julkaisuData: any = {};
+         let description: any = {};
          let avainsanaData = [];
          let isbnData = [];
          let issnData = [];
 
-
          try {
              julkaisuData = await connection.db.one(queryJulkaisu, params);
+             description = await connection.db.oneOrNone(queryAbstract, params);
              avainsanaData = await api.getAvainsana(julkaisunID);
              isbnData = await api.getIsbn(julkaisunID);
              issnData = await api.getIssn(julkaisunID);
@@ -111,6 +115,7 @@ const savedFileName = "file.blob";
              {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
              {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
              {"key": "dc.identifier.uri", "value": julkaisuData["rinnakkaistallennetunversionverkkoosoite"]},
+             {"key": "dc.description.abstract", "value": description["abstract"]},
          ];
 
 
@@ -173,9 +178,7 @@ const savedFileName = "file.blob";
 
      async sendPostReqTheseus(sendObject: any, julkaisuID: any) {
 
-         console.log("in send post to theseus");
          const self = this;
-
 
          const headersOpt = {
              "rest-dspace-token": testtoken,
@@ -284,12 +287,7 @@ const savedFileName = "file.blob";
                  const deletefromJonoQuery = "DELETE from julkaisujono WHERE julkaisuid = " + "${id};";
                  await connection.db.any(deletefromJonoQuery, params);
 
-                 // TODO: delete from publication from justus server
-
                  await fu.deleteJulkaisuFile(filePath, savedFileName);
-
-                 // TESTING PURPOSE
-                 // DeleteFromTheseus(julkaisuID);
              })
              .catch(function (err: Error) {
                  console.log("Something went wrong with sending file: " + err);
