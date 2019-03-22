@@ -84,13 +84,25 @@ async function updateArchiveTable(data: any) {
         obj["embargo"] = data.embargo;
     }
 
+    if (!data.abstract || data.abstract === "") {
+        obj["abstract"] = undefined;
+    } else {
+        obj["abstract"] = data.abstract;
+    }
+
     obj["urn"] = data.urn;
 
-    const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn"], {table: "julkaisuarkisto"});
-    const query = connection.pgp.helpers.update(obj, table) + "WHERE julkaisuid = " +  parseInt(data.julkaisuid);
+    const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn", "abstract"], {table: "julkaisuarkisto"});
+    const query = connection.pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
+
     await connection.db.none(query);
 
-    // TODO: if publication is already transferred to Theseus, update embargo time to Theseus also
+
+    // if (isPublicationInTheseus) {
+    //      TODO: if publication is already transferred to Theseus, update embargo time and abstract to Theseus also
+    // }
+
+
 
 }
 
@@ -101,6 +113,10 @@ async function postDataToArchiveTable(file: any, data: any) {
 
     if (!data.embargo || data.embargo === "" ) {
         data["embargo"] = undefined;
+    }
+
+    if (!data.abstract || data.abstract === "") {
+        data["abstract"] = undefined;
     }
 
     data["filename"] = file.originalname;
@@ -219,10 +235,6 @@ async function isPublicationInTheseus(id: any) {
         return true;
     }
 }
-
-
-
-
 
 
 module.exports = {

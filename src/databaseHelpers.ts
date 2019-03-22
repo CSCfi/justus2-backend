@@ -49,7 +49,8 @@ const julkaisuarkisto = [
       "filename",
       "embargo",
       "mimetype",
-      "urn"
+      "urn",
+      "abstract"
 ];
 
 const theseusJulkaisuFields = [
