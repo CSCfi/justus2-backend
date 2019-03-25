@@ -455,7 +455,14 @@ async function PutTheseus(req: Request, id: any) {
 
     const params = {"id": id};
     const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-    const itemid = await connection.db.any(itemidquery, params);
+    let itemid: any;
+
+    try {
+        itemid = await connection.db.any(itemidquery, params);
+    }
+    catch (e) {
+    console.log(e);
+    }
     console.log("The itemid for the item to be updated");
     const urlFinal = BASEURL + "items/" + itemid[0]["itemid"] + "/metadata";
     const headersOpt = {
