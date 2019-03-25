@@ -10,6 +10,7 @@ const pgp = connection.pgp;
 const db = connection.db;
 
 const dbHelpers = require("./../databaseHelpers");
+const ts = require("./../services/TheseusSender");
 
 const authService = require("./../services/authService");
 const auditLog = require("./../services/auditLogService");
@@ -384,15 +385,17 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             await insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
 
             // TODO: check if publication is entered to justus service
-            // const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
-            // const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
+            const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
+            const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
 
             // if publication file is originally uploaded to Justus service,
             // and file is already transferred to Theseus
             // we have to update data to Theseus also
-            // if (isPublication && isPublicationInTheseus) {
-            //     // TODO: update data to Theseus
-            // }
+            if (isPublication && isPublicationInTheseus) {
+                // TODO: update data to Theseus
+                 ts.PutTheseus(req.body, req.params.id);
+
+            }
 
             await db.any("COMMIT");
             return res.sendStatus(200);
