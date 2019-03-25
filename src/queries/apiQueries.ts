@@ -10,14 +10,15 @@ const pgp = connection.pgp;
 const db = connection.db;
 
 const dbHelpers = require("./../databaseHelpers");
-const ts = require("./../services/TheseusSender");
 
 const authService = require("./../services/authService");
 const auditLog = require("./../services/auditLogService");
 const fileUpload = require("./../queries/fileUpload");
 
-const handleLink = process.env.HANDLE_LINK;
+// Import TheseusSender class
+import { theseus as ts } from "./../services/TheseusSender";
 
+const handleLink = process.env.HANDLE_LINK;
 
 let USER_DATA: any = {};
 
@@ -393,7 +394,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             // we have to update data to Theseus also
             if (isPublication && isPublicationInTheseus) {
                 // TODO: update data to Theseus
-                 ts.PutTheseus(req.body, req.params.id);
+                 await ts.PutTheseus(req.body, req.params.id);
 
             }
 

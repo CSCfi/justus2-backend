@@ -9,7 +9,9 @@ const fs = require("fs");
 
 // Database connection
 const connection = require("./../db");
+
 const testtoken = "72d10dfb-868c-4a65-8a77-afb7c1ad254a";
+
 
 const BASEURL = "https://ds5-am-kktest.lib.helsinki.fi/rest/";
 const fu = require("../queries/fileUpload");
@@ -37,13 +39,6 @@ const savedFileName = "file.blob";
      //     return Theseus._instance;
      // }
 
-
-// For development purposes
-     IntervalTest() {
-         return console.log("Why doesnt it rain");
-     }
-
-// setInterval(() => IntervalTest, 1000);
 
      public async checkQueue() {
          const julkaisuIDt = await connection.db.query(
@@ -377,12 +372,12 @@ const savedFileName = "file.blob";
              .catch(function (err: Error) {
                  console.log("Error while deleting julkaisu: " + id + " with error: " + err);
              });
-     }
+     // }
 
  }
 
 
-async function PutTheseus(req: Request, id: any) {
+public async PutTheseus(req: Request, id: any) {
     console.log("The req.body" + JSON.stringify(req.body));
     const tempMetadataObject = [
         {"key": "dc.title", "value": req.body.julkaisu["julkaisunnimi"]},
@@ -484,8 +479,9 @@ async function PutTheseus(req: Request, id: any) {
     .catch(function (err: Error) {
         console.log("Error while updating julkaisu: " + id + " with error: " + err);
     });
+    }
  }
 export const theseus = new TheseusSender();
-module.exports = {
-    PutTheseus: PutTheseus,
-};
+// module.exports = {
+//     PutTheseus: PutTheseus,
+// };
