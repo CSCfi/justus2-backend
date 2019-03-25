@@ -29,12 +29,13 @@ import { theseus as ts } from "./services/TheseusSender";
 // schedule.scheduleJob("45 * * * * *", function(res: Response) {
 //    UpdateOrgListaus(res);
 // });
+
+// Interval timer for checking julkaisujono
+setInterval(() =>  ts.checkQueue(), 30000);
+
 function testInterval() {
     return console.log("MAKE IT RAIN");
 }
-
-// Interval timer for checking julkaisujono
-setInterval(() => ts.checkQueue(), 30000);
 
 function UpdateOrgListaus(res: Response) {
     return new Promise((resolve, reject) => {
