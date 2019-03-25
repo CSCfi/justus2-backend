@@ -9,7 +9,7 @@ const fs = require("fs");
 
 // Database connection
 const connection = require("./../db");
-const testtoken = "31e20c46-c313-41ac-b875-79b83be5c4fb";
+const testtoken = "72d10dfb-868c-4a65-8a77-afb7c1ad254a";
 
 const BASEURL = "https://ds5-am-kktest.lib.helsinki.fi/rest/";
 const fu = require("../queries/fileUpload");
@@ -74,15 +74,14 @@ const savedFileName = "file.blob";
          const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
          const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
              "${id};";
-
-         const queryAbstract = "SELECT abstract FROM julkaisuarkisto WHERE julkaisuid = " +
+        const queryAbstract = "SELECT abstract FROM julkaisuarkisto WHERE julkaisuid = " +
              "${id};";
-
          let julkaisuData: any = {};
          let description: any = {};
          let avainsanaData = [];
          let isbnData = [];
          let issnData = [];
+
 
          try {
              julkaisuData = await connection.db.one(queryJulkaisu, params);
@@ -116,6 +115,7 @@ const savedFileName = "file.blob";
              {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
              {"key": "dc.identifier.uri", "value": julkaisuData["rinnakkaistallennetunversionverkkoosoite"]},
              {"key": "dc.description.abstract", "value": description["abstract"]},
+             {"key": "dc.type", "value": "publisher"},
          ];
 
 
@@ -287,6 +287,7 @@ const savedFileName = "file.blob";
                  const deletefromJonoQuery = "DELETE from julkaisujono WHERE julkaisuid = " + "${id};";
                  await connection.db.any(deletefromJonoQuery, params);
 
+
                  await fu.deleteJulkaisuFile(filePath, savedFileName);
              })
              .catch(function (err: Error) {
@@ -380,4 +381,111 @@ const savedFileName = "file.blob";
 
  }
 
+
+async function PutTheseus(req: Request, id: any) {
+    console.log("The req.body" + JSON.stringify(req.body));
+    const tempMetadataObject = [
+        {"key": "dc.title", "value": req.body.julkaisu["julkaisunnimi"]},
+        {"key": "dc.type.okm", "value": req.body.julkaisu["julkaisutyyppi"]},
+        {"key": "dc.date.issued", "value": req.body.julkaisu["julkaisuvuosi"]},
+        {"key": "dc.relation.conference", "value": req.body.julkaisu["konferenssinvakiintunutnimi"]},
+        {"key": "dc.relation.ispartof", "value": req.body.julkaisu["emojulkaisunnimi"]},
+        {"key": "dc.contributor.editor", "value": req.body.julkaisu["emojulkaisuntoimittajat"]},
+        {"key": "dc.relation.ispartofjournal", "value": req.body.julkaisu["lehdenjulkaisusarjannimi"]},
+        {"key": "dc.relation.volume", "value": req.body.julkaisu["volyymi"]},
+        {"key": "dc.relation.issue", "value": req.body.julkaisu["numero"]},
+        {"key": "dc.relation.pagerange", "value": req.body.julkaisu["sivut"]},
+        {"key": "dc.relation.articlenumber", "value": req.body.julkaisu["artikkelinumero"]},
+        {"key": "dc.publisher", "value": req.body.julkaisu["kustantaja"]},
+        {"key": "dc.language.iso", "value": req.body.julkaisu["julkaisunkieli"]},
+        {"key": "dc.relation.doi", "value": req.body.julkaisu["doitunniste"]},
+        {"key": "dc.okm.selfarchived", "value": req.body.julkaisu["julkaisurinnakkaistallennettu"]},
+        {"key": "dc.identifier.uri", "value": req.body.julkaisu["rinnakkaistallennetunversionverkkoosoite"]},
+        {"key": "dc.type", "value": "publisher"},
+    ];
+    const metadataObject: any = [];
+    console.log("The req body sorted: " + JSON.stringify(tempMetadataObject));
+    for (let i = 0; i < tempMetadataObject.length; i++) {
+        if (tempMetadataObject[i]["value"] || tempMetadataObject[i]["value"] === "") {
+            metadataObject.push(tempMetadataObject[i]);
+        }
+    }
+
+    if (!arrayIsEmpty(req.body.avainsanat)) {
+        req.body.avainsanat.forEach((value: any) => {
+            const avainsanaobject = {"key": "dc.subject", "value": value};
+            console.log("avainsanaobject: " + JSON.stringify(avainsanaobject));
+            console.log("The metadataobject at avainsanastage: " + JSON.stringify(metadataObject));
+            metadataObject.push(avainsanaobject);
+        });
+    }
+
+    if (!arrayIsEmpty(req.body.julkaisu.isbn)) {
+        req.body.julkaisu.isbn.forEach((value: any) => {
+            // console.log(value);
+            const isbnobject = {"key": "dc.identifier.isbn", "value": value};
+            console.log("The isbnobject :" + JSON.stringify(isbnobject));
+            metadataObject.push(isbnobject);
+        });
+    }
+
+    if (!arrayIsEmpty(req.body.julkaisu.issn)) {
+        req.body.julkaisu.issn.forEach((value: any) => {
+            // console.log(value);
+            const issnobject = {"key": "dc.identifier.issn", "value": value};
+            metadataObject.push(issnobject);
+        });
+    }
+
+    const str = req.body.julkaisu.tekijat;
+    const onetekija = str.split("; ");
+
+    onetekija.forEach((value: any) => {
+        const tekijatobject = {"key": "dc.contributor.author", "value": value}; // formaatti, sukunimi, etunimi
+        metadataObject.push(tekijatobject);
+    });
+    function arrayIsEmpty(arr: any) {
+        if (!arr || !arr[0] || arr[0] === "") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    console.log("The final metadataobject sorted: " + JSON.stringify(metadataObject));
+
+    const params = {"id": id};
+    const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+    let itemid: any;
+
+    try {
+        itemid = await connection.db.any(itemidquery, params);
+    }
+    catch (e) {
+    console.log(e);
+    }
+    console.log("The itemid for the item to be updated");
+    const urlFinal = BASEURL + "items/" + itemid[0]["itemid"] + "/metadata";
+    const headersOpt = {
+        "rest-dspace-token": testtoken,
+        "content-type": "application/json"
+    };
+    const options = {
+        rejectUnauthorized: false,
+        method: "PUT",
+        uri: urlFinal,
+        headers: headersOpt,
+        body: metadataObject,
+        encoding: "utf8",
+    };
+    rp(options)
+    .then(async function (res: Response, req: Request) {
+        console.log("Successful PUT" + res);
+    })
+    .catch(function (err: Error) {
+        console.log("Error while updating julkaisu: " + id + " with error: " + err);
+    });
+ }
 export const theseus = new TheseusSender();
+module.exports = {
+    PutTheseus: PutTheseus,
+};

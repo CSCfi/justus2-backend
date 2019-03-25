@@ -10,6 +10,7 @@ const koodistopalvelu = require("./../queries/koodispalveluQueries");
 const ext = require("./../queries/externalServices");
 // File upload
 const fu = require("./../queries/fileUpload");
+const ts = require("../services/TheseusSender");
 
 // Define the routes here, all will have the prexix /api/ as per the proxypass in the apache settings
 // GET requests here
@@ -22,6 +23,7 @@ router.get("/user", db.getUser);
 router.post("/julkaisu", db.postJulkaisu);
 router.post("/language", db.postLanguage);
 router.post("/upload", fu.uploadJulkaisu);
+// router.post("/testroute/:id", ts.PutTheseus);
 
 // PUT requests
 router.put("/julkaisu/:id", db.updateJulkaisu);
