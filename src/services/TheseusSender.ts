@@ -10,7 +10,7 @@ const fs = require("fs");
 // Database connection
 const connection = require("./../db");
 
-const testtoken = "be62a4bf-bff9-482c-b454-f1f1dcc39efb";
+// const testtoken = "be62a4bf-bff9-482c-b454-f1f1dcc39efb";
 
 
 const BASEURL = "https://ds5-am-kktest.lib.helsinki.fi/rest/";
@@ -44,8 +44,19 @@ const savedFileName = "file.blob";
          const julkaisuIDt = await connection.db.query(
              "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
              "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
+             console.log("The initial token: " + process.env.TOKEN);
 
-         const self = this;
+             this.checkToken(determineBoolean);
+              function determineBoolean(val: any) {
+                const sel = this;
+                console.log("The sel: " + sel);
+                if (val === "invalid") {
+                    console.log("Token is invaild! " + val);
+                    sel.getToken();
+
+                }
+             }
+        const self = this;
          console.log(self);
          console.log("The join SELECT: " + JSON.stringify(julkaisuIDt));
 
@@ -72,11 +83,11 @@ const savedFileName = "file.blob";
         const queryAbstract = "SELECT abstract FROM julkaisuarkisto WHERE julkaisuid = " +
              "${id};";
          const julkaisuData: any = {};
-         let description: any = {};
+        //  let description: any = {};
 
          try {
              julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-             description = await connection.db.oneOrNone(queryAbstract, params);
+            //  description = await connection.db.oneOrNone(queryAbstract, params);
              julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
              julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
              julkaisuData["issn"] = await api.getIssn(julkaisunID);
@@ -84,7 +95,7 @@ const savedFileName = "file.blob";
              console.log(e);
          }
 
-         julkaisuData["description"] = description.abstract;
+        //  julkaisuData["description"] = description.abstract;
          const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
          const self = this;
@@ -98,7 +109,7 @@ const savedFileName = "file.blob";
          const self = this;
 
          const headersOpt = {
-             "rest-dspace-token": testtoken,
+             "rest-dspace-token": process.env.TOKEN,
              "content-type": "application/json"
          };
          const options = {
@@ -173,7 +184,7 @@ const savedFileName = "file.blob";
          const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day;
          console.log("Thefinalurl: " + urlFinal);
          const headersOpt = {
-             "rest-dspace-token": testtoken,
+             "rest-dspace-token": process.env.TOKEN,
              "content-type": "application/json"
          };
          const options = {
@@ -214,11 +225,12 @@ const savedFileName = "file.blob";
 
      }
 
-     checkToken() {
+     async checkToken(callback: Function) {
          // TODO ADD CODE HERE
+
          const urlFinal = BASEURL + "status";
          const headersOpt = {
-             "rest-dspace-token": testtoken,
+             "rest-dspace-token": process.env.TOKEN,
              "content-type": "application/json"
          };
          const options = {
@@ -227,27 +239,29 @@ const savedFileName = "file.blob";
              uri: urlFinal,
              headers: headersOpt,
              json: true,
+             encoding: "utf8",
          };
 
          rp(options)
              .then(async function (res: Response) {
                  const authenticated = (res as any)["authenticated"];
-                 if (authenticated === "true") {
-                     return true;
-
+                    // authcheck === authenticated;
+                    console.log("The authcheck const: " + authenticated);
+                if (await authenticated != true) {
+                     return await callback("invalid");
                  }
                  else {
-                     return false;
+                     return await callback("valid");
                  }
              })
              .catch(function (err: Error) {
-                 console.log("Error while checking token status: " + err);
+                 console.log("Error while checking token status: " + err + " the urlfinal " + urlFinal);
              });
      }
 
      getToken() {
          const urlFinal = BASEURL + "login";
-         const metadataobj = {"email": "test@test.com", "password": "test"};
+         const metadataobj = {"email": "victor.gallen@csc.fi", "password": "test"};
          const headersOpt = {
              "content-type": "application/json",
          };
@@ -257,15 +271,16 @@ const savedFileName = "file.blob";
              uri: urlFinal,
              headers: headersOpt,
              body: metadataobj,
+             json: true,
              encoding: "utf8",
          };
          rp(options)
              .then(async function (res: Response) {
-                 console.log(res);
-                 return res;
+                 console.log("The new token: " + (res as any));
+                 process.env.TOKEN = (res as any);
              })
              .catch(function (err: Error) {
-                 console.log("Error while deleting julkaisu: " + err);
+                 console.log("Error while getting new token: " + err);
              });
      }
 
@@ -278,7 +293,7 @@ const savedFileName = "file.blob";
          console.log(itemid);
          const urlFinal = BASEURL + "items/" + itemid[0]["itemid"];
          const headersOpt = {
-             "rest-dspace-token": testtoken,
+             "rest-dspace-token": process.env.TOKEN,
              "content-type": "application/json"
          };
          const options = {
@@ -319,7 +334,7 @@ public async PutTheseus(metadataObject: any, id: any) {
     const urlFinal = BASEURL + "items/" + itemid.itemid + "/metadata";
     console.log(urlFinal);
     const headersOpt = {
-        "rest-dspace-token": testtoken,
+        "rest-dspace-token": process.env.TOKEN,
         "content-type": "application/json"
     };
 
@@ -385,7 +400,7 @@ public async PutTheseus(metadataObject: any, id: any) {
              {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
              {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
              {"key": "dc.identifier.uri", "value": julkaisuData["rinnakkaistallennetunversionverkkoosoite"]},
-             {"key": "dc.type", "value": "publisher"},
+             {"key": "dc.type", "value": "publication"},
          ];
 
 
