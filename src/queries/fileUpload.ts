@@ -144,7 +144,11 @@ async function moveFile (file: any, id: any) {
     const oldPath = file.path;
     const newPath = publicationDir + "/" + savedFileName;
 
-    await  fs.renameSync(oldPath, newPath);
+    fs.copyFile(oldPath, newPath, (err: any) => {
+        if (err) throw err;
+        console.log("Temp file was copied to new folder");
+        fs.unlinkSync(oldPath);
+    });
 
 }
 
