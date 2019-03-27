@@ -5,7 +5,7 @@ const path = require("path");
 
 // File upload dependencies
 const multer  = require("multer");
-const upload = multer({ dest: "temp/" });
+const upload = multer({ dest: "/temp/" });
 
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
