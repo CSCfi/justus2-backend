@@ -418,6 +418,8 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
         return res.status(403).send("Permission denied");
     }
 
+}
+
 async function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
