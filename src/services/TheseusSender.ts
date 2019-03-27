@@ -110,7 +110,7 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
          const options = {
              rejectUnauthorized: false,
              method: "POST",
-             uri: BASEURL + "collections/13/items/",
+             uri: BASEURL + "collections/1472/items/",
              headers: headersOpt,
              body: sendObject,
              json: true,
