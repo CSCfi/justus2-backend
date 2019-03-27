@@ -80,11 +80,11 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
         const queryAbstract = "SELECT abstract FROM julkaisuarkisto WHERE julkaisuid = " +
              "${id};";
          const julkaisuData: any = {};
-        //  let description: any = {};
+         let description: any = {};
 
          try {
              julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-            //  description = await connection.db.oneOrNone(queryAbstract, params);
+             description = await connection.db.oneOrNone(queryAbstract, params);
              julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
              julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
              julkaisuData["issn"] = await api.getIssn(julkaisunID);
@@ -92,7 +92,7 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
              console.log(e);
          }
 
-        //  julkaisuData["description"] = description.abstract;
+         julkaisuData["description"] = description.abstract;
          const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
          const self = this;
