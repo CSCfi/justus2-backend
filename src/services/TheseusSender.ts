@@ -39,25 +39,20 @@ const publicationFolder = process.env.FILE_FOLDER;
      // public static getInstance(): Theseus {
      //     return Theseus._instance;
      // }
-
-
+    determineStatus = (val: any) => {
+        if (val === "invalid") {
+            console.log("Token is invaild! " + val);
+            this.getToken();
+        }
+     };
      public async checkQueue() {
+        const self = this;
          const julkaisuIDt = await connection.db.query(
              "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
              "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
              console.log("The initial token: " + process.env.TOKEN);
+             this.checkToken(this.determineStatus);
 
-             this.checkToken(determineBoolean);
-              function determineBoolean(val: any) {
-                const sel = this;
-                console.log("The sel: " + sel);
-                if (val === "invalid") {
-                    console.log("Token is invaild! " + val);
-                    sel.getToken();
-
-                }
-             }
-        const self = this;
          console.log(self);
          console.log("The join SELECT: " + JSON.stringify(julkaisuIDt));
 
@@ -223,7 +218,7 @@ const publicationFolder = process.env.FILE_FOLDER;
 
      }
 
-     async checkToken(callback: Function) {
+     async checkToken(callback: any) {
          // TODO ADD CODE HERE
 
          const urlFinal = BASEURL + "status";
