@@ -14,7 +14,7 @@ import { theseus as ts } from "./../services/TheseusSender";
 const connection = require("./../db");
 const dbHelpers = require("./../databaseHelpers");
 
-const publicationFolder = "publications";
+const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
 
 
