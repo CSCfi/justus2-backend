@@ -21,6 +21,7 @@ const dbHelpers = require("./../databaseHelpers");
 
 const savedFileName = "file.blob";
 
+const publicationFolder = process.env.FILE_FOLDER;
 
  class TheseusSender {
 
@@ -70,7 +71,6 @@ const savedFileName = "file.blob";
      public async postJulkaisuTheseus(julkaisunID: any) {
          // const collectionsUrl = "colletions/";
 
-
          // TODO ADD SPECIFIC ORG COLLECTION ID HERE
          // Add unique collections ID:s that are matched according to the organisational id
          // The organisational id is inside the julkaisu taulukko
@@ -101,8 +101,6 @@ const savedFileName = "file.blob";
          const self = this;
          await self.sendPostReqTheseus(metadataObject, julkaisunID);
      }
-
-
 
      async sendPostReqTheseus(sendObject: any, julkaisuID: any) {
 
@@ -178,7 +176,7 @@ const savedFileName = "file.blob";
          const month = embargodatecleaned.split("-")[1];
          const day = embargodatecleaned.split("-")[2];
          // const filepath = "/opt/sources/publications/" + julkaisuID + "/" + filenamecleaned;
-         const filePath = "publications/" + julkaisuID;
+         const filePath =  publicationFolder + "/" + julkaisuID;
          const filePathFull = filePath + "/" + savedFileName;
 
          const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day;
@@ -368,14 +366,11 @@ public async PutTheseus(metadataObject: any, id: any) {
          let description = "";
 
          if (method === "put") {
-             console.log("method is put");
              julkaisuData = obj.julkaisu;
              avainsanaData = obj.avainsana;
              isbnData = obj.julkaisu.isbn;
              issnData = obj.julkaisu.issn;
          } else {
-             console.log("method is post");
-             console.log(obj);
              julkaisuData = obj.julkaisu;
              avainsanaData = obj.avainsana;
              isbnData = obj.isbn;
