@@ -22,6 +22,8 @@ const dbHelpers = require("./../databaseHelpers");
 const savedFileName = "file.blob";
 
 const publicationFolder = process.env.FILE_FOLDER;
+const theseusAuthEmail = process.env.THESEUS_AUTH_EMAIL;
+const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
 
  class TheseusSender {
 
@@ -254,7 +256,7 @@ const publicationFolder = process.env.FILE_FOLDER;
 
      getToken() {
          const urlFinal = BASEURL + "login";
-         const metadataobj = {"email": "victor.gallen@csc.fi", "password": "test"};
+         const metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
          const headersOpt = {
              "content-type": "application/json",
          };
