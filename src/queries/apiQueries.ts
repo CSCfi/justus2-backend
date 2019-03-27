@@ -393,14 +393,19 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             // and file is already transferred to Theseus
             // we have to update data to Theseus also
             if (isPublication && isPublicationInTheseus) {
-                // TODO: update data to Theseus
-                 await ts.PutTheseus(req.body, req.params.id);
 
+                const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
+
+                await ts.PutTheseus(obj, req.params.id);
+
+                await db.any("COMMIT");
+                return res.sendStatus(200);
+
+
+            } else {
+                await db.any("COMMIT");
+                return res.sendStatus(200);
             }
-
-            await db.any("COMMIT");
-            return res.sendStatus(200);
-
 
         } catch (err) {
             // if error exists in any query, rollback
@@ -412,10 +417,6 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
     } else {
         return res.status(403).send("Permission denied");
     }
-
-
-
-}
 
 async function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
