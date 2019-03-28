@@ -166,22 +166,24 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
          const params = {"id": julkaisuID};
          const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
          const filenamequery = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-         const embargo = await connection.db.any(embargoquery, params);
+         const embargo = await connection.db.oneOrNone(embargoquery, params);
          const filename = await connection.db.any(filenamequery, params);
          const filenamecleaned = filename[0]["filename"].replace(/^"(.*)"$/, "$1");
+         let embargodate;
+
+         if (!embargo.embargo) {
+             embargodate = new Date().toISOString().split("T")[0];
+         } else {
+             embargodate = embargo.embargo.toISOString().split("T")[0];
+         }
 
          // TODO SPLIT EMBARGO FOR URLFINAL
-         const embargodate = JSON.stringify(embargo[0]["embargo"]).split("T")[0];
          console.log("The embargodate: " + embargodate);
-         const embargodatecleaned = embargodate.replace(/\"/g, "");
-         console.log("The embargodatecleaned: " + embargodatecleaned);
-         const year = embargodatecleaned.split("-")[0];
-         const month = embargodatecleaned.split("-")[1];
-         const day = embargodatecleaned.split("-")[2];
-         // const filepath = "/opt/sources/publications/" + julkaisuID + "/" + filenamecleaned;
+         const year = embargodate.split("-")[0];
+         const month = embargodate.split("-")[1];
+         const day = embargodate.split("-")[2];
          const filePath =  publicationFolder + "/" + julkaisuID;
          const filePathFull = filePath + "/" + savedFileName;
-
          const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day;
          console.log("Thefinalurl: " + urlFinal);
          const headersOpt = {
