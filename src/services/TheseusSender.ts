@@ -117,6 +117,11 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
              json: true,
              encoding: "utf8",
          };
+
+         console.log(options.uri);
+         console.log(sendObject);
+         console.log(headersOpt);
+
          rp(options)
              .then(async function (res: Response) {
                  const itemID = (res as any)["id"];
