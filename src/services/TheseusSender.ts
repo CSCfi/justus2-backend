@@ -117,6 +117,11 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
              json: true,
              encoding: "utf8",
          };
+
+         console.log(options.uri);
+         console.log(sendObject);
+         console.log(headersOpt);
+
          rp(options)
              .then(async function (res: Response) {
                  const itemID = (res as any)["id"];
@@ -127,8 +132,8 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
 
                  await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
              })
-             .catch(function (err: Error) {
-                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/1472/items " + err);
+             .catch(function (res: Response, err: Error) {
+                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/1472/items " + err + " And the full error response: " + (res as any));
              });
      }
 
