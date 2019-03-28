@@ -13,7 +13,8 @@ const connection = require("./../db");
 // const testtoken = "be62a4bf-bff9-482c-b454-f1f1dcc39efb";
 
 
-const BASEURL = "https://ds5-am-kktest.lib.helsinki.fi/rest/";
+const BASEURL = process.env.THESEUS_BASE_URL;
+
 const fu = require("../queries/fileUpload");
 const api = require("./../queries/subQueries");
 
@@ -127,7 +128,7 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
                  await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
              })
              .catch(function (err: Error) {
-                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/13/items " + err);
+                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/1472/items " + err);
              });
      }
 
