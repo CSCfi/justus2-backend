@@ -12,14 +12,15 @@ const db = connection.db;
 const dbHelpers = require("./../databaseHelpers");
 
 const authService = require("./../services/authService");
-const auditLog = require("./../services/auditLogService");
 const fileUpload = require("./../queries/fileUpload");
 
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
 
-const handleLink = process.env.HANDLE_LINK;
+// Import audit log class
+import { auditLog as auditLog } from "./../services/auditLogService";
 
+const handleLink = process.env.HANDLE_LINK;
 let USER_DATA: any = {};
 
 
