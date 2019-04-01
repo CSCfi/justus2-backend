@@ -10,6 +10,9 @@ const upload = multer({ dest: process.env.TEMP_FILE_FOLDER });
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
 
+// Import audit log class
+import { auditLog as auditLog } from "./../services/auditLogService";
+
 // Database connection
 const connection = require("./../db");
 const dbHelpers = require("./../databaseHelpers");
@@ -26,7 +29,7 @@ async function uploadJulkaisu(req: Request, res: Response) {
     // if user sends only json object (no file), update data in julkaisuarkisto table only
     if (contentType === "application/json") {
        try {
-           await updateArchiveTable(req.body);
+           await updateArchiveTable(req.body, req.headers);
            return res.status(200).json("OK");
        } catch (e) {
            console.log(e);
@@ -51,7 +54,7 @@ async function uploadJulkaisu(req: Request, res: Response) {
                     // then insert id to julkaisujono table
                     await postDataToQueueTable(file, julkaisuId);
                     // then insert publication related other data to julkaisuarkisto table
-                    await postDataToArchiveTable(file, julkaisuData);
+                    await postDataToArchiveTable(file, julkaisuData, req.headers);
 
                     return res.status(200).json("OK");
 
@@ -73,7 +76,7 @@ async function uploadJulkaisu(req: Request, res: Response) {
     }
 }
 
-async function updateArchiveTable(data: any) {
+async function updateArchiveTable(data: any, headers: any) {
 
     const obj: any = {};
 
@@ -96,17 +99,17 @@ async function updateArchiveTable(data: any) {
 
     await connection.db.none(query);
 
+    // update kaytto_loki table
+    await auditLog.postAuditData(headers, "PUT", "julkaisuarkisto", data.julkaisuid, obj);
 
     // if (isPublicationInTheseus) {
     //      TODO: if publication is already transferred to Theseus, update embargo time and abstract to Theseus also
     // }
 
-
-
 }
 
 
-async function postDataToArchiveTable(file: any, data: any) {
+async function postDataToArchiveTable(file: any, data: any, headers: any) {
 
     const tableColumns = dbHelpers.julkaisuarkisto;
 
@@ -125,6 +128,10 @@ async function postDataToArchiveTable(file: any, data: any) {
     const query = connection.pgp.helpers.insert(data, table) + "RETURNING id";
 
     await connection.db.one(query);
+
+    // update kaytto_loki table
+    await auditLog.postAuditData(headers, "POST", "julkaisuarkisto", data.julkaisuid, data);
+
 
 }
 
@@ -179,6 +186,7 @@ async function validate(fileName: any, filePath: any) {
              await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
                  id: julkaisuid
              });
+             await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
              return res.status(200).send("File removed successfully");
          } catch (err) {
              console.log(err);
@@ -194,6 +202,7 @@ async function validate(fileName: any, filePath: any) {
              await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
                  id: julkaisuid
              });
+             await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
              return res.status(200).send("File removed successfully");
          } catch (err) {
              console.log(err);
