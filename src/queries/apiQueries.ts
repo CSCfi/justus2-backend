@@ -11,9 +11,10 @@ const db = connection.db;
 const dbHelpers = require("./../databaseHelpers");
 
 const authService = require("./../services/authService");
-const auditLog = require("./../services/auditLogService");
 const fileUpload = require("./../queries/fileUpload");
 
+// Import audit log class
+import { auditLog as auditLog } from "./../services/auditLogService";
 
 let USER_DATA: any = {};
 
