@@ -10,9 +10,6 @@ const fs = require("fs");
 // Database connection
 const connection = require("./../db");
 
-// const testtoken = "be62a4bf-bff9-482c-b454-f1f1dcc39efb";
-
-
 const BASEURL = process.env.THESEUS_BASE_URL;
 
 const fu = require("../queries/fileUpload");
@@ -25,6 +22,7 @@ const savedFileName = "file.blob";
 const publicationFolder = process.env.FILE_FOLDER;
 const theseusAuthEmail = process.env.THESEUS_AUTH_EMAIL;
 const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
+const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
 
  class TheseusSender {
 
@@ -69,7 +67,9 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
      public async postJulkaisuTheseus(julkaisunID: any) {
          // const collectionsUrl = "colletions/";
 
-         // TODO ADD SPECIFIC ORG COLLECTION ID HERE
+         // TODO: first check if publication already has itemid in archive table. If so, send only publication and remove julkaisuid from queue
+
+         // TODO: ADD SPECIFIC ORG COLLECTION ID HERE
          // Add unique collections ID:s that are matched according to the organisational id
          // The organisational id is inside the julkaisu taulukko
          // const orgCollection = "something";
@@ -111,7 +111,7 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
          const options = {
              rejectUnauthorized: false,
              method: "POST",
-             uri: BASEURL + "collections/1472/items/",
+             uri: BASEURL + "collections/" + theseusCollectionId + "/items/",
              headers: headersOpt,
              body: sendObject,
              json: true,
@@ -133,7 +133,7 @@ const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
                  await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
              })
              .catch(function (res: Response, err: Error) {
-                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/1472/items " + err + " And the full error response: " + (res as any));
+                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + theseusCollectionId + "/items " + err + " And the full error response: " + (res as any));
              });
      }
 
