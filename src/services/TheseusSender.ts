@@ -78,14 +78,14 @@ const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
          const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
          const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
              "${id};";
-        const queryAbstract = "SELECT abstract FROM julkaisuarkisto WHERE julkaisuid = " +
+        const queryAbstractAndUrn = "SELECT abstract, urn FROM julkaisuarkisto WHERE julkaisuid = " +
              "${id};";
          const julkaisuData: any = {};
-         let description: any = {};
+         let arkistoData: any = {};
 
          try {
              julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-             description = await connection.db.oneOrNone(queryAbstract, params);
+             arkistoData = await connection.db.oneOrNone(queryAbstractAndUrn, params);
              julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
              julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
              julkaisuData["issn"] = await api.getIssn(julkaisunID);
@@ -93,7 +93,8 @@ const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
              console.log(e);
          }
 
-         julkaisuData["description"] = description.abstract;
+         julkaisuData["description"] = arkistoData.abstract;
+         julkaisuData["urn"] = arkistoData.urn;
          const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
          const self = this;
@@ -369,6 +370,7 @@ public async PutTheseus(metadataObject: any, id: any) {
          let isbnData;
          let issnData;
          let description = "";
+         let urn;
 
          if (method === "put") {
              julkaisuData = obj.julkaisu;
@@ -381,7 +383,10 @@ public async PutTheseus(metadataObject: any, id: any) {
              isbnData = obj.isbn;
              issnData = obj.issn;
              description = obj.description;
+             urn = obj.urn;
          }
+
+
 
          const tempMetadataObject = [
              {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
@@ -399,7 +404,6 @@ public async PutTheseus(metadataObject: any, id: any) {
              {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
              {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
              {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
-             {"key": "dc.identifier.uri", "value": julkaisuData["rinnakkaistallennetunversionverkkoosoite"]},
              {"key": "dc.type", "value": "publication"},
          ];
 
@@ -454,6 +458,7 @@ public async PutTheseus(metadataObject: any, id: any) {
                  "metadata": metadataObject
              };
              postMetadataObject.metadata.push({"key": "dc.description.abstract", "value": description });
+             postMetadataObject.metadata.push({"key": "dc.identifier.urn", "value": urn });
          }
 
          if (method === "post") {
