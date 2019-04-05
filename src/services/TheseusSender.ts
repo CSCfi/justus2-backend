@@ -6,6 +6,7 @@ const path = require("path");
 
 const kp = require("../koodistopalvelu");
 const fs = require("fs");
+const slugify = require("slugify");
 
 // Database connection
 const connection = require("./../db");
@@ -168,8 +169,9 @@ const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
          const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
          const filenamequery = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
          const embargo = await connection.db.oneOrNone(embargoquery, params);
-         const filename = await connection.db.any(filenamequery, params);
-         const filenamecleaned = filename[0]["filename"].replace(/^"(.*)"$/, "$1");
+         const filename = await connection.db.oneOrNone(filenamequery, params);
+         const filenamecleaned = await slugify(filename["filename"].toString(), "_");
+
          let embargodate;
 
          if (!embargo.embargo) {
