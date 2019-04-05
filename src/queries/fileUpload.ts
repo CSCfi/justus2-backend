@@ -65,6 +65,23 @@ async function uploadJulkaisu(req: Request, res: Response) {
                         fs.unlinkSync(file.path);
                         return res.status(500).send("This publication has already a file");
                     } else {
+
+                        // if something goes wrong, verify that julkaisuid is removed from queue table and publication is removed from server
+                        await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
+                            id: julkaisuId
+                        });
+
+                        const path = publicationFolder + "/" + julkaisuId;
+                        const fileExists = await fs.existsSync(path);
+
+                        if (fileExists) {
+                            try {
+                                await deleteJulkaisuFile(path, savedFileName);
+
+                            } catch (e) {
+                                console.log(e);
+                            }
+                        }
                         return res.status(500).send("Failure in file upload");
                     }
                 }
@@ -151,7 +168,7 @@ async function moveFile (file: any, id: any) {
     const oldPath = file.path;
     const newPath = publicationDir + "/" + savedFileName;
 
-    fs.copyFile(oldPath, newPath, (err: any) => {
+    await fs.copyFileSync(oldPath, newPath, (err: any) => {
         if (err) throw err;
         console.log("Temp file was copied to new folder");
         fs.unlinkSync(oldPath);
