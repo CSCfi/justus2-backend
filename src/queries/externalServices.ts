@@ -409,6 +409,7 @@ function getUrn(req: Request, res: Response, next: NextFunction) {
             res.sendStatus(500);
         }
         res.status(200).json({ data });
+
     });
 
 }

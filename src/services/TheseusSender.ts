@@ -379,6 +379,8 @@ public async PutTheseus(metadataObject: any, id: any) {
              avainsanaData = obj.avainsana;
              isbnData = obj.julkaisu.isbn;
              issnData = obj.julkaisu.issn;
+             description = obj.filedata.abstract;
+             urn = obj.filedata.urn;
          } else {
              julkaisuData = obj.julkaisu;
              avainsanaData = obj.avainsana;
@@ -406,6 +408,8 @@ public async PutTheseus(metadataObject: any, id: any) {
              {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
              {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
              {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
+             {"key": "dc.description.abstract", "value": description},
+             {"key": "dc.identifier.urn", "value": urn},
              {"key": "dc.type", "value": "publication"},
          ];
 
@@ -459,8 +463,6 @@ public async PutTheseus(metadataObject: any, id: any) {
                  "name": julkaisuData["julkaisunnimi"],
                  "metadata": metadataObject
              };
-             postMetadataObject.metadata.push({"key": "dc.description.abstract", "value": description });
-             postMetadataObject.metadata.push({"key": "dc.identifier.urn", "value": urn });
          }
 
          if (method === "post") {

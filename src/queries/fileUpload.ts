@@ -24,105 +24,57 @@ async function uploadJulkaisu(req: Request, res: Response) {
 
     // TODO: Check access rights for publication in question
 
-    const contentType = req.headers["content-type"];
+    upload.single("file")(req, res, async function () {
 
-    // if user sends only json object (no file), update data in julkaisuarkisto table only
-    if (contentType === "application/json") {
-       try {
-           await updateArchiveTable(req.body, req.headers);
-           return res.status(200).json("OK");
-       } catch (e) {
-           console.log(e);
-           return res.status(500).send("Could not update file data");
-       }
+        const julkaisuId = req.body.data.julkaisuid;
+        const julkaisuData = req.body.data;
+        const file = (<any>req).file;
 
-    }
+        const valid = await validate(file.originalname, file.path);
 
-    if (contentType.startsWith("multipart/form-data")) {
-        upload.single("file")(req, res, async function () {
+        if (valid) {
+            try {
+                // first move file from temp folder to publications folder
+                await moveFile(file, julkaisuId);
+                // then insert id to julkaisujono table
+                await postDataToQueueTable(file, julkaisuId);
+                // then insert publication related other data to julkaisuarkisto table
+                await postDataToArchiveTable(file, julkaisuData, req.headers);
 
-            const julkaisuId = req.body.data.julkaisuid;
-            const julkaisuData = req.body.data;
-            const file = (<any>req).file;
+                return res.status(200).json("OK");
 
-            const valid = await validate(file.originalname, file.path);
-
-            if (valid) {
-                try {
-                    // first move file from temp folder to publications folder
-                    await moveFile(file, julkaisuId);
-                    // then insert id to julkaisujono table
-                    await postDataToQueueTable(file, julkaisuId);
-                    // then insert publication related other data to julkaisuarkisto table
-                    await postDataToArchiveTable(file, julkaisuData, req.headers);
-
-                    return res.status(200).json("OK");
-
-                } catch (e) {
+            } catch (e) {
+                console.log(e);
+                if (e.code === "EEXIST") {
                     console.log(e);
-                    if (e.code === "EEXIST") {
-                        console.log(e);
-                        fs.unlinkSync(file.path);
-                        return res.status(500).send("This publication has already a file");
-                    } else {
+                    fs.unlinkSync(file.path);
+                    return res.status(500).send("This publication has already a file");
+                } else {
 
-                        // if something goes wrong, verify that julkaisuid is removed from queue table and publication is removed from server
-                        await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
-                            id: julkaisuId
-                        });
+                    // if something goes wrong, verify that julkaisuid is removed from queue table and publication is removed from server
+                    await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
+                        id: julkaisuId
+                    });
 
-                        const path = publicationFolder + "/" + julkaisuId;
-                        const fileExists = await fs.existsSync(path);
+                    const path = publicationFolder + "/" + julkaisuId;
+                    const fileExists = await fs.existsSync(path);
 
-                        if (fileExists) {
-                            try {
-                                await deleteJulkaisuFile(path, savedFileName);
+                    if (fileExists) {
+                        try {
+                            await deleteJulkaisuFile(path, savedFileName);
 
-                            } catch (e) {
-                                console.log(e);
-                            }
+                        } catch (e) {
+                            console.log(e);
                         }
-                        return res.status(500).send("Failure in file upload");
                     }
+                    return res.status(500).send("Failure in file upload");
                 }
-            } else {
-                return res.status(403).send("Invalid file");
             }
+        } else {
+            return res.status(403).send("Invalid file");
+        }
 
-        });
-    }
-}
-
-async function updateArchiveTable(data: any, headers: any) {
-
-    const obj: any = {};
-
-    if (!data.embargo || data.embargo === "" ) {
-        obj["embargo"] = undefined;
-    } else {
-        obj["embargo"] = data.embargo;
-    }
-
-    if (!data.abstract || data.abstract === "") {
-        obj["abstract"] = undefined;
-    } else {
-        obj["abstract"] = data.abstract;
-    }
-
-    obj["urn"] = data.urn;
-
-    const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn", "abstract"], {table: "julkaisuarkisto"});
-    const query = connection.pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
-
-    await connection.db.none(query);
-
-    // update kaytto_loki table
-    await auditLog.postAuditData(headers, "PUT", "julkaisuarkisto", data.julkaisuid, obj);
-
-    // if (isPublicationInTheseus) {
-    //      TODO: if publication is already transferred to Theseus, update embargo time and abstract to Theseus also
-    // }
-
+    });
 }
 
 
@@ -153,7 +105,6 @@ async function postDataToArchiveTable(file: any, data: any, headers: any) {
 }
 
 async function postDataToQueueTable(file: any, julkaisuid: any) {
-
     const tableColumns = new connection.pgp.helpers.ColumnSet(["julkaisuid"], {table: "julkaisujono"});
     const query = connection.pgp.helpers.insert({"julkaisuid": julkaisuid }, tableColumns) + "RETURNING id";
     await connection.db.one(query);

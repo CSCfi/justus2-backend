@@ -391,29 +391,26 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
 
             // if publication file is originally uploaded to Justus service,
+            // we have to update data in julkaisuarkisto table,
             // and file is already transferred to Theseus
             // we have to update data to Theseus also
-            if (isPublication && isPublicationInTheseus) {
 
-                const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
-
-                await ts.PutTheseus(obj, req.params.id);
-
-                await db.any("COMMIT");
-                return res.sendStatus(200);
-
-
-            } else {
-                await db.any("COMMIT");
-                return res.sendStatus(200);
+            if (isPublication) {
+                await updateArchiveTable(req.body.filedata, req.headers);
+                if (isPublicationInTheseus) {
+                    const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
+                    await ts.PutTheseus(obj, req.params.id);
+                }
             }
+
+            await db.any("COMMIT");
+            return res.sendStatus(200);
 
         } catch (err) {
             // if error exists in any query, rollback
             console.log(err);
             await db.any("ROLLBACK");
-            // res.sendStatus(500);
-            return res.status(500).send("Could not update publication");
+            return res.status(500).send("Error in updating publication");
         }
     } else {
         return res.status(403).send("Permission denied");
@@ -593,6 +590,34 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
 
     await db.any(saveAlayksikko);
     await auditLog.postAuditData(headers, "POST", "alayksikko", jid, alayksikkoObj);
+}
+
+async function updateArchiveTable(data: any, headers: any) {
+
+    const obj: any = {};
+
+    if (!data.embargo || data.embargo === "" ) {
+        obj["embargo"] = undefined;
+    } else {
+        obj["embargo"] = data.embargo;
+    }
+
+    if (!data.abstract || data.abstract === "") {
+        obj["abstract"] = undefined;
+    } else {
+        obj["abstract"] = data.abstract;
+    }
+
+    obj["urn"] = data.urn;
+
+    const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn", "abstract"], {table: "julkaisuarkisto"});
+    const query = pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
+
+    await db.none(query);
+
+    // update kaytto_loki table
+    await auditLog.postAuditData(headers, "PUT", "julkaisuarkisto", data.julkaisuid, obj);
+
 }
 
 
