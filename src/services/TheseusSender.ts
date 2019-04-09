@@ -24,6 +24,8 @@ const publicationFolder = process.env.FILE_FOLDER;
 const theseusAuthEmail = process.env.THESEUS_AUTH_EMAIL;
 const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
 const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
+const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
+
 
  class TheseusSender {
 
@@ -221,8 +223,16 @@ const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
                  const deletefromJonoQuery = "DELETE from julkaisujono WHERE julkaisuid = " + "${id};";
                  await connection.db.any(deletefromJonoQuery, params);
 
+                 const urnQuery = "SELECT urn FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+                 const urn = await connection.db.oneOrNone(urnQuery, params);
 
+                 const rinnakkaistallennetunversionverkkoosoite = {"rinnakkaistallennetunversionverkkoosoite":  urnIdentifierPrefix + urn.urn };
+                 const updateUrn = connection.pgp.helpers.update(rinnakkaistallennetunversionverkkoosoite, ["rinnakkaistallennetunversionverkkoosoite"], "julkaisu") + "WHERE id = " +  parseInt(julkaisuID);
+
+                 await connection.db.none(updateUrn);
                  await fu.deleteJulkaisuFile(filePath, savedFileName);
+
+                 console.log("Successfully sent publication to Theseus and updated all data!");
              })
              .catch(function (err: Error) {
                  console.log("Something went wrong with sending file: " + err);
