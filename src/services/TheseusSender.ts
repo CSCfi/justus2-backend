@@ -437,7 +437,6 @@ public async PutTheseus(metadataObject: any, id: any) {
          }
 
 
-         let versionObject;
          if (fileData["versio"] && fileData["versio"] !== "") {
              const versio =  await this.mapVersioFields(fileData["versio"]);
              const versionObject = {"key": "dc.type.version", "value": versio};
