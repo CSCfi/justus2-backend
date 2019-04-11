@@ -596,6 +596,8 @@ async function updateArchiveTable(data: any, headers: any) {
 
     const obj: any = {};
 
+    const updateColumns = dbHelpers.julkaisuarkistoUpdateFields;
+
     if (!data.embargo || data.embargo === "" ) {
         obj["embargo"] = undefined;
     } else {
@@ -608,9 +610,25 @@ async function updateArchiveTable(data: any, headers: any) {
         obj["abstract"] = data.abstract;
     }
 
-    obj["urn"] = data.urn;
+    if (!data.oikeudet || data.oikeudet === "") {
+        obj["oikeudet"] = undefined;
+    } else {
+        obj["oikeudet"] = data.oikeudet;
+    }
 
-    const table = new connection.pgp.helpers.ColumnSet(["embargo", "urn", "abstract"], {table: "julkaisuarkisto"});
+    if (!data.versio || data.versio === "") {
+        obj["versio"] = undefined;
+    } else {
+        obj["versio"] = data.versio;
+    }
+
+    if (!data.julkaisusarja || data.julkaisusarja === "") {
+        obj["julkaisusarja"] = undefined;
+    } else {
+        obj["julkaisusarja"] = data.julkaisusarja;
+    }
+
+    const table = new connection.pgp.helpers.ColumnSet(updateColumns, {table: "julkaisuarkisto"});
     const query = pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
 
     await db.none(query);
