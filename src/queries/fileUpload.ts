@@ -90,6 +90,18 @@ async function postDataToArchiveTable(file: any, data: any, headers: any) {
         data["abstract"] = undefined;
     }
 
+    if (!data.versio || data.versio === "") {
+        data["versio"] = undefined;
+    }
+
+    if (!data.oikeudet || data.oikeudet === "") {
+        data["oikeudet"] = undefined;
+    }
+
+    if (!data.julkaisusarja || data.julkaisusarja === "") {
+        data["julkaisusarja"] = undefined;
+    }
+
     data["filename"] = file.originalname;
     data["mimetype"] = file.mimetype;
 
@@ -215,7 +227,6 @@ async function isPublicationInTheseus(id: any) {
         return true;
     }
 }
-
 
 module.exports = {
     uploadJulkaisu: uploadJulkaisu,

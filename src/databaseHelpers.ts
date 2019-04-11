@@ -50,7 +50,18 @@ const julkaisuarkisto = [
       "embargo",
       "mimetype",
       "urn",
-      "abstract"
+      "abstract",
+      "versio",
+      "oikeudet",
+      "julkaisusarja"
+];
+
+const julkaisuarkistoUpdateFields = [
+    "embargo",
+    "abstract",
+    "versio",
+    "oikeudet",
+    "julkaisusarja"
 ];
 
 const theseusJulkaisuFields = [
@@ -118,6 +129,7 @@ module.exports = {
     julkaisu: julkaisu,
     julkaisuListFields: julkaisuListFields,
     julkaisuarkisto: julkaisuarkisto,
+    julkaisuarkistoUpdateFields: julkaisuarkistoUpdateFields,
     organisaatiotekija: organisasaatiotekija,
     tieteenala: tieteenala,
     taiteenala: taiteenala,
