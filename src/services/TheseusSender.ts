@@ -81,14 +81,18 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
          const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
              "${id};";
-        const queryAbstractAndUrn = "SELECT abstract, urn FROM julkaisuarkisto WHERE julkaisuid = " +
+
+         let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
+         arkistotableFields =  arkistotableFields.join(",");
+
+         const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
              "${id};";
          const julkaisuData: any = {};
          let arkistoData: any = {};
 
          try {
              julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-             arkistoData = await connection.db.oneOrNone(queryAbstractAndUrn, params);
+             arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
              julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
              julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
              julkaisuData["issn"] = await api.getIssn(julkaisunID);
@@ -96,8 +100,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              console.log(e);
          }
 
-         julkaisuData["description"] = arkistoData.abstract;
-         julkaisuData["urn"] = arkistoData.urn;
+         julkaisuData["filedata"] = arkistoData;
          const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
          const self = this;
@@ -121,10 +124,6 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              json: true,
              encoding: "utf8",
          };
-
-         console.log(options.uri);
-         console.log(sendObject);
-         console.log(headersOpt);
 
          rp(options)
              .then(async function (res: Response) {
@@ -331,7 +330,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
 public async PutTheseus(metadataObject: any, id: any) {
 
-    //  TODO: update also embargo time and abstract
+    //  TODO: update also embargo time
 
     const params = {"id": id};
     const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
@@ -377,30 +376,21 @@ public async PutTheseus(metadataObject: any, id: any) {
 
      public async mapTheseusFields(id: any, obj: any, method: string) {
 
-         let julkaisuData: any = {};
-         let avainsanaData;
          let isbnData;
          let issnData;
-         let description = "";
-         let urn;
+
+         const julkaisuData = obj.julkaisu;
+         const fileData = obj.filedata;
+         const avainsanaData = obj.avainsana;
 
          if (method === "put") {
-             julkaisuData = obj.julkaisu;
-             avainsanaData = obj.avainsana;
              isbnData = obj.julkaisu.isbn;
              issnData = obj.julkaisu.issn;
-             description = obj.filedata.abstract;
-             urn = obj.filedata.urn;
+
          } else {
-             julkaisuData = obj.julkaisu;
-             avainsanaData = obj.avainsana;
              isbnData = obj.isbn;
              issnData = obj.issn;
-             description = obj.description;
-             urn = obj.urn;
          }
-
-
 
          const tempMetadataObject = [
              {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
@@ -418,9 +408,10 @@ public async PutTheseus(metadataObject: any, id: any) {
              {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
              {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
              {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
-             {"key": "dc.description.abstract", "value": description},
-             {"key": "dc.identifier.urn", "value": urn},
+             {"key": "dc.description.abstract", "value": fileData["abstract"]},
+             {"key": "dc.identifier.urn", "value": fileData["urn"] },
              {"key": "dc.type", "value": "publication"},
+             // {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
          ];
 
 
@@ -428,11 +419,29 @@ public async PutTheseus(metadataObject: any, id: any) {
              [{"key": "dc.source.identifier", "value": id }];
 
 
+         // remove empty values
          for (let i = 0; i < tempMetadataObject.length; i++) {
              if (tempMetadataObject[i]["value"] && tempMetadataObject[i]["value"] !== "") {
                  metadataObject.push(tempMetadataObject[i]);
              }
          }
+
+         // let oikeudetObject;
+         // if (fileData["oikeudet"] && fileData["oikeudet"] === "All rights reserved") {
+         //     oikeudetObject = {"key": "dc.rights", "value": "All rights reserved. This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited."};
+         //     metadataObject.push(oikeudetObject);
+         // } else if (fileData["oikeudet"] && fileData["oikeudet"] !== "") {
+         //     oikeudetObject = {"key": "dc.rights", "value": fileData["oikeudet"]};
+         //     metadataObject.push(oikeudetObject);
+         // }
+
+
+         // let versionObject;
+         // if (fileData["versio"] && fileData["versio"] !== "") {
+         //     const versio =  await this.mapVersioFields(fileData["versio"]);
+         //     const versionObject = {"key": "dc.type.version", "value": versio};
+         //     metadataObject.push(versionObject);
+         // }
 
          if (!this.arrayIsEmpty(avainsanaData)) {
              avainsanaData.forEach((value: any) => {
@@ -490,6 +499,24 @@ public async PutTheseus(metadataObject: any, id: any) {
              return false;
          }
      }
+
+     async mapVersioFields(data: any) {
+         let version;
+
+         if (data === "0") {
+             version = "fi=Final draft|sv=Final draft |en=Final draft|";
+         }
+         if (data === "1") {
+             version = "fi=Publisher's version|sv=Publisher's version|en=Publisher's version|";
+         }
+         if (data === "2") {
+             version = "fi=Pre-print -versio|sv=Pre-print |en=Pre-print|";
+         }
+
+         return version;
+
+     }
+
 
  }
 export const theseus = new TheseusSender();
