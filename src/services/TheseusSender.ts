@@ -102,6 +102,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
          julkaisuData["filedata"] = arkistoData;
          const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
+         console.log(metadataObject);
 
          const self = this;
          await self.sendPostReqTheseus(metadataObject, julkaisunID);
@@ -411,7 +412,7 @@ public async PutTheseus(metadataObject: any, id: any) {
              {"key": "dc.description.abstract", "value": fileData["abstract"]},
              {"key": "dc.identifier.urn", "value": fileData["urn"] },
              {"key": "dc.type", "value": "publication"},
-             // {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
+             {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
          ];
 
 
@@ -426,22 +427,22 @@ public async PutTheseus(metadataObject: any, id: any) {
              }
          }
 
-         // let oikeudetObject;
-         // if (fileData["oikeudet"] && fileData["oikeudet"] === "All rights reserved") {
-         //     oikeudetObject = {"key": "dc.rights", "value": "All rights reserved. This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited."};
-         //     metadataObject.push(oikeudetObject);
-         // } else if (fileData["oikeudet"] && fileData["oikeudet"] !== "") {
-         //     oikeudetObject = {"key": "dc.rights", "value": fileData["oikeudet"]};
-         //     metadataObject.push(oikeudetObject);
-         // }
+         let oikeudetObject;
+         if (fileData["oikeudet"] && fileData["oikeudet"] === "All rights reserved") {
+             oikeudetObject = {"key": "dc.rights", "value": "All rights reserved. This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited."};
+             metadataObject.push(oikeudetObject);
+         } else if (fileData["oikeudet"] && fileData["oikeudet"] !== "") {
+             oikeudetObject = {"key": "dc.rights", "value": fileData["oikeudet"]};
+             metadataObject.push(oikeudetObject);
+         }
 
 
-         // let versionObject;
-         // if (fileData["versio"] && fileData["versio"] !== "") {
-         //     const versio =  await this.mapVersioFields(fileData["versio"]);
-         //     const versionObject = {"key": "dc.type.version", "value": versio};
-         //     metadataObject.push(versionObject);
-         // }
+         let versionObject;
+         if (fileData["versio"] && fileData["versio"] !== "") {
+             const versio =  await this.mapVersioFields(fileData["versio"]);
+             const versionObject = {"key": "dc.type.version", "value": versio};
+             metadataObject.push(versionObject);
+         }
 
          if (!this.arrayIsEmpty(avainsanaData)) {
              avainsanaData.forEach((value: any) => {

@@ -400,6 +400,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
                 await updateArchiveTable(req.body.filedata, req.headers);
                 if (isPublicationInTheseus) {
                     const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
+                    console.log(obj);
                     await ts.PutTheseus(obj, req.params.id);
                 }
             }
