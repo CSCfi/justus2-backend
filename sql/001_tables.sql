@@ -234,6 +234,9 @@ CREATE TABLE julkaisuarkisto
   urn character varying,
   abstract text,
   embargo timestamp with time zone,
+  oikeudet character varying,
+  versio character varying(1),
+  julkaisuarkisto character varying,
   CONSTRAINT julkaisuarkisto_pkey PRIMARY KEY (id),
   CONSTRAINT fk_julkaisujono FOREIGN KEY (julkaisuid)
       REFERENCES julkaisu (id) MATCH SIMPLE
