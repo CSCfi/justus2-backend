@@ -167,7 +167,8 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
     if (hasOrganisation && hasAccessToPublication) {
         const julkaisuTableFields = dbHelpers.getTableFields("julkaisu");
-        const arkistoTableFields = "julkaisuarkisto.filename, julkaisuarkisto.embargo, julkaisuarkisto.urn, julkaisuarkisto.abstract, julkaisuarkisto.handle";
+
+        const arkistoTableFields = "urn,handle,filename," + dbHelpers.julkaisuarkistoUpdateFields.join(",");
 
         let params;
         let query;
