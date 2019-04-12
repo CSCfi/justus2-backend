@@ -231,6 +231,8 @@ async function isPublicationInTheseus(id: any) {
 async function downloadJulkaisu(req: Request, res: Response) {
 
         const isFileInTheseus = await isPublicationInTheseus(req.params.id);
+        console.log(isFileInTheseus);
+        console.log(publicationFolder + "/" + req.params.id + "/file.blob");
 
         if (!isFileInTheseus) {
 
@@ -250,7 +252,9 @@ async function downloadJulkaisu(req: Request, res: Response) {
         }
 
       else {
-        res.sendStatus(500);
+        console.log("in else block");
+        // res.sendStatus(500);
+        return res.status(500).send("Error in downloading publication");
     }
 
 }
