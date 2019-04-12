@@ -18,6 +18,7 @@ router.get("/julkaisut/lista/all", db.getJulkaisut);
 router.get("/julkaisut/lista/:organisaatiotunnus?", db.getJulkaisutmin);
 router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
 router.get("/user", db.getUser);
+router.get("/download/:id", fu.downloadJulkaisu);
 
 // POST requests
 router.post("/julkaisu", db.postJulkaisu);

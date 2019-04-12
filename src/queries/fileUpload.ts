@@ -228,11 +228,39 @@ async function isPublicationInTheseus(id: any) {
     }
 }
 
+async function downloadJulkaisu(req: Request, res: Response) {
+
+        const isFileInTheseus = await isPublicationInTheseus(req.params.id);
+
+        if (!isFileInTheseus) {
+
+            const publicationToDownload = publicationFolder + "/" + req.params.id + "/file.blob";
+            const params = {"id": req.params.id};
+            const query = "SELECT mimetype, filename FROM julkaisuarkisto WHERE julkaisuid = " +
+                "${id};";
+
+            const data = await connection.db.oneOrNone(query, params);
+
+            res.header("Content-type", data.mimetype);
+            res.download(publicationToDownload, data.filename, function (err: any) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+      else {
+        res.sendStatus(500);
+    }
+
+}
+
 module.exports = {
     uploadJulkaisu: uploadJulkaisu,
     deleteJulkaisu: deleteJulkaisu,
     fileHasBeenUploadedToJustus: fileHasBeenUploadedToJustus,
     isPublicationInTheseus: isPublicationInTheseus,
-    deleteJulkaisuFile: deleteJulkaisuFile
+    deleteJulkaisuFile: deleteJulkaisuFile,
+    downloadJulkaisu: downloadJulkaisu
 
 };
