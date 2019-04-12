@@ -164,7 +164,7 @@ const domainMappings = [
         // Metropolia ammattikorkeakoulu  #metropolia-admins
         "domain": "@metropolia.fi",
         "code": "10065",
-        "email": "annika.hayrynen@metropolia.fi"
+        "email": "julkaisut@metropolia.fi"
     },
     {
         // Satakunnan ammattikorkeakoulu  #samk-admins
