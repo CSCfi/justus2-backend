@@ -81,38 +81,48 @@ async function uploadJulkaisu(req: Request, res: Response) {
 async function postDataToArchiveTable(file: any, data: any, headers: any) {
 
     const tableColumns = dbHelpers.julkaisuarkisto;
+    const obj: any = {};
 
-    if (!data.embargo || data.embargo === "" ) {
-        data["embargo"] = undefined;
-    }
+    if (data.embargo && data.embargo !== "" ) {
+            obj["embargo"] = data.embargo;
+        }
 
-    if (!data.abstract || data.abstract === "") {
-        data["abstract"] = undefined;
-    }
+        if (data.abstract  &&  data.abstract !== "") {
+            obj["abstract"] = data.abstract;
+        } else {
+            obj["abstract"] = undefined;
+        }
 
-    if (!data.versio || data.versio === "") {
-        data["versio"] = undefined;
-    }
+        if (data.versio && data.versio !== "") {
+            obj["versio"] = data.versio;
+        } else {
+            obj["versio"] = undefined;
+        }
 
-    if (!data.oikeudet || data.oikeudet === "") {
-        data["oikeudet"] = undefined;
-    }
+        if (data.oikeudet && data.oikeudet !== "") {
+            obj["oikeudet"] = data.oikeudet;
+        } else {
+            obj["oikeudet"] = undefined;
+        }
 
-    if (!data.julkaisusarja || data.julkaisusarja === "") {
-        data["julkaisusarja"] = undefined;
-    }
+        if (data.julkaisusarja && data.julkaisusarja !== "") {
+            obj["julkaisusarja"] = data.julkaisusarja;
+        } else {
+            obj["julkaisusarja"] = data.julkaisusarja;
+        }
 
-    data["filename"] = file.originalname;
-    data["mimetype"] = file.mimetype;
+        obj["filename"] = file.originalname;
+        obj["mimetype"] = file.mimetype;
+        obj["julkaisuid"] = data.julkaisuid;
+        obj["urn"] = data.urn;
 
     const table = new connection.pgp.helpers.ColumnSet(tableColumns, {table: "julkaisuarkisto"});
-    const query = connection.pgp.helpers.insert(data, table) + "RETURNING id";
+    const query = connection.pgp.helpers.insert(obj, table) + "RETURNING id";
 
     await connection.db.one(query);
 
     // update kaytto_loki table
     await auditLog.postAuditData(headers, "POST", "julkaisuarkisto", data.julkaisuid, data);
-
 
 }
 
@@ -252,8 +262,6 @@ async function downloadJulkaisu(req: Request, res: Response) {
         }
 
       else {
-        console.log("in else block");
-        // res.sendStatus(500);
         return res.status(500).send("Error in downloading publication");
     }
 
