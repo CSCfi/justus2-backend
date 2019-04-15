@@ -9,6 +9,7 @@ const redis = require("redis");
 const client = redis.createClient();
 const organisationConfig = require("./organization_config");
 
+const koodistoUrl = process.env.KOODISTO_URL;
 const handleLink = process.env.HANDLE_LINK;
 
 const getRedis = (rediskey: string, success: any, error: any) => {
@@ -199,7 +200,7 @@ function ObjectHandlerTieteenalat(obj: any, lang: any) {
     ];
     obj.forEach((e: any) => {
         const determinator = e.koodiArvo;
-        const url: string = "https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/tieteenala/koodi?onlyValidKoodis=false";
+        const url: string =  koodistoUrl + "/tieteenala/koodi?onlyValidKoodis=false";
         httpgetCombiner(url, parse);
         function parse(alatieteenalatRAW: object[]) {
             const alatieteenalat: object[] = [
@@ -257,7 +258,7 @@ function ObjectHandlerJulkaisunluokat(obj: any, lang: any) {
 
     obj.forEach((e: any) => {
         const spec = e.koodiArvo.toLowerCase();
-        const url: string = "https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/relaatio/sisaltyy-alakoodit/julkaisunpaaluokka_" + spec;
+        const url: string =  koodistoUrl + "/relaatio/sisaltyy-alakoodit/julkaisunpaaluokka_" + spec;
         httpgetCombiner(url, parse);
         function parse(alaluokatRAW: object[]) {
             const alaluokat: object[] = [
