@@ -83,8 +83,10 @@ async function postDataToArchiveTable(file: any, data: any, headers: any) {
     const tableColumns = dbHelpers.julkaisuarkisto;
     const obj: any = {};
 
-    if (data.embargo && data.embargo !== "" ) {
-            obj["embargo"] = data.embargo;
+        if (data.embargo && data.embargo !== "" ) {
+                obj["embargo"] = data.embargo;
+        } else {
+            obj["embargo"] = undefined;
         }
 
         if (data.abstract  &&  data.abstract !== "") {
