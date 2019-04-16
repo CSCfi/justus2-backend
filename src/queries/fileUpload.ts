@@ -56,6 +56,16 @@ async function uploadJulkaisu(req: Request, res: Response) {
                         id: julkaisuId
                     });
 
+                    const tempFileExists = await fs.existsSync(file.path);
+                    if (tempFileExists) {
+                        try {
+                            await fs.unlinkSync(file.path);
+
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    }
+
                     const path = publicationFolder + "/" + julkaisuId;
                     const fileExists = await fs.existsSync(path);
 
