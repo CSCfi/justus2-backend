@@ -55,10 +55,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
              "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
              console.log("The initial token: " + process.env.TOKEN);
-             this.checkToken(this.determineStatus);
-
-         console.log(self);
-         console.log("The join SELECT: " + JSON.stringify(julkaisuIDt));
+             await this.checkToken(this.determineStatus);
 
          julkaisuIDt.forEach(async function (e: any) {
              console.log("The id inside the for loop: " + e.julkaisuid);
@@ -68,44 +65,47 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
      }
 
      public async postJulkaisuTheseus(julkaisunID: any) {
-         // const collectionsUrl = "colletions/";
 
-         // TODO: first check if publication already has itemid in archive table. If so, send only publication and remove julkaisuid from queue
+         const itemId = await this.itemIdExists(julkaisunID);
+         if (itemId.itemid) {
+             // if itemid already exists, send only publication
+             await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
+         } else {
+             // TODO: ADD SPECIFIC ORG COLLECTION ID HERE
+             // Add unique collections ID:s that are matched according to the organisational id
+             // The organisational id is inside the julkaisu taulukko
+             // const orgCollection = "something";
+             const params = {"id": julkaisunID};
+             // ALL queries for the metadataobject
+             const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
+             const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
+                 "${id};";
 
-         // TODO: ADD SPECIFIC ORG COLLECTION ID HERE
-         // Add unique collections ID:s that are matched according to the organisational id
-         // The organisational id is inside the julkaisu taulukko
-         // const orgCollection = "something";
-         const params = {"id": julkaisunID};
-         // ALL queries for the metadataobject
-         const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
-         const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
-             "${id};";
+             let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
+             arkistotableFields =  arkistotableFields.join(",");
 
-         let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
-         arkistotableFields =  arkistotableFields.join(",");
+             const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+                 "${id};";
+             const julkaisuData: any = {};
+             let arkistoData: any = {};
 
-         const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
-             "${id};";
-         const julkaisuData: any = {};
-         let arkistoData: any = {};
+             try {
+                 julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
+                 arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
+                 julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
+                 julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
+                 julkaisuData["issn"] = await api.getIssn(julkaisunID);
+             } catch (e) {
+                 console.log(e);
+             }
 
-         try {
-             julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-             arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
-             julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
-             julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
-             julkaisuData["issn"] = await api.getIssn(julkaisunID);
-         } catch (e) {
-             console.log(e);
+             julkaisuData["filedata"] = arkistoData;
+             const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
+
+             const self = this;
+             await self.sendPostReqTheseus(metadataObject, julkaisunID);
          }
 
-         julkaisuData["filedata"] = arkistoData;
-         const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
-         console.log(metadataObject);
-
-         const self = this;
-         await self.sendPostReqTheseus(metadataObject, julkaisunID);
      }
 
      async sendPostReqTheseus(sendObject: any, julkaisuID: any) {
@@ -157,7 +157,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          console.log("The stuff in inserttemptable: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
 
          if (fu.isPublicationInTheseus(julkaisuID)) {
-             this.sendBitstreamToItem(julkaisuID, theseusItemID);
+             await this.sendBitstreamToItem(julkaisuID, theseusItemID);
              console.log("IT IS IN THESEUS: " + julkaisuID);
          }
          else {
@@ -208,7 +208,6 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          rp(options)
              .then(async function (res: Response, req: Request) {
                  // TODO add catching of bitstreamid, also maybe policyid
-                 console.log(res);
                  // If both are needed, merge insert into one statement.
                  const bitstreamid = (res as any)["id"];
                  console.log("catching the bitstream id from response" + bitstreamid);
@@ -232,18 +231,14 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
                  await connection.db.none(updateUrn);
                  await fu.deleteJulkaisuFile(filePath, savedFileName);
 
-                 console.log("Successfully sent publication to Theseus and updated all data!");
+                 console.log("Successfully sent publication with id " + julkaisuID + " to Theseus and updated all data!");
              })
              .catch(function (err: Error) {
                  console.log("Something went wrong with sending file: " + err);
              });
-
-
      }
 
      async checkToken(callback: any) {
-         // TODO ADD CODE HERE
-
          const urlFinal = BASEURL + "status";
          const headersOpt = {
              "rest-dspace-token": process.env.TOKEN,
@@ -452,7 +447,6 @@ public async PutTheseus(metadataObject: any, id: any) {
 
          if (!this.arrayIsEmpty(isbnData)) {
              isbnData.forEach((value: any) => {
-                 // console.log(value);
                  const isbnobject = {"key": "dc.identifier.isbn", "value": value};
                  metadataObject.push(isbnobject);
              });
@@ -460,7 +454,6 @@ public async PutTheseus(metadataObject: any, id: any) {
 
          if (!this.arrayIsEmpty(issnData)) {
              issnData.forEach((value: any) => {
-                 // console.log(value);
                  const issnobject = {"key": "dc.identifier.issn", "value": value};
                  metadataObject.push(issnobject);
              });
@@ -516,6 +509,16 @@ public async PutTheseus(metadataObject: any, id: any) {
          return version;
 
      }
+
+     async itemIdExists(julkaisuid: any) {
+         const params = {"id": julkaisuid};
+         const queryItemId = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " +
+             "${id};";
+
+         const data = await connection.db.oneOrNone(queryItemId, params);
+         return data;
+     }
+
 
 
  }
