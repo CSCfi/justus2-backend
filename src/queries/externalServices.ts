@@ -413,7 +413,7 @@ async function getUrn(req: Request, res: Response) {
 function getUrnData() {
     return new Promise(function (resolve, reject) {
         request(URN_URL, function (error: any, res: any, body: any) {
-            if (!error && res.statusCode !== 200) {
+            if (!error && res.statusCode == 200) {
                 resolve(body);
             } else {
                 reject(error);
