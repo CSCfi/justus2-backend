@@ -401,18 +401,28 @@ function enableZeroValue(field: any) {
 
 }
 
-function getUrn(req: Request, res: Response, next: NextFunction) {
+async function getUrn(req: Request, res: Response) {
+    try {
+        const data =  await getUrnData();
+        return res.status(200).json({ data });
+    } catch (e) {
+        console.log(e);
+    }
+}
 
-    request(utf8.encode(URN_URL), { json: true }, (error: any, response: any, data: any) => {
-        if (error) {
-            console.log(error);
-            res.sendStatus(500);
-        }
-        res.status(200).json({ data });
+function getUrnData() {
+    return new Promise(function (resolve, reject) {
+        request(URN_URL, function (error: any, res: any, body: any) {
+            if (!error && res.statusCode !== 200) {
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
 
     });
-
 }
+
 
 module.exports = {
 
@@ -424,6 +434,7 @@ module.exports = {
     getJufotISSN: getJufotISSN,
     getJulkaisutVirtaCrossrefLista: getJulkaisutVirtaCrossrefLista,
     getJulkaisuVirtaCrossrefEsitaytto: getJulkaisuVirtaCrossrefEsitaytto,
-    getUrn: getUrn
+    getUrn: getUrn,
+    getUrnData: getUrnData
 
 };

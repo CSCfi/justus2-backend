@@ -45,8 +45,7 @@ async function uploadJulkaisu(req: Request, res: Response) {
 
             } catch (e) {
                 console.log(e);
-                if (e.code === "EEXIST") {
-                    console.log(e);
+                if (e && e.code === "EEXIST") {
                     fs.unlinkSync(file.path);
                     return res.status(500).send("This publication has already a file");
                 } else {
@@ -126,7 +125,13 @@ async function postDataToArchiveTable(file: any, data: any, headers: any) {
         obj["filename"] = file.originalname;
         obj["mimetype"] = file.mimetype;
         obj["julkaisuid"] = data.julkaisuid;
-        obj["urn"] = data.urn;
+
+        if (!data.urn) {
+            const urn = await external.getUrnData();
+            obj["urn"] = urn;
+        } else {
+            obj["urn"] = data.urn;
+        }
 
     const table = new connection.pgp.helpers.ColumnSet(tableColumns, {table: "julkaisuarkisto"});
     const query = connection.pgp.helpers.insert(obj, table) + "RETURNING id";
@@ -153,11 +158,8 @@ async function moveFile (file: any, id: any) {
     const oldPath = file.path;
     const newPath = publicationDir + "/" + savedFileName;
 
-    await fs.copyFileSync(oldPath, newPath, (err: any) => {
-        if (err) throw err;
-        console.log("Temp file was copied to new folder");
-        fs.unlinkSync(oldPath);
-    });
+    await fs.copyFileSync(oldPath, newPath);
+    await fs.unlinkSync(oldPath);
 
 }
 
