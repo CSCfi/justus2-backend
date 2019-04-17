@@ -16,9 +16,11 @@ import { auditLog as auditLog } from "./../services/auditLogService";
 // Database connection
 const connection = require("./../db");
 const dbHelpers = require("./../databaseHelpers");
+const external = require("./../queries/externalServices");
 
 const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
+
 
 async function uploadJulkaisu(req: Request, res: Response) {
 
@@ -76,7 +78,14 @@ async function uploadJulkaisu(req: Request, res: Response) {
                             console.log(e);
                         }
                     }
+
+                    const table = new connection.pgp.helpers.ColumnSet(["julkaisurinnakkaistallennettu"], {table: "julkaisu"});
+
+                    const query = connection.pgp.helpers.update({"julkaisurinnakkaistallennettu": "0"}, table) + " WHERE id = " +  parseInt(julkaisuId);
+                    await connection.db.none(query);
+
                     return res.status(500).send("Failure in file upload");
+
                 }
             }
         } else {
