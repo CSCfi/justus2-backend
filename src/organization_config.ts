@@ -1,4 +1,4 @@
-const organizationContacts = require("./organization_contacts");
+const organizationContacts = require("./../organization_contacts");
 const domainMappings = organizationContacts.domainMappings;
 
 const commonVisibleFields = [
