@@ -5,7 +5,7 @@ module.exports = (req: Request, res: Response, next: NextFunction) => {
     console.log(req.path);
 
     // return data from this route before user is authenticated
-    if (req.path === "/organisaationimet") {
+    if (req.path === "/public/organisaationimet") {
         console.log(next());
         next();
     }
