@@ -377,7 +377,7 @@ public async PutTheseus(metadataObject: any, id: any) {
 
          const julkaisuData = obj.julkaisu;
          const fileData = obj.filedata;
-         const avainsanaData = obj.avainsana;
+         const avainsanaData = obj.avainsanat;
 
          if (method === "put") {
              isbnData = obj.julkaisu.isbn;
