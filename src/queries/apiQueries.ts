@@ -450,6 +450,8 @@ async function getAllData(data: any) {
         data[i]["tieteenala"] = await sq.getTieteenala(data[i].julkaisu.id);
         data[i]["tieteenala"] = await sq.getTieteenala(data[i].julkaisu.id);
         data[i]["taiteenala"] = await sq.getTaiteenala(data[i].julkaisu.id);
+        data[i]["julkaisu"]["issn"] = await sq.getIssn(data[i].julkaisu.id);
+        data[i]["julkaisu"]["isbn"] = await sq.getIsbn(data[i].julkaisu.id);
         data[i]["taidealantyyppikategoria"] = await sq.getTyyppikategoria(data[i].julkaisu.id);
         data[i]["avainsanat"] = await sq.getAvainsana(data[i].julkaisu.id);
         data[i]["lisatieto"] = await sq.getLisatieto(data[i].julkaisu.id);
