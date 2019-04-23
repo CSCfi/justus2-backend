@@ -823,11 +823,14 @@ function ObjectHandlerCrossrefEsitaytto(obj: any): object[] {
     return obj;
 }
 
-function ObjectHandlerJulkaisudata(obj: any) {
+function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
     return obj.map((x: any) => {
 
         const data: any = {};
-        const julkaisu = {
+        let julkaisu: any = {};
+
+        if (!allData) {
+            julkaisu = {
                 id: x.id,
                 organisaatiotunnus: x.organisaatiotunnus,
                 julkaisuvuosi: x.julkaisuvuosi,
@@ -836,7 +839,45 @@ function ObjectHandlerJulkaisudata(obj: any) {
                 julkaisuntila: x.julkaisuntila,
                 username: x.username,
                 modified: x.modified
-        };
+            };
+        } else {
+            julkaisu = {
+                id: x.id,
+                organisaatiotunnus: x.organisaatiotunnus,
+                julkaisutyyppi: x.julkaisutyyppi,
+                julkaisuvuosi: x.julkaisuvuosi,
+                julkaisunnimi: x.julkaisunnimi,
+                tekijat: x.tekijat,
+                julkaisuntekijoidenlukumaara: x.julkaisuntekijoidenlukumaara,
+                konferenssinvakiintunutnimi: x.konferenssinvakiintunutnimi,
+                emojulkaisunnimi: x.emojulkaisunnimi,
+                emojulkaisuntoimittajat: x.emojulkaisuntoimittajat,
+                lehdenjulkaisusarjannimi: x.lehdenjulkaisusarjannimi,
+                volyymi: x.volyymi,
+                numero: x.numero,
+                sivut: x.sivut,
+                artikkelinumero: x.artikkelinumero,
+                kustantaja: x.kustantaja,
+                julkaisunkustannuspaikka: x.julkaisunkustannuspaikka,
+                julkaisunkieli: x.julkaisunkieli,
+                julkaisunkansainvalisyys: x.julkaisunkansainvalisyys,
+                julkaisumaa: x.julkaisumaa,
+                kansainvalinenyhteisjulkaisu: x.kansainvalinenyhteisjulkaisu,
+                yhteisjulkaisuyrityksenkanssa: x.yhteisjulkaisuyrityksenkanssa,
+                doitunniste: x.doitunniste,
+                pysyvaverkkoosoite: x.pysyvaverkkoosoite,
+                avoinsaatavuus: x.avoinsaatavuus,
+                julkaisurinnakkaistallennettu: x.julkaisurinnakkaistallennettu,
+                rinnakkaistallennetunversionverkkoosoite: x.rinnakkaistallennetunversionverkkoosoite,
+                jufotunnus: x.jufotunnus,
+                jufoluokitus: x.jufoluokitus,
+                julkaisuntila: x.julkaisuntila,
+                username: x.username,
+                modified: x.modified,
+                lisatieto: x.lisatieto
+            };
+        }
+
 
         if (x.handle && x.aid) {
             data["julkaisu"] = julkaisu;

@@ -70,7 +70,7 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
             }
 
             const julkaisudata = await db.any(query, params);
-            const temp = oh.ObjectHandlerJulkaisudata(julkaisudata);
+            const temp = oh.ObjectHandlerJulkaisudata(julkaisudata, true);
             const data  = await getAllData(temp);
 
             res.status(200).json({ data });
@@ -144,7 +144,7 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
         db.any(query, params)
             .then((response: any) => {
-                const data = oh.ObjectHandlerJulkaisudata(response);
+                const data = oh.ObjectHandlerJulkaisudata(response, false);
                 res.status(200).json({data});
             })
             .catch((err: any) => {
