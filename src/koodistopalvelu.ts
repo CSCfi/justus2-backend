@@ -135,7 +135,7 @@ function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, l
     });
 }
 
-function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
+ export function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
     if (secondURL) {
         const urls = [URL, secondURL];
         const first: object []  = [

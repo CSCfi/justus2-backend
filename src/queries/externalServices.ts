@@ -10,10 +10,10 @@ const virtaUrl = process.env.VIRTA_URL;
 const request = require("request");
 const requestPromise = require("request-promise");
 
-const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
 const utf8 = require("utf8");
 
+import  * as kp  from "./../koodistopalvelu";
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
     if (req.query.lang.toLowerCase() === "fi" || req.query.lang.toLowerCase() === "sv") {
         const url: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
