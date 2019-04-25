@@ -390,7 +390,7 @@ public async PutTheseus(metadataObject: any, id: any) {
 
          const tempMetadataObject = [
              {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
-             {"key": "dc.type.okm", "value": julkaisuData["julkaisutyyppi"]},
+             {"key": "dc.type.okm", "value": this.mapJulkaisuTyyppiFields(julkaisuData["julkaisutyyppi"])},
              {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
              {"key": "dc.relation.conference", "value": julkaisuData["konferenssinvakiintunutnimi"]},
              {"key": "dc.relation.ispartof", "value": julkaisuData["emojulkaisunnimi"]},
@@ -507,6 +507,95 @@ public async PutTheseus(metadataObject: any, id: any) {
          }
 
          return version;
+
+     }
+
+     mapJulkaisuTyyppiFields(tyyppi: any) {
+
+         console.log(tyyppi);
+
+         let theseusFormat;
+
+         if (tyyppi === "A1") {
+             theseusFormat = "fi=A1 Alkuperäisartikkeli tieteellisessä aikakauslehdessä|sv=A1 Originalartikel i en vetenskaplig tidskrift|en=A1 Journal article (refereed), original research|";
+         }
+        if (tyyppi === "A2") {
+            theseusFormat = "fi=A2 Katsausartikkeli tieteellisessä aikakauslehdessä|sv=A2 Översiktsartikel i en vetenskaplig tidskrift|en=A2 Review article, Literature review, Systematic review|";
+        }
+        if (tyyppi === "A3") {
+            theseusFormat = "fi=A3 Kirjan tai muun kokoomateoksen osa|sv=A3 Del av bok eller annat samlingsverk|en=A3 Book section, Chapters in research books|";
+        }
+        if (tyyppi === "A4") {
+            theseusFormat = "fi=A4 Artikkeli konferenssijulkaisussa|sv=A4 Artikel i en konferenspublikation|en=A4 Conference proceedings|";
+        }
+        if (tyyppi === "B1") {
+            theseusFormat = "fi=B1 Kirjoitus tieteellisessä aikakauslehdessä|sv=B1 Inlägg i en vetenskaplig tidskrift|en=B1 Non-refereed journal articles|";
+        }
+        if (tyyppi === "B2") {
+            theseusFormat = "fi=B2 Kirjan tai muun kokoomateoksen osa|sv=B2 Del av bok eller annat samlingsverk|en=B2 Book section|";
+        }
+        if (tyyppi === "B3") {
+            theseusFormat = "fi=B3 Vertaisarvioimaton artikkeli konferenssijulkaisussa|sv=B3 Icke-referentgranskad artikel i konferenspublikation|en=B3 Non-refereed conference proceedings|";
+        }
+        if (tyyppi === "C1") {
+            theseusFormat = "fi=C1 Kustannettu tieteellinen erillisteos|sv=C1 Separat utgivet vetenskapligt verk|en=C1 Book|";
+        }
+        if (tyyppi === "C2") {
+            theseusFormat =  "fi=C1 Kustannettu tieteellinen erillisteos|sv=C1 Separat utgivet vetenskapligt verk|en=C1 Book|";
+        }
+        if (tyyppi === "D1") {
+            theseusFormat = "fi=D1 Artikkeli ammattilehdessä|sv=D1 Artikel i en facktidskrift|en=D1 Article in a trade journal|";
+        }
+        if (tyyppi === "D2") {
+            theseusFormat = "fi=D2 Artikkeli ammatillisessa kokoomateoksessa (ml. toimittajan kirjoittama johdantoartikkeli)|sv=D2 Artikel i ett yrkesinriktat samlingsverk (inkl. inledningsartikel som skrivits av redaktören)|en=D2 Article in a professional book (incl. an introduction by the editor)|";
+        }
+        if (tyyppi === "D3") {
+            theseusFormat = "fi=D3 Artikkeli ammatillisessa konferenssijulkaisussa|sv=D3 Artikel i en yrkesinriktad konferenspublikation|en=D3 Professional conference proceedings|";
+        }
+        if (tyyppi === "D4") {
+            theseusFormat = "fi=D4 Julkaistu kehittämis- tai tutkimusraportti taikka selvitys|sv=D4 Publicerad utvecklings eller forskningsrapport eller -utredning|en=D4 Published development or research report or study|";
+        }
+        if (tyyppi === "D5") {
+            theseusFormat = "fi=D5 Ammatillinen kirja|sv=D5 Yrkesinriktad bok|en=D5 Textbook, professional manual or guide|";
+        }
+        if (tyyppi === "D6") {
+            theseusFormat = "fi=D6 Toimitettu ammatillinen teos|sv=D6 Redigerat yrkesinriktat verk|en= D6 Edited professional book|";
+        }
+        if (tyyppi === "E1") {
+            theseusFormat = "fi=E1 Yleistajuinen artikkeli, sanomalehtiartikkeli|sv=E1 Populärartikel, tidningsartikel|en=E1 Popularised article, newspaper article|";
+        }
+        if (tyyppi === "E2") {
+            theseusFormat = "fi=E2 Yleistajuinen monografia|sv=E2 Populärmonografi|en=E2 Popularised monograph|";
+        }
+        if (tyyppi === "E3") {
+            theseusFormat = "fi=E3 Toimitettu yleistajuinen teos|sv=E3 Redigerat populärverk|en=E3 Edited popular book|";
+        }
+        if (tyyppi === "F1") {
+            theseusFormat = "fi=F1 Erillisjulkaisu|sv=F1 Separat publikation|en=F1 Published independent work of art|";
+        }
+        if (tyyppi === "F2") {
+            theseusFormat = "fi=F2 Julkinen taiteellinen teoksen osatoteutus|sv=F2 Offentlig medverkan i ett konstnärligt verk|en=F2 Public partial realisation of a work of art|";
+        }
+        if (tyyppi === "F3") {
+            theseusFormat = "fi=F3 Ei-taiteellisen julkaisun taiteellinen osa|sv=F3 Konstnärlig del av en icke-konstnärlig publikation|en=F3 Artistic part of a non-artistic publication|";
+        }
+        if (tyyppi === "G1") {
+            theseusFormat = "fi=G1 Ammattikorkeakoulututkinnon opinnäytetyö, kandidaatintyö|sv=G1 Lärdomsprov för yrkeshögskoleexamen, kandidatavhandling|en=G1 Polytechnic thesis, Bachelor’s thesis|";
+        }
+        if (tyyppi === "G2") {
+            theseusFormat = "fi=G2 Pro gradu, diplomityö, ylempi amk-opinnäytetyö|sv=G2 Pro gradu-avhandling, diplomarbete, högre YH-lärdomsprov|en=G2 Master’s thesis, polytechnic Master’s thesis|";
+        }
+        if (tyyppi === "G3") {
+            theseusFormat = "fi=G3 Lisensiaatintyö|sv=G3 Licentiatavhandling|en=G3 Licentiate thesis|";
+        }
+        if (tyyppi === "G4") {
+            theseusFormat = "fi=G4 Monografiaväitöskirja|sv=G4 Monografiavhandling|en=G4 Doctoral dissertation (monograph)|";
+        }
+        if (tyyppi === "G5") {
+            theseusFormat = "fi=G5 Artikkeliväitöskirja|sv=G5 Artikelavhandling|en=G5 Doctoral dissertation (article)|";
+        }
+
+        return theseusFormat;
 
      }
 
