@@ -38,6 +38,9 @@ app.use(session({
 
 }));
 
+console.log(process.env.NODE_ENV);
+
+
 // CONNECT TO PSQL INSIDE VAGRANT "psql -h 10.10.10.10 -U appaccount -d justus"
 // psql -h 10.10.10.10 -U appaccount -d justus < node_modules/connect-pg-simple/table.sql
 app.use(morgan("dev"));

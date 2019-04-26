@@ -25,7 +25,6 @@ const domainMapping = organisationConfig.domainMappings;
 const publicationFolder = process.env.FILE_FOLDER;
 const theseusAuthEmail = process.env.THESEUS_AUTH_EMAIL;
 const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
-const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
 const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
 
@@ -105,14 +104,24 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
              const self = this;
-             await self.sendPostReqTheseus(metadataObject, julkaisunID);
+             await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
          }
 
      }
 
-     async sendPostReqTheseus(sendObject: any, julkaisuID: any) {
+     async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
 
          const self = this;
+         let theseusCollectionId: string;
+
+         if (process.env.NODE_ENV === "demo") {
+             console.log("Environment is demo");
+             theseusCollectionId = this.mapCollectionId(org);
+             console.log(theseusCollectionId);
+         } else {
+             theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
+
+         }
 
          const headersOpt = {
              "rest-dspace-token": process.env.TOKEN,
@@ -624,6 +633,18 @@ public async PutTheseus(metadataObject: any, id: any) {
          return theseusFormat;
      }
 
+     mapCollectionId(org: any) {
+         let collectionId = "";
+
+         for (let i = 0; i < domainMapping.length; i++) {
+             if (domainMapping[i].code === org) {
+                 collectionId = domainMapping[i].theseusData.theseusCollectionId;
+             }
+         }
+
+        return collectionId;
+
+     }
 
 
  }
