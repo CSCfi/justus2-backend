@@ -8,7 +8,6 @@ const getUserData = function (headers: any) {
 
 
     if (!headers["shib-group"]) {
-        console.log("No shib-group provided");
         return false;
     }
 
@@ -38,7 +37,13 @@ const getUserData = function (headers: any) {
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
                 userData.rooli = role;
-                userData.showPublicationInput = domainMapping[key].showPublicationInput;
+
+                if (!domainMapping[key].theseusData) {
+                    userData.showPublicationInput = false;
+                } else {
+                    userData.showPublicationInput = true;
+                }
+
                 domainMapped = true;
             } else {
                 return false;
