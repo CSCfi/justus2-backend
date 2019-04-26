@@ -312,7 +312,6 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
          const itemid = await connection.db.any(itemidquery, params);
 
-         console.log(itemid);
          const urlFinal = BASEURL + "items/" + itemid[0]["itemid"];
          const headersOpt = {
              "rest-dspace-token": process.env.TOKEN,
@@ -350,8 +349,6 @@ public async PutTheseus(metadataObject: any, id: any) {
     console.log(e);
     }
 
-    console.log(itemid);
-    console.log(itemid.itemid);
     console.log("The itemid for the item to be updated" + itemid.itemid);
     const urlFinal = BASEURL + "items/" + itemid.itemid + "/metadata";
     console.log(urlFinal);
@@ -533,8 +530,6 @@ public async PutTheseus(metadataObject: any, id: any) {
      }
 
      mapJulkaisuTyyppiFields(tyyppi: any) {
-
-         console.log(tyyppi);
 
          let theseusFormat;
 
