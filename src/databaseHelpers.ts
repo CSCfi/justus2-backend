@@ -65,6 +65,7 @@ const julkaisuarkistoUpdateFields = [
 ];
 
 const theseusJulkaisuFields = [
+    "organisaatiotunnus",
     "julkaisutyyppi",
     "julkaisuvuosi",
     "julkaisunnimi",
