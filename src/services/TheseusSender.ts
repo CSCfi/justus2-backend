@@ -114,13 +114,12 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          const self = this;
          let theseusCollectionId: string;
 
-         if (process.env.NODE_ENV === "demo") {
-             console.log("Environment is demo");
+         if (process.env.NODE_ENV === "prod") {
+             console.log("Environment is prod");
              theseusCollectionId = this.mapCollectionId(org);
              console.log(theseusCollectionId);
          } else {
              theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
-
          }
 
          const headersOpt = {
