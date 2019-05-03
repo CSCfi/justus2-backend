@@ -18,11 +18,12 @@ const api = require("./../queries/subQueries");
 const dbHelpers = require("./../databaseHelpers");
 
 const savedFileName = "file.blob";
+const organisationConfig = require("./../organization_config");
+const domainMapping = organisationConfig.domainMappings;
 
 const publicationFolder = process.env.FILE_FOLDER;
 const theseusAuthEmail = process.env.THESEUS_AUTH_EMAIL;
 const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
-const theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
 const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
 
@@ -102,14 +103,23 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
              const self = this;
-             await self.sendPostReqTheseus(metadataObject, julkaisunID);
+             await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
          }
 
      }
 
-     async sendPostReqTheseus(sendObject: any, julkaisuID: any) {
+     async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
 
          const self = this;
+         let theseusCollectionId: string;
+
+         if (process.env.NODE_ENV === "prod") {
+             console.log("Environment is prod");
+             theseusCollectionId = this.mapCollectionId(org);
+             console.log(theseusCollectionId);
+         } else {
+             theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
+         }
 
          const headersOpt = {
              "rest-dspace-token": process.env.TOKEN,
@@ -367,7 +377,6 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
          const itemid = await connection.db.any(itemidquery, params);
 
-         console.log(itemid);
          const urlFinal = BASEURL + "items/" + itemid[0]["itemid"];
          const headersOpt = {
              "rest-dspace-token": process.env.TOKEN,
@@ -403,8 +412,6 @@ public async PutTheseus(metadataObject: any, id: any) {
     console.log(e);
     }
 
-    console.log(itemid);
-    console.log(itemid.itemid);
     console.log("The itemid for the item to be updated" + itemid.itemid);
     const urlFinal = BASEURL + "items/" + itemid.itemid + "/metadata";
     console.log(urlFinal);
@@ -455,6 +462,7 @@ public async PutTheseus(metadataObject: any, id: any) {
          const tempMetadataObject = [
              {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
              {"key": "dc.type.okm", "value": this.mapJulkaisuTyyppiFields(julkaisuData["julkaisutyyppi"])},
+             {"key": "dc.contributor.organization", "value": this.mapOrganizationFields(julkaisuData["organisaatiotunnus"])},
              {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
              {"key": "dc.relation.conference", "value": julkaisuData["konferenssinvakiintunutnimi"]},
              {"key": "dc.relation.ispartof", "value": julkaisuData["emojulkaisunnimi"]},
@@ -557,6 +565,16 @@ public async PutTheseus(metadataObject: any, id: any) {
          }
      }
 
+
+     async itemIdExists(julkaisuid: any) {
+         const params = {"id": julkaisuid};
+         const queryItemId = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " +
+             "${id};";
+
+         const data = await connection.db.oneOrNone(queryItemId, params);
+         return data;
+     }
+
      async mapVersioFields(data: any) {
          let version;
 
@@ -575,8 +593,6 @@ public async PutTheseus(metadataObject: any, id: any) {
      }
 
      mapJulkaisuTyyppiFields(tyyppi: any) {
-
-         console.log(tyyppi);
 
          let theseusFormat;
 
@@ -663,15 +679,30 @@ public async PutTheseus(metadataObject: any, id: any) {
 
      }
 
-     async itemIdExists(julkaisuid: any) {
-         const params = {"id": julkaisuid};
-         const queryItemId = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " +
-             "${id};";
+     mapOrganizationFields(org: any) {
+         let theseusFormat = "";
 
-         const data = await connection.db.oneOrNone(queryItemId, params);
-         return data;
+         for (let i = 0; i < domainMapping.length; i++) {
+             if (domainMapping[i].code === org) {
+                 theseusFormat = domainMapping[i].theseusData.theseusCode;
+             }
+         }
+
+         return theseusFormat;
      }
 
+     mapCollectionId(org: any) {
+         let collectionId = "";
+
+         for (let i = 0; i < domainMapping.length; i++) {
+             if (domainMapping[i].code === org) {
+                 collectionId = domainMapping[i].theseusData.theseusCollectionId;
+             }
+         }
+
+        return collectionId;
+
+     }
 
 
  }
