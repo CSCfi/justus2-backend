@@ -402,6 +402,8 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
                     const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
                     console.log(obj);
                     await ts.PutTheseus(obj, req.params.id);
+                    // Uncomment line below to enable the feature of updating the embargo to Theseus
+                    // await ts.prepareUpdateEmbargo(req.params.id, req.body.filedata);
                 }
             }
 

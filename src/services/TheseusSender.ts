@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { isFor } from "babel-types";
 const request = require("request");
 const rp = require("request-promise");
 const path = require("path");
@@ -189,7 +188,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          const day = embargodate.split("-")[2];
          const filePath =  publicationFolder + "/" + julkaisuID;
          const filePathFull = filePath + "/" + savedFileName;
-         const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day;
+         const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day + "&expand=policies";
          console.log("Thefinalurl: " + urlFinal);
          const headersOpt = {
              "rest-dspace-token": process.env.TOKEN,
@@ -211,11 +210,12 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
                  // If both are needed, merge insert into one statement.
                  const bitstreamid = (res as any)["id"];
                  console.log("catching the bitstream id from response" + bitstreamid);
-                 // const policyid = (res as any)["policyid"];
+                 const policyid = (res as any)["policyid"];
                  const params = {"id": julkaisuID};
                  const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
-                 // const policyidquery = "INSERT INTO julkaisuarkisto (policyid) VALUES (" + policyid + " ) WHERE julkaisuid = " + "${id};";
+                 const policyidquery = "UPDATE julkaisuarkisto SET policyid=" + policyid + " WHERE julkaisuid = " + "${id};";
                  await connection.db.any(bitstreamquery, params);
+                 await connection.db.any(policyidquery, params);
 
              })
              .then(async function () {
@@ -270,7 +270,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              });
      }
 
-     getToken() {
+      getToken() {
          const urlFinal = BASEURL + "login";
          const metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
          const headersOpt = {
@@ -288,13 +288,79 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          rp(options)
              .then(async function (res: Response) {
                  console.log("The new token: " + (res as any));
-                 process.env.TOKEN = (res as any);
+                  process.env.TOKEN = (res as any);
              })
              .catch(function (err: Error) {
                  console.log("Error while getting new token: " + err);
              });
      }
+     public async prepareUpdateEmbargo(id: any, embargoobj: any) {
+        const self = this;
+        const params = {"id": id};
+        const policyidquery = "SELECT policyid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+        const policyid = await connection.db.any(policyidquery, params);
+        const bitstreamidquery = "SELECT bitstreamid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+        const bitstreamid = await connection.db.any(bitstreamidquery, params);
 
+        const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "/policy/" + policyid;
+        const headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json",
+        };
+        const options = {
+            rejectUnauthorized: false,
+            method: "DELETE",
+            uri: urlFinal,
+            headers: headersOpt,
+        };
+        rp(options)
+            .then(async function (res: Response) {
+                self.UpdateEmbargo(id, embargoobj, bitstreamid);
+            })
+            .catch(function (err: Error) {
+                console.log("Error while deleting embargotime for julkaisuid: " + id + " with error: " + err);
+            });
+
+     }
+     async UpdateEmbargo(id: any , embargoobj: any, bitstreamid: any) {
+        const embargo = embargoobj["embargo"];
+        const embargocleaned = embargo.toISOString().split("T")[0];
+        const metadataobj = {
+                "action": "READ",
+                "epersonId": "",
+                "groupId": 0,
+                "resourceId": 2,
+                "resourceType": "bitstream",
+                "rpDescription": "",
+                "rpName": "",
+                "rpType": "TYPE_CUSTOM",
+                "startDate": embargocleaned,
+                "endDate": "",
+        };
+
+        const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "/policy";
+        const headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json",
+        };
+        const options = {
+            rejectUnauthorized: false,
+            method: "POST",
+            uri: urlFinal,
+            headers: headersOpt,
+            body: metadataobj,
+            json: true,
+            encoding: "utf8",
+        };
+        rp(options)
+            .then(async function (res: Response) {
+                console.log("Embargo updated for julkaisuid: " + id);
+            })
+            .catch(function (err: Error) {
+                console.log("Error while posting new embargotime for julkaisuid: " + id + " with err: " + err);
+            });
+
+     }
      public async DeleteFromTheseus(id: any) {
 
          const params = {"id": id};
@@ -325,9 +391,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
 
 public async PutTheseus(metadataObject: any, id: any) {
-
     //  TODO: update also embargo time
-
     const params = {"id": id};
     const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
     let itemid: any;
