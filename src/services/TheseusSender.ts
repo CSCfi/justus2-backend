@@ -223,9 +223,9 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
                  const policyid = (res as any)["policyid"];
                  const params = {"id": julkaisuID};
                  const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
-                 const policyidquery = "UPDATE julkaisuarkisto SET policyid=" + policyid + " WHERE julkaisuid = " + "${id};";
+                //  const policyidquery = "UPDATE julkaisuarkisto SET policyid=" + policyid + " WHERE julkaisuid = " + "${id};";
                  await connection.db.any(bitstreamquery, params);
-                 await connection.db.any(policyidquery, params);
+                //  await connection.db.any(policyidquery, params);
 
              })
              .then(async function () {
