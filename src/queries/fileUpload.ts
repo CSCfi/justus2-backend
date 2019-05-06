@@ -101,7 +101,7 @@ async function postDataToArchiveTable(file: any, data: any, headers: any) {
     const tableColumns = dbHelpers.julkaisuarkisto;
     const obj: any = {};
 
-        if (data.embargo && data.embargo !== "" ) {
+        if (data.embargo && data.embargo !== "" && data.embargo !== "null" ) {
                 obj["embargo"] = data.embargo;
         } else {
             obj["embargo"] = undefined;
@@ -128,7 +128,7 @@ async function postDataToArchiveTable(file: any, data: any, headers: any) {
         if (data.julkaisusarja && data.julkaisusarja !== "") {
             obj["julkaisusarja"] = data.julkaisusarja;
         } else {
-            obj["julkaisusarja"] = data.julkaisusarja;
+            obj["julkaisusarja"] = undefined;
         }
 
         obj["filename"] = file.originalname;

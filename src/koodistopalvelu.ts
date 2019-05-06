@@ -22,20 +22,17 @@ import { theseus as ts } from "./services/TheseusSender";
 
 // Scheduler for updating Koodistopalvelu data inside redis
 // Each star represents a different value, beginning from second and ending in day
-// So if we want to update it once a day at midnight we would use ("* 0 0 * * *")
-// schedule.scheduleJob("30 * * * * *", function(res: Response) {
-//    UpdateKoodistopalveluRedis(res);
-// });
-// schedule.scheduleJob("45 * * * * *", function(res: Response) {
-//    UpdateOrgListaus(res);
-// });
+// So if we want to update it once a day at midnight we would use ("0 0 0 * * *")
+schedule.scheduleJob("0 0 0 * * *", function(res: Response) {
+   UpdateKoodistopalveluRedis(res);
+});
+schedule.scheduleJob("15 0 0 * * *", function(res: Response) {
+   UpdateOrgListaus(res);
+});
 
 // Interval timer for checking julkaisujono
 setInterval(() =>  ts.checkQueue(), 30000);
 
-function testInterval() {
-    return console.log("MAKE IT RAIN");
-}
 
 function UpdateOrgListaus(res: Response) {
     return new Promise((resolve, reject) => {
