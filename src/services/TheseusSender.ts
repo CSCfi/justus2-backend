@@ -63,7 +63,6 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              await self.postJulkaisuTheseus(e.julkaisuid);
          });
      }
-
      public async postJulkaisuTheseus(julkaisunID: any) {
 
          const itemId = await this.itemIdExists(julkaisunID);
@@ -223,9 +222,9 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
                  const policyid = (res as any)["policyid"];
                  const params = {"id": julkaisuID};
                  const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
-                 const policyidquery = "UPDATE julkaisuarkisto SET policyid=" + policyid + " WHERE julkaisuid = " + "${id};";
+                //  const policyidquery = "UPDATE julkaisuarkisto SET policyid=" + policyid + " WHERE julkaisuid = " + "${id};";
                  await connection.db.any(bitstreamquery, params);
-                 await connection.db.any(policyidquery, params);
+                //  await connection.db.any(policyidquery, params);
 
              })
              .then(async function () {
@@ -304,13 +303,41 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
                  console.log("Error while getting new token: " + err);
              });
      }
-     public async prepareUpdateEmbargo(id: any, embargoobj: any) {
+
+     public async EmbargoUpdate(id: any, embargobj: any) {
         const self = this;
         const params = {"id": id};
-        const policyidquery = "SELECT policyid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-        const policyid = await connection.db.any(policyidquery, params);
         const bitstreamidquery = "SELECT bitstreamid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
         const bitstreamid = await connection.db.any(bitstreamidquery, params);
+
+        const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "?expand=policies";
+        const headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json",
+        };
+        const options = {
+            rejectUnauthorized: false,
+            method: "GET",
+            uri: urlFinal,
+            headers: headersOpt,
+            json: true,
+            encoding: "utf8",
+        };
+        rp(options)
+        .then(async function (res: Response) {
+            const policyid = (res as any)["policies"][0]["id"];
+            self.prepareUpdateEmbargo(id, embargobj, bitstreamid, policyid);
+        })
+        .catch(function (err: Error) {
+            console.log("Error while catching policyid for bitstreamid: " + bitstreamid + " with error: " + err);
+        });
+
+     }
+    async prepareUpdateEmbargo(id: any, embargoobj: any, bitstreamid: any, policyid: any) {
+        const self = this;
+        // const params = {"id": id};
+        // const policyidquery = "SELECT policyid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+        // const policyid = await connection.db.any(policyidquery, params);
 
         const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "/policy/" + policyid;
         const headersOpt = {
