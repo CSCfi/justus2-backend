@@ -308,7 +308,8 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
         const self = this;
         const params = {"id": id};
         const bitstreamidquery = "SELECT bitstreamid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-        const bitstreamid = await connection.db.any(bitstreamidquery, params);
+        const bitstreamidObject = await connection.db.oneOrNone(bitstreamidquery, params);
+        const bitstreamid = bitstreamidObject.bitstreamid;
 
         const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "?expand=policies";
         const headersOpt = {
@@ -360,8 +361,13 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
      }
      async UpdateEmbargo(id: any , embargoobj: any, bitstreamid: any) {
-        const embargo = embargoobj["embargo"];
-        const embargocleaned = embargo.toISOString().split("T")[0];
+        // const embargo = embargoobj["embargo"];
+        let embargocleaned;
+        if (!embargoobj.embargo) {
+            embargocleaned = new Date().toISOString().split("T")[0];
+        } else {
+             embargocleaned = embargoobj.embargo.split("T")[0];
+        }
         const metadataobj = {
                 "action": "READ",
                 "epersonId": "",
