@@ -227,7 +227,6 @@ CREATE TABLE julkaisuarkisto
   julkaisuid bigint NOT NULL UNIQUE,
   itemid integer,
   bitstreamid integer,
-  policyid character varying,
   filename character varying,
   mimetype character varying,
   handle character varying,
