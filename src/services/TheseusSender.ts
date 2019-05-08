@@ -219,7 +219,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
                  // If both are needed, merge insert into one statement.
                  const bitstreamid = (res as any)["id"];
                  console.log("catching the bitstream id from response" + bitstreamid);
-                 const policyid = (res as any)["policyid"];
+                //  const policyid = (res as any)["policyid"];
                  const params = {"id": julkaisuID};
                  const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
                 //  const policyidquery = "UPDATE julkaisuarkisto SET policyid=" + policyid + " WHERE julkaisuid = " + "${id};";
@@ -304,7 +304,8 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              });
      }
 
-     public async EmbargoUpdate(id: any, embargobj: any) {
+     public async EmbargoUpdate(id: any, embargo: any) {
+
         const self = this;
         const params = {"id": id};
         const bitstreamidquery = "SELECT bitstreamid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
@@ -327,14 +328,14 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
         rp(options)
         .then(async function (res: Response) {
             const policyid = (res as any)["policies"][0]["id"];
-            self.prepareUpdateEmbargo(id, embargobj, bitstreamid, policyid);
+            self.prepareUpdateEmbargo(id, embargo, bitstreamid, policyid);
         })
         .catch(function (err: Error) {
             console.log("Error while catching policyid for bitstreamid: " + bitstreamid + " with error: " + err);
         });
 
      }
-    async prepareUpdateEmbargo(id: any, embargoobj: any, bitstreamid: any, policyid: any) {
+    async prepareUpdateEmbargo(id: any, embargo: any, bitstreamid: any, policyid: any) {
         const self = this;
         // const params = {"id": id};
         // const policyidquery = "SELECT policyid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
@@ -353,20 +354,20 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
         };
         rp(options)
             .then(async function (res: Response) {
-                self.UpdateEmbargo(id, embargoobj, bitstreamid);
+                self.UpdateEmbargo(id, embargo, bitstreamid);
             })
             .catch(function (err: Error) {
                 console.log("Error while deleting embargotime for julkaisuid: " + id + " with error: " + err);
             });
 
      }
-     async UpdateEmbargo(id: any , embargoobj: any, bitstreamid: any) {
+     async UpdateEmbargo(id: any , embargo: any, bitstreamid: any) {
         // const embargo = embargoobj["embargo"];
         let embargocleaned;
-        if (!embargoobj.embargo) {
+        if (!embargo) {
             embargocleaned = new Date().toISOString().split("T")[0];
         } else {
-             embargocleaned = embargoobj.embargo.split("T")[0];
+             embargocleaned = embargo.split("T")[0];
         }
         const metadataobj = {
                 "action": "READ",
