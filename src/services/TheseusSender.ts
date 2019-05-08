@@ -44,25 +44,31 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
      //     return Theseus._instance;
      // }
     determineStatus = (val: any) => {
-        if (val === "invalid") {
-            console.log("Token is invaild! " + val);
-            this.getToken();
-        }
-     };
-     public async checkQueue() {
         const self = this;
-         const julkaisuIDt = await connection.db.query(
-             "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
-             "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
-             console.log("The initial token: " + process.env.TOKEN);
-             await this.checkToken(this.determineStatus);
-
-         julkaisuIDt.forEach(async function (e: any) {
-             console.log("The id inside the for loop: " + e.julkaisuid);
-
-             await self.postJulkaisuTheseus(e.julkaisuid);
-         });
+        if (val === false) {
+            console.log("Token is invalid! " + val);
+             self.getToken();
+        }
+        else {
+            this.launchPost();
+        }
      }
+     public async checkQueue() {
+             await this.checkToken(this.determineStatus);
+     }
+
+     public async launchPost()  {
+        const self = this;
+        const julkaisuIDt = await connection.db.query(
+            "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
+            "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
+            console.log("The initial token: " + process.env.TOKEN);
+            julkaisuIDt.forEach(async function (e: any) {
+                console.log("The id inside the for loop: " + e.julkaisuid);
+                await self.postJulkaisuTheseus(e.julkaisuid);
+            });
+     }
+
      public async postJulkaisuTheseus(julkaisunID: any) {
 
          const itemId = await this.itemIdExists(julkaisunID);
@@ -265,14 +271,8 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          rp(options)
              .then(async function (res: Response) {
                  const authenticated = (res as any)["authenticated"];
-                    // authcheck === authenticated;
                     console.log("The authcheck const: " + authenticated);
-                if (await authenticated != true) {
-                     return await callback("invalid");
-                 }
-                 else {
-                     return await callback("valid");
-                 }
+                return await callback (authenticated);
              })
              .catch(function (err: Error) {
                  console.log("Error while checking token status: " + err + " the urlfinal " + urlFinal);
