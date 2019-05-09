@@ -546,7 +546,7 @@ public async PutTheseus(metadataObject: any, id: any) {
 
          if (!this.arrayIsEmpty(avainsanaData)) {
              avainsanaData.forEach((value: any) => {
-                 const avainsanaobject = {"key": "dc.subject", "value": value};
+                 const avainsanaobject = {"key": "dc.subject.yso", "value": value};
                  metadataObject.push(avainsanaobject);
              });
          }
@@ -560,7 +560,7 @@ public async PutTheseus(metadataObject: any, id: any) {
 
          if (!this.arrayIsEmpty(issnData)) {
              issnData.forEach((value: any) => {
-                 const issnobject = {"key": "dc.identifier.issn", "value": value};
+                 const issnobject = {"key": "dc.relation.issn", "value": value};
                  metadataObject.push(issnobject);
              });
          }
