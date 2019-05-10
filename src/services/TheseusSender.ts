@@ -119,9 +119,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          let theseusCollectionId: string;
 
          if (process.env.NODE_ENV === "prod") {
-             console.log("Environment is prod");
              theseusCollectionId = this.mapCollectionId(org);
-             console.log(theseusCollectionId);
          } else {
              theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
          }
@@ -362,7 +360,6 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
      }
      async UpdateEmbargo(id: any , embargo: any, bitstreamid: any) {
-        // const embargo = embargoobj["embargo"];
         let embargocleaned;
         if (!embargo) {
             embargocleaned = new Date().toISOString().split("T")[0];
