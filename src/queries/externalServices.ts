@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
-const BASEURLFINTO = "https://api.finto.fi/rest/v1/yso/search?type=skos%3AConcept&unique=true&lang=";
-const BASEURLJUFO =   "https://jufo-rest.csc.fi/v1.0/etsi.php?tyyppi=";
-
+const BASEURLFINTO = process.env.FINTO_URL;
+const BASEURLJUFO =   process.env.JUFO_URL;
 const URN_URL = process.env.URN_URL;
 const crossRefUrl = process.env.CROSSREF_URL;
 const virtaUrl = process.env.VIRTA_URL;
