@@ -38,8 +38,6 @@ app.use(session({
 
 }));
 
-console.log(process.env.NODE_ENV);
-
 
 // CONNECT TO PSQL INSIDE VAGRANT "psql -h 10.10.10.10 -U appaccount -d justus"
 // psql -h 10.10.10.10 -U appaccount -d justus < node_modules/connect-pg-simple/table.sql
@@ -57,5 +55,6 @@ app.use(expressValidator);
 app.use(flash);
 app.use(lusca.xframe("SAMEORIGIN"));
 app.use(lusca.xssProtection);
+app.disable("etag");
 
 export default app;
