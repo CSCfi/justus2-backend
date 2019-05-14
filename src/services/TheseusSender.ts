@@ -509,6 +509,7 @@ public async PutTheseus(metadataObject: any, id: any) {
              {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
              {"key": "dc.description.abstract", "value": fileData["abstract"]},
              {"key": "dc.identifier.urn", "value": fileData["urn"] },
+             {"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) },
              {"key": "dc.type", "value": "publication"},
              {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
          ];
@@ -621,6 +622,16 @@ public async PutTheseus(metadataObject: any, id: any) {
 
          return version;
 
+     }
+
+     cleanEmbargo(embargo: any) {
+
+        if (!embargo || embargo === "") {
+            return "";
+        } else {
+            return embargo.split("T")[0];
+
+        }
      }
 
      mapJulkaisuTyyppiFields(tyyppi: any) {
