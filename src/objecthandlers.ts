@@ -503,31 +503,7 @@ function nullchecker(doesauthorexist: any) {
         return doesauthorexist.map((s: any) => s.given + " " + s.family);
     }
 }
-// Objecthandler for JulkaisutVIRTACR
-function ObjectHandlerJulkaisutVIRTACR(obj: any): object[] {
-    return obj.message.items.map((e: any) => {
-        const authorsstuff = e.author;
-        return {
-            src: {
-                lahde: e.source,
-                id: e.DOI,
-            },
-            title: e.title[0],
-            authors: nullchecker(authorsstuff),
-            ISBN: e.ISBN,
-            ISSN: e.ISSN,
-            };
-        });
-    }
 
-function ObjectHandlerTestVirta(obj: any): any {
-    return console.log("the object: " + obj + " The object stringified " + JSON.stringify(obj));
-}
-
-// WAIT FOR FURTHER INSTRUCTIONS, UNCLEAR RIGHT NOW
-// function ObjectHandlerJulkaisutVIRTAPART(obj: any) {
-
-// }
 function getrediscallback(key: string, callbacker: Function) {
     getRedis(key, function success(reply: string) {
         let newdata = undefined;
@@ -816,13 +792,6 @@ function ObjectHandlerOrgNames(obj: any, orgid: any, lang: any) {
     return list;
 }
 
-function ObjectHandlerVirtaEsitaytto(obj: any): object[] {
-    return obj;
-}
-function ObjectHandlerCrossrefEsitaytto(obj: any): object[] {
-    return obj;
-}
-
 function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
     return obj.map((x: any) => {
 
@@ -1097,7 +1066,6 @@ module.exports = {
     ObjectHandlerJufoID: ObjectHandlerJufoID,
     ObjectHandlerJufoISSN: ObjectHandlerJufoISSN,
     ObjectHandlerOrgListaus: ObjectHandlerOrgListaus,
-    ObjectHandlerTestVirta: ObjectHandlerTestVirta,
     ObjectHandlerJulkaisudata: ObjectHandlerJulkaisudata,
     ObjectHandlerUser: ObjectHandlerUser,
     ObjectHandlerOrgNames: ObjectHandlerOrgNames,
