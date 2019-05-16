@@ -629,7 +629,7 @@ public async PutTheseus(metadataObject: any, id: any) {
         if (!embargo || embargo === "") {
             return "";
         } else {
-            return embargo.split("T")[0];
+            return embargo.toISOString().split("T")[0];
 
         }
      }
