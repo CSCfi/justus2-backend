@@ -86,7 +86,7 @@ const theseusJulkaisuFields = [
 ];
 
 
-const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "rooli"];
+const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "hrnumero", "rooli"];
 const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
 const taiteenala = ["julkaisuid", "taiteenalakoodi", "jnro"];
 

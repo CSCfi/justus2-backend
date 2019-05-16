@@ -37,13 +37,6 @@ const getUserData = function (headers: any) {
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
                 userData.rooli = role;
-
-                if (!domainMapping[key].theseusData) {
-                    userData.showPublicationInput = false;
-                } else {
-                    userData.showPublicationInput = true;
-                }
-
                 domainMapped = true;
             } else {
                 return false;

@@ -69,7 +69,7 @@ async function getLisatieto(julkaisuid: any) {
 
 function getOrgTekijatAndAlayksikko(id: any) {
     return con.db.task((t: any) => {
-        return t.map("SELECT id, etunimet, sukunimi, orcid, rooli FROM organisaatiotekija WHERE julkaisuid=$1", id, (orgtekija: any) => {
+        return t.map("SELECT id, etunimet, sukunimi, orcid, hrnumero, rooli FROM organisaatiotekija WHERE julkaisuid=$1", id, (orgtekija: any) => {
             return t.any("SELECT alayksikko FROM alayksikko WHERE organisaatiotekijaid=$1", orgtekija.id)
                 .then((res: any) => {
                     orgtekija.tempalayksikko = res;

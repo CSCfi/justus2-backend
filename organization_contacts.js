@@ -281,7 +281,12 @@ const contactList = [
         // Luonnonvarakeskus
         "domain": "@luke.fi",
         "code": "4100010",
-        "email": ""
+        "email": "",
+		// For Luke publications are transferred to Jukurit instead of Theseus
+		"jukuritData": {
+			"theseusCode": "Luonnonvarakeskus"	
+		},
+		"visibleFields": ["hrnumero"]
     },
     {
         // 	Geologian tutkimuskeskus #gtk-admins

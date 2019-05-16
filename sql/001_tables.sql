@@ -125,6 +125,7 @@ CREATE TABLE organisaatiotekija
   etunimet text,
   sukunimi text,
   orcid text,
+  hrnumero character varying,
   rooli integer,
   CONSTRAINT organisaatiotekija_pkey PRIMARY KEY (id),
   CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)

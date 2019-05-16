@@ -8,6 +8,7 @@ const https = require("https");
 const redis = require("redis");
 const client = redis.createClient();
 const organisationConfig = require("./organization_config");
+const domainMapping = organisationConfig.domainMappings;
 
 const koodistoUrl = process.env.KOODISTO_URL;
 const handleLink = process.env.HANDLE_LINK;
@@ -1013,9 +1014,21 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
             });
         });
 
-
-        const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
+        let visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
         const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
+
+        Object.keys(domainMapping).forEach(function (val, key) {
+            if (domainMapping[key].code === org) {
+                if (domainMapping[key].visibleFields) {
+                    visibleFields = visibleFields.concat(domainMapping[key].visibleFields);
+                }
+                if (domainMapping[key].theseusData || domainMapping[key].jukuritData) {
+                    perustiedot.showPublicationInput = true;
+                } else {
+                    perustiedot.showPublicationInput = false;
+                }
+            }
+        });
 
               yarray.push(twonine);
               yarray.push(twoeight);
