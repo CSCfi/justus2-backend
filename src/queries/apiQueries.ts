@@ -307,7 +307,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
     if (hasAccessToPublication) {
         const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-        const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id);
+        const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
 
         // begin transaction
         await db.any("BEGIN");

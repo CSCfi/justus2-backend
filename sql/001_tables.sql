@@ -40,6 +40,7 @@ CREATE TABLE julkaisu
   modified timestamp with time zone NOT NULL DEFAULT now(),
   --julkaisuid character varying(20),
   lisatieto text,
+  projektinumero character varying,
   CONSTRAINT julkaisu_pkey PRIMARY KEY (id)
 )
 WITH (

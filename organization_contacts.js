@@ -286,7 +286,7 @@ const contactList = [
 		"jukuritData": {
 			"theseusCode": "Luonnonvarakeskus"	
 		},
-		"visibleFields": ["hrnumero"]
+		"visibleFields": ["hrnumero", "projektinumero"]
     },
     {
         // 	Geologian tutkimuskeskus #gtk-admins
