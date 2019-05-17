@@ -629,10 +629,12 @@ public async PutTheseus(metadataObject: any, id: any) {
         if (!embargo || embargo === "") {
             return "";
         } else {
-            return embargo.toISOString().split("T")[0];
+            const embargoDate = new Date(embargo).toISOString();
+            return embargoDate.split("T")[0];
 
         }
      }
+
 
      mapJulkaisuTyyppiFields(tyyppi: any) {
 
