@@ -1,10 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 
 const BASEURLFINTO = process.env.FINTO_URL;
-const BASEURLJUFO =   process.env.JUFO_URL;
+const BASEURLJUFO = process.env.JUFO_URL;
 const URN_URL = process.env.URN_URL;
 const crossRefUrl = process.env.CROSSREF_URL;
 const virtaUrl = process.env.VIRTA_URL;
+
+const jufoSearchUrl = BASEURLJUFO + "/etsi.php?";
+const jufoKanavaUrl = BASEURLJUFO + "/kanava";
 
 const request = require("request");
 const requestPromise = require("request-promise");
@@ -26,8 +29,8 @@ function getAvainSanat(req: Request, res: Response, next: NextFunction) {
     }
 }
 function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = BASEURLJUFO + "1&nimi=" + req.query.q;
-    console.log("This is the apiurl: " + apiurl);
+    const apiurl: string = jufoSearchUrl + "tyyppi=1&nimi=" + req.query.q;
+    console.log("This is the apiurl for julkaisusarja GET: " + apiurl);
 
     // The jufo rest api is kinda weird, if the query word is <5 or over 50
     // it returns nothing, which breaks the code, hence the odd looking error handling
@@ -40,8 +43,9 @@ function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
     }
 }
 function getKonferenssinimet(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = BASEURLJUFO + "3&nimi=" + req.query.q;
-    console.log("This is the apiurl: " + apiurl);
+
+    const apiurl: string = jufoSearchUrl + "tyyppi=3&nimi=" + req.query.q;
+    console.log("This is the apiurl for konferenssinnimet GET: " + apiurl);
 
     // The jufo rest api is kinda weird, if the query word is <5 or over 50
     // it returns nothing, which breaks the code, hence the odd looking error handling
@@ -54,8 +58,9 @@ function getKonferenssinimet(req: Request, res: Response, next: NextFunction) {
     }
 }
 function getKustantajat(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = BASEURLJUFO + "2&nimi=" + req.query.q;
-    console.log("This is the apiurl: " + apiurl);
+
+    const apiurl: string = jufoSearchUrl + "tyyppi=2&nimi=" + req.query.q;
+    console.log("This is the apiurl for kustantajat GET: " + apiurl);
 
     // The jufo rest api is kinda weird, if the query word is <5 or over 50
     // it returns nothing, which breaks the code, hence the odd looking error handling
@@ -68,8 +73,9 @@ function getKustantajat(req: Request, res: Response, next: NextFunction) {
     }
 }
 function getJufo(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = "https://jufo-rest.csc.fi/v1.0/kanava/" + req.params.id;
-    console.log("This is the apiurl: " + apiurl);
+
+    const apiurl: string = jufoKanavaUrl + "/" + req.params.id;
+    console.log("This is the apiurl for jufo GET: " + apiurl);
 
     // The jufo rest api is kinda weird, if the query word is <5 or over 50
     // it returns nothing, which breaks the code, hence the odd looking error handling
@@ -82,8 +88,8 @@ function getJufo(req: Request, res: Response, next: NextFunction) {
     }
 }
 function getJufotISSN(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = "https://jufo-rest.csc.fi/v1.0/etsi.php?issn=" + req.query.issn;
-    console.log("This is the apiurl: " + apiurl);
+    const apiurl: string = jufoSearchUrl + "issn=" + req.query.issn;
+    console.log("This is the apiurl for jufo issn GET: " + apiurl);
 
     // The jufo rest api is kinda weird, if the query word is <5 or over 50
     // it returns nothing, which breaks the code, hence the odd looking error handling
@@ -105,7 +111,7 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
     }
 
      let apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
-     let apiUrlVirta: string = virtaUrl + "?julkaisunNimi=" + encodeURIComponent(julkaisu);
+     let apiUrlVirta: string = virtaUrl + "/haku?julkaisunNimi=" + encodeURIComponent(julkaisu);
 
      if (tekija && tekija !== "undefined" && tekija !== "") {
          apiUrlCrossRef = apiUrlCrossRef + "&query.author=" + encodeURIComponent(tekija);
@@ -165,7 +171,7 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
         url = crossRefUrl + "/http://dx.doi.org" + req.query.id;
     }
     if (req.query.lahde.toLowerCase() === "virta") {
-        url = "https://virta-jtp.csc.fi/api/julkaisut/" + req.query.id;
+        url =  virtaUrl + "/" + req.query.id;
     }
 
     request(utf8.encode(url), { json: true }, (error: any, response: any, data: any) => {
