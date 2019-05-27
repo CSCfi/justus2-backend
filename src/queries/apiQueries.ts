@@ -267,6 +267,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             await insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
             await insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
             await insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
+            await insertProjektinumero(req.body.julkaisu, julkaisuId.id, req.headers);
 
             await db.any("COMMIT");
 
@@ -482,6 +483,27 @@ async function insertIssnAndIsbn(julkaisu: any, jid: any, headers: any, identifi
     await db.many(save);
 
     await auditLog.postAuditData(headers, "POST", table, jid, obj);
+
+}
+
+async function insertProjektinumero(julkaisu: any, jid: any, headers: any) {
+
+    const projektinumeroObj: any = [];
+    
+    if (!julkaisu["projektinumero"]) {
+        return;
+    }
+
+    for (let i = 0; i < julkaisu["projektinumero"].length; i++) {
+        if (julkaisu["projektinumero"][i] !== "") {
+            projektinumeroObj.push({"julkaisuid": jid, "projektinumero": julkaisu["projektinumero"][i]});
+        }
+    }
+    const columns = new pgp.helpers.ColumnSet(["julkaisuid", "projektinumero"], {table: "julkaisu_projektinumero"});
+    const save = pgp.helpers.insert(projektinumeroObj, columns) + "RETURNING id";
+    await db.many(save);
+
+    await auditLog.postAuditData(headers, "POST", "julkaisu_projektinumero", jid, projektinumeroObj); 
 
 }
 
