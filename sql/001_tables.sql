@@ -40,7 +40,6 @@ CREATE TABLE julkaisu
   modified timestamp with time zone NOT NULL DEFAULT now(),
   --julkaisuid character varying(20),
   lisatieto text,
-  projektinumero character varying,
   CONSTRAINT julkaisu_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -288,3 +287,20 @@ WITH (
 );
 ALTER TABLE julkaisu_isbn
 OWNER TO appaccount;
+
+CREATE TABLE julkaisu_projektinumero
+(
+  id bigserial NOT NULL,
+  julkaisuid bigint NOT NULL,
+  projektinumero character varying,
+  CONSTRAINT julkaisu_projektinumero_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_julkaisu FOREIGN KEY (julkaisuid)
+      REFERENCES julkaisu (id) MATCH SIMPLE
+	  ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE julkaisu_projektinumero
+OWNER TO appaccount;
+
