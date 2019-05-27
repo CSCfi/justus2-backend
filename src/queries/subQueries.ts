@@ -26,6 +26,17 @@ async function getIsbn(julkaisuid: any) {
     }
 }
 
+async function getProjektinumero(julkaisuid: any) {
+    const query = "SELECT projektinumero FROM julkaisu_projektinumero WHERE julkaisuid =  " + julkaisuid + ";";
+    let result = await con.db.any(query);
+    if (result.length < 1) {
+        return [""];
+    } else {
+        result = oh.mapIssnAndIsbn("projektinumero", result);
+        return result;
+    }
+}
+
 async function getOrganisaatiotekija(julkaisuid: any) {
     let result = await getOrgTekijatAndAlayksikko(julkaisuid);
     result = oh.mapOrganisaatiotekijaAndAlayksikko(result);
@@ -82,18 +93,13 @@ function getOrgTekijatAndAlayksikko(id: any) {
 module.exports = {
     getIsbn: getIsbn,
     getIssn: getIssn,
+    getProjektinumero: getProjektinumero,
     getAvainsana: getAvainsana,
     getOrganisaatiotekija: getOrganisaatiotekija,
     getTieteenala: getTieteenala,
     getTaiteenala: getTaiteenala,
     getTyyppikategoria: getTyyppikategoria,
     getLisatieto: getLisatieto
-
-
-
-
-
-
 
 
 };

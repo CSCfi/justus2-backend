@@ -197,6 +197,7 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             data["julkaisu"] = await db.one(query, params);
             data["julkaisu"]["issn"] = await sq.getIssn(req.params.id);
             data["julkaisu"]["isbn"] = await sq.getIsbn(req.params.id);
+            data["julkaisu"]["projektinumero"] = await sq.getProjektinumero(req.params.id);
             data["tieteenala"] = await sq.getTieteenala(req.params.id);
             data["taiteenala"] = await sq.getTaiteenala(req.params.id);
             data["taidealantyyppikategoria"] = await sq.getTyyppikategoria(req.params.id);
