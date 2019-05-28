@@ -31,7 +31,6 @@ const julkaisu = [
     "jufoluokitus",
     "julkaisuntila",
     "username",
-    "projektinumero",
     "modified"
 ];
 

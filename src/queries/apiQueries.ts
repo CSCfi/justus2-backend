@@ -197,6 +197,7 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             data["julkaisu"] = await db.one(query, params);
             data["julkaisu"]["issn"] = await sq.getIssn(req.params.id);
             data["julkaisu"]["isbn"] = await sq.getIsbn(req.params.id);
+            data["julkaisu"]["projektinumero"] = await sq.getProjektinumero(req.params.id);
             data["tieteenala"] = await sq.getTieteenala(req.params.id);
             data["taiteenala"] = await sq.getTaiteenala(req.params.id);
             data["taidealantyyppikategoria"] = await sq.getTyyppikategoria(req.params.id);
@@ -267,6 +268,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             await insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
             await insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
             await insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
+            await insertProjektinumero(req.body.julkaisu, julkaisuId.id, req.headers);
 
             await db.any("COMMIT");
 
@@ -338,9 +340,18 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             await insertIssnAndIsbn(req.body.julkaisu, req.params.id, req.headers, "isbn");
 
+            const deletedProjektinumeroRows = await db.result("DELETE FROM julkaisu_projektinumero WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedProjektinumeroRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_projektinumero", req.params.id, [undefined]);
+            }
+            await insertProjektinumero(req.body.julkaisu, req.params.id, req.headers);
+
             const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
                 id: req.params.id
             });
+
             if (deletedOrganisaatiotekijaRows.rowCount > 0) {
                 await auditLog.postAuditData(req.headers, "DELETE", "organisaatiotekija", req.params.id, [undefined]);
             }
@@ -482,6 +493,27 @@ async function insertIssnAndIsbn(julkaisu: any, jid: any, headers: any, identifi
     await db.many(save);
 
     await auditLog.postAuditData(headers, "POST", table, jid, obj);
+
+}
+
+async function insertProjektinumero(julkaisu: any, jid: any, headers: any) {
+
+    const projektinumeroObj: any = [];
+    
+    if (!julkaisu["projektinumero"]) {
+        return;
+    }
+
+    for (let i = 0; i < julkaisu["projektinumero"].length; i++) {
+        if (julkaisu["projektinumero"][i] !== "") {
+            projektinumeroObj.push({"julkaisuid": jid, "projektinumero": julkaisu["projektinumero"][i]});
+        }
+    }
+    const columns = new pgp.helpers.ColumnSet(["julkaisuid", "projektinumero"], {table: "julkaisu_projektinumero"});
+    const save = pgp.helpers.insert(projektinumeroObj, columns) + "RETURNING id";
+    await db.many(save);
+
+    await auditLog.postAuditData(headers, "POST", "julkaisu_projektinumero", jid, projektinumeroObj); 
 
 }
 

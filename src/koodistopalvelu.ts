@@ -132,7 +132,8 @@ function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, l
     });
 }
 
- export function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
+
+export function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
     if (secondURL) {
         const urls = [URL, secondURL];
         const first: object []  = [
@@ -168,20 +169,25 @@ function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, l
         }
     }
     else {
-    https.get(URL, (resp: Response) => {
-        let data = "";
-        resp.on("data", (chunk: any) => {
-            data += chunk;
+        https.get(URL, (resp: Response) => {
+            let data = "";
+            resp.on("data", (chunk: any) => {
+                data += chunk;
+            });
+            resp.on("end", () => {
+                if (!data) {
+                    res.send("{}");
+                } else {
+                    const newdata = JSON.parse(data);
+                    res.send(objecthandler(newdata, queryParams));
+                }
+    
+            });
+        })
+        .on("error", (err: Error) => {
+            console.log("Error: " + err.message);
         });
-        resp.on("end", () => {
-            const newdata = JSON.parse(data);
-            res.send(objecthandler(newdata, queryParams));
-        });
-    })
-    .on("error", (err: Error) => {
-        console.log("Error: " + err.message);
-    });
-    }
+        }
 }
 
 function HTTPSUBGET (URL: String) {
