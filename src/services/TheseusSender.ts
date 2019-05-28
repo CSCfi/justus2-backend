@@ -11,6 +11,7 @@ const slugify = require("slugify");
 const connection = require("./../db");
 
 const BASEURL = process.env.THESEUS_BASE_URL;
+const JUKURIURL = process.env.JUKURI_BASE_URL;
 
 const fu = require("../queries/fileUpload");
 const api = require("./../queries/subQueries");
@@ -25,6 +26,9 @@ const publicationFolder = process.env.FILE_FOLDER;
 const theseusAuthEmail = process.env.THESEUS_AUTH_EMAIL;
 const theseusAuthPassword = process.env.THESEUS_AUTH_PASSWORD;
 const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
+
+const jukuriAuthEmail = process.env.JUKURI_AUTH_EMAIL;
+const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
  class TheseusSender {
@@ -43,18 +47,32 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
      // public static getInstance(): Theseus {
      //     return Theseus._instance;
      // }
-    determineStatus = (val: any) => {
+    determineStatus = (val: any, version: any) => {
         const self = this;
         if (val === false) {
-            console.log("Token is invalid! " + val);
-             self.getToken();
+            console.log("Token is invalid! " + val + " for the version: " + version);
+             self.getToken(version);
         }
         else {
+            console.log("Token is valid for version: " + version);
             this.launchPost();
+
         }
      }
      public async checkQueue() {
-             await this.checkToken(this.determineStatus);
+        const self = this;
+         const authTokens = [
+            {
+                token: "theseus"
+            },
+            {
+                token: "jukuri"
+            }
+         ];
+         authTokens.forEach(async function(e: any) {
+             console.log("the e " + JSON.stringify(e.token));
+              self.checkToken(self.determineStatus, e.token);
+         });
      }
 
      public async launchPost()  {
@@ -62,10 +80,11 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
         const julkaisuIDt = await connection.db.query(
             "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
             "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
-            console.log("The initial token: " + process.env.TOKEN);
+            console.log("The initial token: " + process.env.TOKEN + " and jukurittoken " + process.env.JUKURI_TOKEN);
+
             julkaisuIDt.forEach(async function (e: any) {
                 console.log("The id inside the for loop: " + e.julkaisuid);
-                await self.postJulkaisuTheseus(e.julkaisuid);
+                // await self.postJulkaisuTheseus(e.julkaisuid);
             });
      }
 
@@ -251,10 +270,21 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
              });
      }
 
-     async checkToken(callback: any) {
-         const urlFinal = BASEURL + "status";
+     async checkToken(callback: any, version: any) {
+         let urlFinal: any;
+         let token: any;
+         if (version === "jukuri") {
+            urlFinal = JUKURIURL + "status";
+            token = process.env.JUKURI_TOKEN;
+            console.log("Version is jukuri");
+         }
+         else {
+            urlFinal = BASEURL + "status";
+            token = process.env.TOKEN;
+            console.log("Version is theseus");
+         }
          const headersOpt = {
-             "rest-dspace-token": process.env.TOKEN,
+             "rest-dspace-token": token,
              "content-type": "application/json"
          };
          const options = {
@@ -269,17 +299,26 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          rp(options)
              .then(async function (res: Response) {
                  const authenticated = (res as any)["authenticated"];
-                    console.log("The authcheck const: " + authenticated);
-                return await callback (authenticated);
+                    console.log("The authcheck const: " + authenticated + " and version: " + version);
+                return await callback (authenticated, version);
              })
              .catch(function (err: Error) {
                  console.log("Error while checking token status: " + err + " the urlfinal " + urlFinal);
              });
      }
 
-      getToken() {
-         const urlFinal = BASEURL + "login";
-         const metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
+      getToken(version: any) {
+        let urlFinal = BASEURL + "login";
+        let metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
+        let token = process.env.TOKEN;
+        if (version === "jukuri") {
+            urlFinal = JUKURIURL + "login";
+            metadataobj = {"email": jukuriAuthEmail, "password": jukuriAuthPassword};
+            token = process.env.JUKURI_TOKEN;
+        }
+        else {
+            console.log("Version is theseus");
+        }
          const headersOpt = {
              "content-type": "application/json",
          };
@@ -294,8 +333,8 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
          };
          rp(options)
              .then(async function (res: Response) {
-                 console.log("The new token: " + (res as any));
-                  process.env.TOKEN = (res as any);
+                 console.log("The new token: " + (res as any) +  " for version " + version);
+                  token = (res as any);
              })
              .catch(function (err: Error) {
                  console.log("Error while getting new token: " + err);
