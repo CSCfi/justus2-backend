@@ -109,10 +109,6 @@ function UpdateKoodistopalveluRedis(res: Response) {
     });
 }
 
-function TestFunction() {
-    console.log("Testing scheduler");
-    return Promise.resolve();
-}
 // Used for apis where you need to combine multiple external api calls and set redis later
 // when you have combined the data
 function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, lang: any ) {
@@ -341,26 +337,6 @@ function setOrgListausEN(res: Response) {
     const orgid = organisationConfig.getOrganisationCodes();
     return HTTPGET(koodistoUrl, res, "getOrgListausEN", OH.ObjectHandlerOrgListaus, "EN", orgid);
 }
-
-
-// function setAvainSanat(res: Response) {
-//     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");
-// }
-// function setJulkaisuSarjat(res: Response) {
-//     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");
-// }
-// function setKonferenssinimet(res: Response) {
-//     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");
-// }
-// function setKustantajat(res: Response) {
-//     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");
-// }
-// function setJufoTiedot(res: Response) {
-//     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");
-// }
-// function setJufotISSN(res: Response) {
-//     HTTPGET("https://virkailija.testiopintopolku.fi/koodisto-service/rest/json/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, "getJulkaisunLuokat");
-// }
 
 module.exports = {
 HTTPGETshow: HTTPGETshow,

@@ -24,7 +24,6 @@ router.get("/download/:id", fu.downloadJulkaisu);
 router.post("/julkaisu", db.postJulkaisu);
 router.post("/language", db.postLanguage);
 router.post("/upload", fu.uploadJulkaisu);
-// router.post("/testroute/:id", ts.PutTheseus);
 
 // PUT requests
 router.put("/julkaisu/:id", db.updateJulkaisu);

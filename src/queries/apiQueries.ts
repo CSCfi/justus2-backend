@@ -225,11 +225,6 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 
 }
 
-function testvirta(res: Response) {
-    kp.HTTPGETshow("https://virta-jtp.csc.fi/api/julkaisut/haku?julkaisunNimi=explicit", res, oh.ObjectHandlerTestVirta);
-}
-
-
 // POST requests
 // Post a julkaisu to the database
 // Catch the JSON body and parse it so that we can insert the values into postgres
