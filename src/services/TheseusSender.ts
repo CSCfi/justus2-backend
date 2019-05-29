@@ -162,8 +162,7 @@ class TheseusSender {
 
         // TODO check if file exists, if so. Fire the request to send item to theseus
         // Else, do nothing (This should never happen though, iirc.)
-        // Else, do nothing (This should never happen though, iirc.)
-        console.log("The stuff in inserttemptable: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
+        console.log("The stuff in insert temp table: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
 
         if (fu.isPublicationInTheseus(julkaisuID)) {
             try {
@@ -501,7 +500,7 @@ class TheseusSender {
             {"key": "dc.contributor.editor", "value": julkaisuData["emojulkaisuntoimittajat"]},
             {"key": "dc.relation.ispartofjournal", "value": julkaisuData["lehdenjulkaisusarjannimi"]},
             {"key": "dc.relation.volume", "value": julkaisuData["volyymi"]},
-            {"key": "dc.relation.issue", "value": julkaisuData["numero"]},
+            {"key": "dc.relation.numberinseries", "value": julkaisuData["numero"]},
             {"key": "dc.format.pagerange", "value": julkaisuData["sivut"]},
             {"key": "dc.relation.articlenumber", "value": julkaisuData["artikkelinumero"]},
             {"key": "dc.publisher", "value": julkaisuData["kustantaja"]},
