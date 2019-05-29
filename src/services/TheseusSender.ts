@@ -31,6 +31,7 @@ const jukuriAuthEmail = process.env.JUKURI_AUTH_EMAIL;
 const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
+
  class TheseusSender {
 
      // private static _instance: Theseus = new Theseus();
@@ -51,14 +52,17 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         const self = this;
         if (val === false) {
             console.log("Token is invalid! " + val + " for the version: " + version);
-             self.getToken(version);
+            self.getToken(version);
         }
+
         else {
             console.log("Token is valid for version: " + version);
             this.launchPost();
 
         }
-     }
+
+
+     };
      public async checkQueue() {
         const self = this;
          const authTokens = [
@@ -75,11 +79,14 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
          });
      }
 
-     public async launchPost()  {
+
+
+    public async launchPost()  {
         const self = this;
         const julkaisuIDt = await connection.db.query(
             "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
             "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
+
             console.log("The initial token: " + process.env.TOKEN + " and jukurittoken " + process.env.JUKURI_TOKEN);
 
             julkaisuIDt.forEach(async function (e: any) {
@@ -88,200 +95,203 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             });
      }
 
-     public async postJulkaisuTheseus(julkaisunID: any) {
 
-         const itemId = await this.itemIdExists(julkaisunID);
-         if (itemId.itemid) {
-             // if itemid already exists, send only publication
-             await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
-         } else {
-             // TODO: ADD SPECIFIC ORG COLLECTION ID HERE
-             // Add unique collections ID:s that are matched according to the organisational id
-             // The organisational id is inside the julkaisu taulukko
-             // const orgCollection = "something";
-             const params = {"id": julkaisunID};
-             // ALL queries for the metadataobject
-             const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
-             const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
-                 "${id};";
+    public async postJulkaisuTheseus(julkaisunID: any) {
 
-             let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
-             arkistotableFields =  arkistotableFields.join(",");
+        const itemId = await this.itemIdExists(julkaisunID);
+        if (itemId.itemid) {
+            // if itemid already exists, send only publication
+            await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
+        } else {
+            const params = {"id": julkaisunID};
+            // ALL queries for the metadataobject
+            const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
+            const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
+                "${id};";
 
-             const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
-                 "${id};";
-             const julkaisuData: any = {};
-             let arkistoData: any = {};
+            let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
+            arkistotableFields =  arkistotableFields.join(",");
 
-             try {
-                 julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-                 arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
-                 julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
-                 julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
-                 julkaisuData["issn"] = await api.getIssn(julkaisunID);
-             } catch (e) {
-                 console.log(e);
-             }
+            const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+                "${id};";
+            const julkaisuData: any = {};
+            let arkistoData: any = {};
 
-             julkaisuData["filedata"] = arkistoData;
-             const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
+            try {
+                julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
+                arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
+                julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
+                julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
+                julkaisuData["issn"] = await api.getIssn(julkaisunID);
+            } catch (e) {
+                console.log(e);
+            }
 
-             const self = this;
-             await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
-         }
+            julkaisuData["filedata"] = arkistoData;
+            const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
-     }
+            const self = this;
+            await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
+        }
 
-     async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
+    }
 
-         const self = this;
-         let theseusCollectionId: string;
+    async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
 
-         if (process.env.NODE_ENV === "prod") {
-             theseusCollectionId = this.mapCollectionId(org);
-         } else {
-             theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
-         }
+        const self = this;
+        let theseusCollectionId: string;
 
-         const headersOpt = {
-             "rest-dspace-token": process.env.TOKEN,
-             "content-type": "application/json"
-         };
-         const options = {
-             rejectUnauthorized: false,
-             method: "POST",
-             uri: BASEURL + "collections/" + theseusCollectionId + "/items/",
-             headers: headersOpt,
-             body: sendObject,
-             json: true,
-             encoding: "utf8",
-         };
+        if (process.env.NODE_ENV === "prod") {
+            theseusCollectionId = this.mapCollectionId(org);
+        } else {
+            theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
+        }
 
-         rp(options)
-             .then(async function (res: Response) {
-                 const itemID = (res as any)["id"];
-                 console.log("The itemid: " + itemID);
-                 const handle = (res as any)["handle"];
-                 console.log("The handle: " + handle);
-                 console.log(res);
+        const headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json"
+        };
+        const options = {
+            rejectUnauthorized: false,
+            method: "POST",
+            uri: BASEURL + "collections/" + theseusCollectionId + "/items/",
+            headers: headersOpt,
+            body: sendObject,
+            json: true,
+            encoding: "utf8",
+        };
 
-                 await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
-             })
-             .catch(function (res: Response, err: Error) {
-                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + theseusCollectionId + "/items " + err + " And the full error response: " + (res as any));
-             });
-     }
+        rp(options)
+            .then(async function (res: Response) {
+                const itemID = (res as any)["id"];
+                console.log("The itemid: " + itemID);
+                const handle = (res as any)["handle"];
+                console.log("The handle: " + handle);
+                console.log(res);
+
+                await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
+            })
+            .catch(function (res: Response, err: Error) {
+                console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + theseusCollectionId + "/items " + err + " And the full error response: " + (res as any));
+            });
+    }
 
 
-     async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any) {
-         // TODO, combine both queries into one
-         const paramss = {"id": julkaisuID};
-         const queryitemid = "UPDATE julkaisuarkisto SET itemid=" + theseusItemID + "WHERE julkaisuid = " +
-             "${id};";
-         const queryhandle = "UPDATE julkaisuarkisto SET handle=" + "'" + theseusHandleID + "'" + "WHERE julkaisuid = " +
-             "${id};";
-         await connection.db.any(queryitemid, paramss);
-         await connection.db.any(queryhandle, paramss);
+    async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any) {
+        // TODO, combine both queries into one
+        const paramss = {"id": julkaisuID};
+        const queryitemid = "UPDATE julkaisuarkisto SET itemid=" + theseusItemID + "WHERE julkaisuid = " +
+            "${id};";
+        const queryhandle = "UPDATE julkaisuarkisto SET handle=" + "'" + theseusHandleID + "'" + "WHERE julkaisuid = " +
+            "${id};";
+        await connection.db.any(queryitemid, paramss);
+        await connection.db.any(queryhandle, paramss);
 
-         // TODO check if file exists, if so. Fire the request to send item to theseus
-         // Else, do nothing (This should never happen though, iirc.)
-         console.log("The stuff in inserttemptable: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
+        // TODO check if file exists, if so. Fire the request to send item to theseus
+        // Else, do nothing (This should never happen though, iirc.)
+        console.log("The stuff in insert temp table: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
 
-         if (fu.isPublicationInTheseus(julkaisuID)) {
-             await this.sendBitstreamToItem(julkaisuID, theseusItemID);
-             console.log("IT IS IN THESEUS: " + julkaisuID);
-         }
-         else {
-             console.log("Metadata for item updated");
-         }
-     }
+        if (fu.isPublicationInTheseus(julkaisuID)) {
+            try {
+                await this.sendBitstreamToItem(julkaisuID, theseusItemID);
+                console.log("IT IS IN THESEUS: " + julkaisuID);
 
-     async sendBitstreamToItem(julkaisuID: any, theseusID: any) {
-         console.log("The julkaisuID when we are sending bistream: " + julkaisuID + " and the theseusID: " + theseusID);
-         const params = {"id": julkaisuID};
-         const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-         const filenamequery = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-         const embargo = await connection.db.oneOrNone(embargoquery, params);
-         const filename = await connection.db.oneOrNone(filenamequery, params);
-         const filenamecleaned = await slugify(filename["filename"].toString(), "_");
+            } catch (e) {
+                console.log("Error in sending  publication and its metadata to Thseus: " + e);
+            }
+        }
+        else {
+            console.log("Metadata for item updated");
+        }
+    }
 
-         let embargodate;
+    async sendBitstreamToItem(julkaisuID: any, theseusID: any) {
+        console.log("The julkaisuID when we are sending bistream: " + julkaisuID + " and the theseusID: " + theseusID);
+        const params = {"id": julkaisuID};
+        const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+        const filenamequery = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+        const embargo = await connection.db.oneOrNone(embargoquery, params);
+        const filename = await connection.db.oneOrNone(filenamequery, params);
+        const filenamecleaned = await slugify(filename["filename"].toString(), "_");
 
-         if (!embargo.embargo) {
-             embargodate = new Date().toISOString().split("T")[0];
-         } else {
-             embargodate = embargo.embargo.toISOString().split("T")[0];
-         }
+        let embargodate;
 
-         // TODO SPLIT EMBARGO FOR URLFINAL
-         console.log("The embargodate: " + embargodate);
-         const year = embargodate.split("-")[0];
-         const month = embargodate.split("-")[1];
-         const day = embargodate.split("-")[2];
-         const filePath =  publicationFolder + "/" + julkaisuID;
-         const filePathFull = filePath + "/" + savedFileName;
-         const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day + "&expand=policies";
-         console.log("Thefinalurl: " + urlFinal);
-         const headersOpt = {
-             "rest-dspace-token": process.env.TOKEN,
-             "content-type": "application/json"
-         };
-         const options = {
-             rejectUnauthorized: false,
-             method: "POST",
-             uri: urlFinal,
-             headers: headersOpt,
-             json: true,
-             formData: {
-                 file: fs.createReadStream(filePathFull)
-             }
-         };
-         rp(options)
-             .then(async function (res: Response, req: Request) {
-                 // TODO add catching of bitstreamid, also maybe policyid
-                 // If both are needed, merge insert into one statement.
-                 const bitstreamid = (res as any)["id"];
-                 console.log("catching the bitstream id from response" + bitstreamid);
-                //  const policyid = (res as any)["policyid"];
-                 const params = {"id": julkaisuID};
-                 const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
-                //  const policyidquery = "UPDATE julkaisuarkisto SET policyid=" + policyid + " WHERE julkaisuid = " + "${id};";
-                 await connection.db.any(bitstreamquery, params);
-                //  await connection.db.any(policyidquery, params);
+        if (!embargo.embargo) {
+            embargodate = new Date().toISOString().split("T")[0];
+        } else {
+            embargodate = embargo.embargo.toISOString().split("T")[0];
+        }
 
-             })
-             .then(async function () {
-                 const deletefromJonoQuery = "DELETE from julkaisujono WHERE julkaisuid = " + "${id};";
-                 await connection.db.any(deletefromJonoQuery, params);
+        // TODO SPLIT EMBARGO FOR URLFINAL
+        console.log("The embargodate: " + embargodate);
+        const year = embargodate.split("-")[0];
+        const month = embargodate.split("-")[1];
+        const day = embargodate.split("-")[2];
+        const filePath =  publicationFolder + "/" + julkaisuID;
+        const filePathFull = filePath + "/" + savedFileName;
+        const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day + "&expand=policies";
+        console.log("Thefinalurl: " + urlFinal);
+        const headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json"
+        };
+        const options = {
+            rejectUnauthorized: false,
+            method: "POST",
+            uri: urlFinal,
+            headers: headersOpt,
+            json: true,
+            formData: {
+                file: fs.createReadStream(filePathFull)
+            }
+        };
+        rp(options)
+            .then(async function (res: Response, req: Request) {
+                console.log(res);
+                const bitstreamid = (res as any)["id"];
+                console.log("catching the bitstream id from response" + bitstreamid);
+                const params = {"id": julkaisuID};
+                const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
+                await connection.db.any(bitstreamquery, params);
 
-                 const urnQuery = "SELECT urn FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-                 const urn = await connection.db.oneOrNone(urnQuery, params);
+            })
+            .then(async function () {
+                const deletefromJonoQuery = "DELETE from julkaisujono WHERE julkaisuid = " + "${id};";
+                await connection.db.any(deletefromJonoQuery, params);
 
-                 const rinnakkaistallennetunversionverkkoosoite = {"rinnakkaistallennetunversionverkkoosoite":  urnIdentifierPrefix + urn.urn };
-                 const updateUrn = connection.pgp.helpers.update(rinnakkaistallennetunversionverkkoosoite, ["rinnakkaistallennetunversionverkkoosoite"], "julkaisu") + "WHERE id = " +  parseInt(julkaisuID);
+                console.log("Julkaisuid " + julkaisuID + " removed from julkaisujono table");
 
-                 await connection.db.none(updateUrn);
-                 await fu.deleteJulkaisuFile(filePath, savedFileName);
+                const urnQuery = "SELECT urn FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+                const urn = await connection.db.oneOrNone(urnQuery, params);
 
-                 console.log("Successfully sent publication with id " + julkaisuID + " to Theseus and updated all data!");
-             })
-             .catch(function (err: Error) {
-                 console.log("Something went wrong with sending file: " + err);
-             });
-     }
+                const rinnakkaistallennetunversionverkkoosoite = {"rinnakkaistallennetunversionverkkoosoite":  urnIdentifierPrefix + urn.urn };
+                const updateUrn = connection.pgp.helpers.update(rinnakkaistallennetunversionverkkoosoite, ["rinnakkaistallennetunversionverkkoosoite"], "julkaisu") + "WHERE id = " +  "${id};";
+                await connection.db.none(updateUrn, params);
+
+                console.log("Rinnakkaistallennetunversionverkkoosoite updated");
+
+                await fu.deleteJulkaisuFile(filePath, savedFileName);
+
+                console.log("File deleted from server");
+                console.log("Successfully sent publication with id " + julkaisuID + " to Theseus and updated all data!");
+            })
+            .catch(function (err: Error) {
+                console.log("Something went wrong with sending file: " + err);
+            });
+    }
 
      async checkToken(callback: any, version: any) {
          let urlFinal: any;
          let token: any;
          if (version === "jukuri") {
-            urlFinal = JUKURIURL + "status";
-            token = process.env.JUKURI_TOKEN;
-            console.log("Version is jukuri");
+             urlFinal = JUKURIURL + "status";
+             token = process.env.JUKURI_TOKEN;
+             console.log("Version is jukuri");
          }
          else {
-            urlFinal = BASEURL + "status";
-            token = process.env.TOKEN;
-            console.log("Version is theseus");
+             urlFinal = BASEURL + "status";
+             token = process.env.TOKEN;
+             console.log("Version is theseus");
          }
          const headersOpt = {
              "rest-dspace-token": token,
@@ -299,26 +309,26 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
          rp(options)
              .then(async function (res: Response) {
                  const authenticated = (res as any)["authenticated"];
-                    console.log("The authcheck const: " + authenticated + " and version: " + version);
-                return await callback (authenticated, version);
+                 console.log("The authcheck const: " + authenticated + " and version: " + version);
+                 return await callback (authenticated, version);
              })
              .catch(function (err: Error) {
                  console.log("Error while checking token status: " + err + " the urlfinal " + urlFinal);
              });
      }
 
-      getToken(version: any) {
-        let urlFinal = BASEURL + "login";
-        let metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
-        let token = process.env.TOKEN;
-        if (version === "jukuri") {
-            urlFinal = JUKURIURL + "login";
-            metadataobj = {"email": jukuriAuthEmail, "password": jukuriAuthPassword};
-            token = process.env.JUKURI_TOKEN;
-        }
-        else {
-            console.log("Version is theseus");
-        }
+     getToken(version: any) {
+         let urlFinal = BASEURL + "login";
+         let metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
+         let token = process.env.TOKEN;
+         if (version === "jukuri") {
+             urlFinal = JUKURIURL + "login";
+             metadataobj = {"email": jukuriAuthEmail, "password": jukuriAuthPassword};
+             token = process.env.JUKURI_TOKEN;
+         }
+         else {
+             console.log("Version is theseus");
+         }
          const headersOpt = {
              "content-type": "application/json",
          };
@@ -334,14 +344,16 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
          rp(options)
              .then(async function (res: Response) {
                  console.log("The new token: " + (res as any) +  " for version " + version);
-                  token = (res as any);
+                 token = (res as any);
              })
              .catch(function (err: Error) {
                  console.log("Error while getting new token: " + err);
              });
      }
 
-     public async EmbargoUpdate(id: any, embargo: any) {
+
+    public async EmbargoUpdate(id: any, embargo: any) {
+
 
         const self = this;
         const params = {"id": id};
@@ -363,20 +375,17 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             encoding: "utf8",
         };
         rp(options)
-        .then(async function (res: Response) {
-            const policyid = (res as any)["policies"][0]["id"];
-            self.prepareUpdateEmbargo(id, embargo, bitstreamid, policyid);
-        })
-        .catch(function (err: Error) {
-            console.log("Error while catching policyid for bitstreamid: " + bitstreamid + " with error: " + err);
-        });
+            .then(async function (res: Response) {
+                const policyid = (res as any)["policies"][0]["id"];
+                self.prepareUpdateEmbargo(id, embargo, bitstreamid, policyid);
+            })
+            .catch(function (err: Error) {
+                console.log("Error while catching policyid for bitstreamid: " + bitstreamid + " with error: " + err);
+            });
 
-     }
+    }
     async prepareUpdateEmbargo(id: any, embargo: any, bitstreamid: any, policyid: any) {
         const self = this;
-        // const params = {"id": id};
-        // const policyidquery = "SELECT policyid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-        // const policyid = await connection.db.any(policyidquery, params);
 
         const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "/policy/" + policyid;
         const headersOpt = {
@@ -397,25 +406,25 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 console.log("Error while deleting embargotime for julkaisuid: " + id + " with error: " + err);
             });
 
-     }
-     async UpdateEmbargo(id: any , embargo: any, bitstreamid: any) {
+    }
+    async UpdateEmbargo(id: any , embargo: any, bitstreamid: any) {
         let embargocleaned;
         if (!embargo) {
             embargocleaned = new Date().toISOString().split("T")[0];
         } else {
-             embargocleaned = embargo.split("T")[0];
+            embargocleaned = embargo.split("T")[0];
         }
         const metadataobj = {
-                "action": "READ",
-                "epersonId": "",
-                "groupId": 0,
-                "resourceId": 2,
-                "resourceType": "bitstream",
-                "rpDescription": "",
-                "rpName": "",
-                "rpType": "TYPE_CUSTOM",
-                "startDate": embargocleaned,
-                "endDate": "",
+            "action": "READ",
+            "epersonId": "",
+            "groupId": 0,
+            "resourceId": 2,
+            "resourceType": "bitstream",
+            "rpDescription": "",
+            "rpName": "",
+            "rpType": "TYPE_CUSTOM",
+            "startDate": embargocleaned,
+            "endDate": "",
         };
 
         const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "/policy";
@@ -440,230 +449,230 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 console.log("Error while posting new embargotime for julkaisuid: " + id + " with err: " + err);
             });
 
-     }
-     public async DeleteFromTheseus(id: any) {
-
-         const params = {"id": id};
-         const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-         const itemid = await connection.db.any(itemidquery, params);
-
-         const urlFinal = BASEURL + "items/" + itemid[0]["itemid"];
-         const headersOpt = {
-             "rest-dspace-token": process.env.TOKEN,
-             "content-type": "application/json"
-         };
-         const options = {
-             rejectUnauthorized: false,
-             method: "DELETE",
-             uri: urlFinal,
-             headers: headersOpt,
-         };
-         rp(options)
-             .then(async function (res: Response, req: Request) {
-                 console.log("Successful delete" + res);
-             })
-             .catch(function (err: Error) {
-                 console.log("Error while deleting julkaisu: " + id + " with error: " + err);
-             });
-     }
-
-
-
-public async PutTheseus(metadataObject: any, id: any) {
-    //  TODO: update also embargo time
-    const params = {"id": id};
-    const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-    let itemid: any;
-
-    try {
-        itemid = await connection.db.one(itemidquery, params);
     }
-    catch (e) {
-    console.log(e);
+    public async DeleteFromTheseus(id: any) {
+
+        const params = {"id": id};
+        const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+        const itemid = await connection.db.any(itemidquery, params);
+
+        const urlFinal = BASEURL + "items/" + itemid[0]["itemid"];
+        const headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json"
+        };
+        const options = {
+            rejectUnauthorized: false,
+            method: "DELETE",
+            uri: urlFinal,
+            headers: headersOpt,
+        };
+        rp(options)
+            .then(async function (res: Response, req: Request) {
+                console.log("Successful delete" + res);
+            })
+            .catch(function (err: Error) {
+                console.log("Error while deleting julkaisu: " + id + " with error: " + err);
+            });
     }
 
-    console.log("The itemid for the item to be updated" + itemid.itemid);
-    const urlFinal = BASEURL + "items/" + itemid.itemid + "/metadata";
-    console.log(urlFinal);
-    const headersOpt = {
-        "rest-dspace-token": process.env.TOKEN,
-        "content-type": "application/json"
-    };
 
-    const options = {
-        rejectUnauthorized: false,
-        method: "PUT",
-        uri: urlFinal,
-        headers: headersOpt,
-        body: metadataObject,
-        json: true,
-        encoding: "utf8",
-    };
 
-    rp(options)
-    .then(async function (res: Response, req: Request) {
-        console.log("Successful PUT" + res as any);
-    })
-    .catch(function (err: Error) {
-        console.log("Error while updating julkaisu: " + id + " with error: " + err);
+    public async PutTheseus(metadataObject: any, id: any) {
+        //  TODO: update also embargo time
+        const params = {"id": id};
+        const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+        let itemid: any;
 
-    });
+        try {
+            itemid = await connection.db.one(itemidquery, params);
+        }
+        catch (e) {
+            console.log(e);
+        }
+
+        console.log("The itemid for the item to be updated" + itemid.itemid);
+        const urlFinal = BASEURL + "items/" + itemid.itemid + "/metadata";
+        console.log(urlFinal);
+        const headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json"
+        };
+
+        const options = {
+            rejectUnauthorized: false,
+            method: "PUT",
+            uri: urlFinal,
+            headers: headersOpt,
+            body: metadataObject,
+            json: true,
+            encoding: "utf8",
+        };
+
+        rp(options)
+            .then(async function (res: Response, req: Request) {
+                console.log("Successful PUT" + res as any);
+            })
+            .catch(function (err: Error) {
+                console.log("Error while updating julkaisu: " + id + " with error: " + err);
+
+            });
 
     }
 
-     public async mapTheseusFields(id: any, obj: any, method: string) {
+    public async mapTheseusFields(id: any, obj: any, method: string) {
 
-         let isbnData;
-         let issnData;
+        let isbnData;
+        let issnData;
 
-         const julkaisuData = obj.julkaisu;
-         const fileData = obj.filedata;
-         const avainsanaData = obj.avainsanat;
+        const julkaisuData = obj.julkaisu;
+        const fileData = obj.filedata;
+        const avainsanaData = obj.avainsanat;
 
-         if (method === "put") {
-             isbnData = obj.julkaisu.isbn;
-             issnData = obj.julkaisu.issn;
+        if (method === "put") {
+            isbnData = obj.julkaisu.isbn;
+            issnData = obj.julkaisu.issn;
 
-         } else {
-             isbnData = obj.isbn;
-             issnData = obj.issn;
-         }
+        } else {
+            isbnData = obj.isbn;
+            issnData = obj.issn;
+        }
 
-         const tempMetadataObject = [
-             {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
-             {"key": "dc.type.okm", "value": this.mapJulkaisuTyyppiFields(julkaisuData["julkaisutyyppi"])},
-             {"key": "dc.contributor.organization", "value": this.mapOrganizationFields(julkaisuData["organisaatiotunnus"])},
-             {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
-             {"key": "dc.relation.conference", "value": julkaisuData["konferenssinvakiintunutnimi"]},
-             {"key": "dc.relation.ispartof", "value": julkaisuData["emojulkaisunnimi"]},
-             {"key": "dc.contributor.editor", "value": julkaisuData["emojulkaisuntoimittajat"]},
-             {"key": "dc.relation.ispartofjournal", "value": julkaisuData["lehdenjulkaisusarjannimi"]},
-             {"key": "dc.relation.volume", "value": julkaisuData["volyymi"]},
-             {"key": "dc.relation.issue", "value": julkaisuData["numero"]},
-             {"key": "dc.relation.pagerange", "value": julkaisuData["sivut"]},
-             {"key": "dc.relation.articlenumber", "value": julkaisuData["artikkelinumero"]},
-             {"key": "dc.publisher", "value": julkaisuData["kustantaja"]},
-             {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
-             {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
-             {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
-             {"key": "dc.description.abstract", "value": fileData["abstract"]},
-             {"key": "dc.identifier.urn", "value": fileData["urn"] },
-             {"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) },
-             {"key": "dc.type", "value": "publication"},
-             {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
-         ];
-
-
-         const metadataObject =
-             [{"key": "dc.source.identifier", "value": id }];
+        const tempMetadataObject = [
+            {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
+            {"key": "dc.type.okm", "value": this.mapJulkaisuTyyppiFields(julkaisuData["julkaisutyyppi"])},
+            {"key": "dc.contributor.organization", "value": this.mapOrganizationFields(julkaisuData["organisaatiotunnus"])},
+            {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
+            {"key": "dc.relation.conference", "value": julkaisuData["konferenssinvakiintunutnimi"]},
+            {"key": "dc.relation.ispartof", "value": julkaisuData["emojulkaisunnimi"]},
+            {"key": "dc.contributor.editor", "value": julkaisuData["emojulkaisuntoimittajat"]},
+            {"key": "dc.relation.ispartofjournal", "value": julkaisuData["lehdenjulkaisusarjannimi"]},
+            {"key": "dc.relation.volume", "value": julkaisuData["volyymi"]},
+            {"key": "dc.relation.issue", "value": julkaisuData["numero"]},
+            {"key": "dc.relation.pagerange", "value": julkaisuData["sivut"]},
+            {"key": "dc.relation.articlenumber", "value": julkaisuData["artikkelinumero"]},
+            {"key": "dc.publisher", "value": julkaisuData["kustantaja"]},
+            {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
+            {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
+            {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
+            {"key": "dc.description.abstract", "value": fileData["abstract"]},
+            {"key": "dc.identifier.urn", "value": fileData["urn"] },
+            {"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) },
+            {"key": "dc.type", "value": "publication"},
+            {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
+        ];
 
 
-         // remove empty values
-         for (let i = 0; i < tempMetadataObject.length; i++) {
-             if (tempMetadataObject[i]["value"] && tempMetadataObject[i]["value"] !== "") {
-                 metadataObject.push(tempMetadataObject[i]);
-             }
-         }
-
-         let oikeudetObject;
-         if (fileData["oikeudet"] && fileData["oikeudet"] === "All rights reserved") {
-             oikeudetObject = {"key": "dc.rights", "value": "All rights reserved. This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited."};
-             metadataObject.push(oikeudetObject);
-         } else if (fileData["oikeudet"] && fileData["oikeudet"] !== "") {
-             oikeudetObject = {"key": "dc.rights", "value": fileData["oikeudet"]};
-             metadataObject.push(oikeudetObject);
-         }
+        const metadataObject =
+            [{"key": "dc.source.identifier", "value": id }];
 
 
-         if (fileData["versio"] && fileData["versio"] !== "") {
-             const versio =  await this.mapVersioFields(fileData["versio"]);
-             const versionObject = {"key": "dc.type.version", "value": versio};
-             metadataObject.push(versionObject);
-         }
+        // remove empty values
+        for (let i = 0; i < tempMetadataObject.length; i++) {
+            if (tempMetadataObject[i]["value"] && tempMetadataObject[i]["value"] !== "") {
+                metadataObject.push(tempMetadataObject[i]);
+            }
+        }
 
-         if (!this.arrayIsEmpty(avainsanaData)) {
-             avainsanaData.forEach((value: any) => {
-                 const avainsanaobject = {"key": "dc.subject.yso", "value": value};
-                 metadataObject.push(avainsanaobject);
-             });
-         }
-
-         if (!this.arrayIsEmpty(isbnData)) {
-             isbnData.forEach((value: any) => {
-                 const isbnobject = {"key": "dc.identifier.isbn", "value": value};
-                 metadataObject.push(isbnobject);
-             });
-         }
-
-         if (!this.arrayIsEmpty(issnData)) {
-             issnData.forEach((value: any) => {
-                 const issnobject = {"key": "dc.relation.issn", "value": value};
-                 metadataObject.push(issnobject);
-             });
-         }
-
-         const str = julkaisuData["tekijat"];
-         const onetekija = str.split("; ");
-
-         onetekija.forEach((value: any) => {
-             const tekijatobject = {"key": "dc.contributor.author", "value": value}; // formaatti, sukunimi, etunimi
-             metadataObject.push(tekijatobject);
-         });
+        let oikeudetObject;
+        if (fileData["oikeudet"] && fileData["oikeudet"] === "All rights reserved") {
+            oikeudetObject = {"key": "dc.rights", "value": "All rights reserved. This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited."};
+            metadataObject.push(oikeudetObject);
+        } else if (fileData["oikeudet"] && fileData["oikeudet"] !== "") {
+            oikeudetObject = {"key": "dc.rights", "value": fileData["oikeudet"]};
+            metadataObject.push(oikeudetObject);
+        }
 
 
-         let postMetadataObject: any = {};
+        if (fileData["versio"] && fileData["versio"] !== "") {
+            const versio =  await this.mapVersioFields(fileData["versio"]);
+            const versionObject = {"key": "dc.type.version", "value": versio};
+            metadataObject.push(versionObject);
+        }
 
-         if (method === "post") {
-             postMetadataObject = {
-                 "name": julkaisuData["julkaisunnimi"],
-                 "metadata": metadataObject
-             };
-         }
+        if (!this.arrayIsEmpty(avainsanaData)) {
+            avainsanaData.forEach((value: any) => {
+                const avainsanaobject = {"key": "dc.subject.yso", "value": value};
+                metadataObject.push(avainsanaobject);
+            });
+        }
 
-         if (method === "post") {
-             return postMetadataObject;
-         } else {
-             return metadataObject;
-         }
-     }
+        if (!this.arrayIsEmpty(isbnData)) {
+            isbnData.forEach((value: any) => {
+                const isbnobject = {"key": "dc.identifier.isbn", "value": value};
+                metadataObject.push(isbnobject);
+            });
+        }
+
+        if (!this.arrayIsEmpty(issnData)) {
+            issnData.forEach((value: any) => {
+                const issnobject = {"key": "dc.relation.issn", "value": value};
+                metadataObject.push(issnobject);
+            });
+        }
+
+        const str = julkaisuData["tekijat"];
+        const onetekija = str.split("; ");
+
+        onetekija.forEach((value: any) => {
+            const tekijatobject = {"key": "dc.contributor.author", "value": value}; // formaatti, sukunimi, etunimi
+            metadataObject.push(tekijatobject);
+        });
 
 
-     arrayIsEmpty(arr: any) {
-         if (!arr || !arr[0] || arr[0] === "") {
-             return true;
-         } else {
-             return false;
-         }
-     }
+        let postMetadataObject: any = {};
+
+        if (method === "post") {
+            postMetadataObject = {
+                "name": julkaisuData["julkaisunnimi"],
+                "metadata": metadataObject
+            };
+        }
+
+        if (method === "post") {
+            return postMetadataObject;
+        } else {
+            return metadataObject;
+        }
+    }
 
 
-     async itemIdExists(julkaisuid: any) {
-         const params = {"id": julkaisuid};
-         const queryItemId = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " +
-             "${id};";
+    arrayIsEmpty(arr: any) {
+        if (!arr || !arr[0] || arr[0] === "") {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-         const data = await connection.db.oneOrNone(queryItemId, params);
-         return data;
-     }
 
-     async mapVersioFields(data: any) {
-         let version;
+    async itemIdExists(julkaisuid: any) {
+        const params = {"id": julkaisuid};
+        const queryItemId = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " +
+            "${id};";
 
-         if (data === "0") {
-             version = "fi=Final draft|sv=Final draft |en=Final draft|";
-         }
-         if (data === "1") {
-             version = "fi=Publisher's version|sv=Publisher's version|en=Publisher's version|";
-         }
-         if (data === "2") {
-             version = "fi=Pre-print -versio|sv=Pre-print |en=Pre-print|";
-         }
+        const data = await connection.db.oneOrNone(queryItemId, params);
+        return data;
+    }
 
-         return version;
+    async mapVersioFields(data: any) {
+        let version;
 
-     }
+        if (data === "0") {
+            version = "fi=Final draft|sv=Final draft |en=Final draft|";
+        }
+        if (data === "1") {
+            version = "fi=Publisher's version|sv=Publisher's version|en=Publisher's version|";
+        }
+        if (data === "2") {
+            version = "fi=Pre-print -versio|sv=Pre-print |en=Pre-print|";
+        }
 
-     cleanEmbargo(embargo: any) {
+        return version;
+
+    }
+
+    cleanEmbargo(embargo: any) {
 
         if (!embargo || embargo === "") {
             return "";
@@ -672,16 +681,16 @@ public async PutTheseus(metadataObject: any, id: any) {
             return embargoDate.split("T")[0];
 
         }
-     }
+    }
 
 
-     mapJulkaisuTyyppiFields(tyyppi: any) {
+    mapJulkaisuTyyppiFields(tyyppi: any) {
 
-         let theseusFormat;
+        let theseusFormat;
 
-         if (tyyppi === "A1") {
-             theseusFormat = "fi=A1 Alkuperäisartikkeli tieteellisessä aikakauslehdessä|sv=A1 Originalartikel i en vetenskaplig tidskrift|en=A1 Journal article (refereed), original research|";
-         }
+        if (tyyppi === "A1") {
+            theseusFormat = "fi=A1 Alkuperäisartikkeli tieteellisessä aikakauslehdessä|sv=A1 Originalartikel i en vetenskaplig tidskrift|en=A1 Journal article (refereed), original research|";
+        }
         if (tyyppi === "A2") {
             theseusFormat = "fi=A2 Katsausartikkeli tieteellisessä aikakauslehdessä|sv=A2 Översiktsartikel i en vetenskaplig tidskrift|en=A2 Review article, Literature review, Systematic review|";
         }
@@ -760,33 +769,33 @@ public async PutTheseus(metadataObject: any, id: any) {
 
         return theseusFormat;
 
-     }
 
-     mapOrganizationFields(org: any) {
-         let theseusFormat = "";
+    }
+    mapOrganizationFields(org: any) {
+        let theseusFormat = "";
 
-         for (let i = 0; i < domainMapping.length; i++) {
-             if (domainMapping[i].code === org) {
-                 theseusFormat = domainMapping[i].theseusData.theseusCode;
-             }
-         }
+        for (let i = 0; i < domainMapping.length; i++) {
+            if (domainMapping[i].code === org) {
+                theseusFormat = domainMapping[i].theseusData.theseusCode;
+            }
+        }
 
-         return theseusFormat;
-     }
+        return theseusFormat;
+    }
 
-     mapCollectionId(org: any) {
-         let collectionId = "";
+    mapCollectionId(org: any) {
+        let collectionId = "";
 
-         for (let i = 0; i < domainMapping.length; i++) {
-             if (domainMapping[i].code === org) {
-                 collectionId = domainMapping[i].theseusData.theseusCollectionId;
-             }
-         }
+        for (let i = 0; i < domainMapping.length; i++) {
+            if (domainMapping[i].code === org) {
+                collectionId = domainMapping[i].theseusData.theseusCollectionId;
+            }
+        }
 
         return collectionId;
 
-     }
+    }
 
 
- }
+}
 export const theseus = new TheseusSender();
