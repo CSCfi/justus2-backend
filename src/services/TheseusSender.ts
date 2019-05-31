@@ -43,31 +43,36 @@ class TheseusSender {
     // public static getInstance(): Theseus {
     //     return Theseus._instance;
     // }
-    determineStatus = (val: any) => {
-        const self = this;
-        if (val === false) {
-            console.log("Token is invalid! " + val);
-            self.getToken();
-        }
-        else {
-            this.launchPost();
-        }
-    }
     public async checkQueue() {
-        await this.checkToken(this.determineStatus);
+        const self = this;
+            this.checkToken().then(async function() {
+                   console.log("The token was valid " + process.env.TOKEN);
+                   self.launchPost();
+                }).catch(async function(msg: any) {
+                   console.log("The token " + process.env.TOKEN + " was invalid! Proceeding to get a new token" + " the res " + msg);
+                   const deeper = self;
+                   deeper.getToken().then(async function(msg: any) {
+                   console.log("This is the new token " + process.env.TOKEN +  " the message: " + msg);
+                   const derper = deeper;
+                   derper.launchPost();        
+                   }).catch(function() {
+                       console.log("Something went wrong when getting a new token");
+                   });
+            })
+            ;
     }
 
-    public async launchPost()  {
-        const self = this;
-        const julkaisuIDt = await connection.db.query(
-            "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
-            "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
-        console.log("The initial token: " + process.env.TOKEN);
-        julkaisuIDt.forEach(async function (e: any) {
-            console.log("The id inside the for loop: " + e.julkaisuid);
-            await self.postJulkaisuTheseus(e.julkaisuid);
-        });
-    }
+   public async launchPost()  {
+       const self = this;
+       const julkaisuIDt = await connection.db.query(
+           "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
+           "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
+       console.log("The initial token: " + process.env.TOKEN);
+       julkaisuIDt.forEach(async function (e: any) {
+           console.log("The id inside the for loop: " + e.julkaisuid);
+           await self.postJulkaisuTheseus(e.julkaisuid);
+       });
+   }
 
     public async postJulkaisuTheseus(julkaisunID: any) {
 
@@ -254,7 +259,7 @@ class TheseusSender {
             });
     }
 
-    async checkToken(callback: any) {
+    checkToken(): Promise<any> {
         const urlFinal = BASEURL + "status";
         const headersOpt = {
             "rest-dspace-token": process.env.TOKEN,
@@ -268,19 +273,22 @@ class TheseusSender {
             json: true,
             encoding: "utf8",
         };
-
-        rp(options)
-            .then(async function (res: Response) {
-                const authenticated = (res as any)["authenticated"];
-                console.log("The authcheck const: " + authenticated);
-                return await callback (authenticated);
-            })
-            .catch(function (err: Error) {
-                console.log("Error while checking token status: " + err + " the urlfinal " + urlFinal);
+       return new Promise(function(resolve: any, reject: any) {
+       rp(options)
+       .then(async function (res: Response) {
+           if ((res as any)["authenticated"] === true) {
+               console.log("The auth response " + (res as any)["authenticated"]);
+               resolve();
+           }
+           else if ((res as any)["authenticated"] === false) {
+               reject(JSON.stringify(res as any));
+           }
+       });
             });
+
     }
 
-    getToken() {
+     getToken(): Promise<any> {
         const urlFinal = BASEURL + "login";
         const metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
         const headersOpt = {
@@ -295,14 +303,18 @@ class TheseusSender {
             json: true,
             encoding: "utf8",
         };
-        rp(options)
-            .then(async function (res: Response) {
-                console.log("The new token: " + (res as any));
-                process.env.TOKEN = (res as any);
-            })
-            .catch(function (err: Error) {
-                console.log("Error while getting new token: " + err);
-            });
+        return new Promise(function(resolve: any, reject: any) {
+           rp(options)
+           .then(async function (res: Response) {
+               console.log("The new token: " + (res as any));
+               process.env.TOKEN = (res as any);
+               resolve(res as any);
+           })
+           .catch(function (err: Error) {
+               console.log("Error while getting new token: " + err);
+               reject();
+             });
+           });
     }
 
     public async EmbargoUpdate(id: any, embargo: any) {
