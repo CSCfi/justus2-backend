@@ -89,52 +89,12 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
             console.log("The initial token: " + process.env.TOKEN + " and jukurittoken " + process.env.JUKURI_TOKEN);
 
-            julkaisuIDt.forEach(async function (e: any) {
-                console.log("The id inside the for loop: " + e.julkaisuid);
-                // await self.postJulkaisuTheseus(e.julkaisuid);
-            });
-     }
-
-
-    public async postJulkaisuTheseus(julkaisunID: any) {
-
-        const itemId = await this.itemIdExists(julkaisunID);
-        if (itemId.itemid) {
-            // if itemid already exists, send only publication
-            await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
-        } else {
-            const params = {"id": julkaisunID};
-            // ALL queries for the metadataobject
-            const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
-            const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
-                "${id};";
-
-            let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
-            arkistotableFields =  arkistotableFields.join(",");
-
-            const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
-                "${id};";
-            const julkaisuData: any = {};
-            let arkistoData: any = {};
-
-            try {
-                julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-                arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
-                julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
-                julkaisuData["isbn"] = await api.getIsbn(julkaisunID);
-                julkaisuData["issn"] = await api.getIssn(julkaisunID);
-            } catch (e) {
-                console.log(e);
-            }
-
-            julkaisuData["filedata"] = arkistoData;
-            const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
-
-            const self = this;
-            await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
-        }
-
+        julkaisuIDt.forEach(async function (e: any) {
+            console.log("The id inside the for loop: " + e.julkaisuid);
+            await self.postJulkaisuTheseus(e.julkaisuid);
+        });
     }
+
 
     async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
 
@@ -174,8 +134,52 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             .catch(function (res: Response, err: Error) {
                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + theseusCollectionId + "/items " + err + " And the full error response: " + (res as any));
             });
-    }
 
+     }
+
+
+    public async postJulkaisuTheseus(julkaisunID: any) {
+
+        const itemId = await this.itemIdExists(julkaisunID);
+        if (itemId.itemid) {
+            // if itemid already exists, send only publication
+            await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
+        } else {
+            const params = {"id": julkaisunID};
+            // ALL queries for the metadataobject
+            const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
+            const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
+                "${id};";
+
+            let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
+            arkistotableFields =  arkistotableFields.join(",");
+
+            const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+                "${id};";
+            const julkaisuData: any = {};
+            let arkistoData: any = {};
+
+            try {
+                julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
+                arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
+                julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
+                julkaisuData["julkaisu"]["isbn"] = await api.getIsbn(julkaisunID);
+                julkaisuData["julkaisu"]["issn"] = await api.getIssn(julkaisunID);
+                julkaisuData["julkaisu"]["projektinumero"] = await api.getProjektinumero(julkaisunID);
+                julkaisuData["tieteenala"] = await api.getTieteenala(julkaisunID);
+                julkaisuData["organisaatiotekija"] = await api.getOrganisaatiotekija(julkaisunID);
+            } catch (e) {
+                console.log(e);
+            }
+
+            julkaisuData["filedata"] = arkistoData;
+            const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
+
+            const self = this;
+            // await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
+        }
+
+    }
 
     async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any) {
         // TODO, combine both queries into one
@@ -249,7 +253,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             .then(async function (res: Response, req: Request) {
                 console.log(res);
                 const bitstreamid = (res as any)["id"];
-                console.log("catching the bitstream id from response" + bitstreamid);
+                console.log("catching the bitstream id from response " + bitstreamid);
                 const params = {"id": julkaisuID};
                 const bitstreamquery = "UPDATE julkaisuarkisto SET bitstreamid=" + bitstreamid + " WHERE julkaisuid = " + "${id};";
                 await connection.db.any(bitstreamquery, params);
@@ -522,39 +526,40 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
     public async mapTheseusFields(id: any, obj: any, method: string) {
 
-        let isbnData;
-        let issnData;
+        let jukuriPublication;
 
         const julkaisuData = obj.julkaisu;
         const fileData = obj.filedata;
         const avainsanaData = obj.avainsanat;
+        const organisaatiotekijaData = obj.organisaatiotekija;
+        const isbnData = obj.julkaisu.isbn;
+        const issnData = obj.julkaisu.issn;
+        const tieteenalat = obj.tieteenala;
+        const projektinumeroData = obj.julkaisu.projektinumero;
 
-        if (method === "put") {
-            isbnData = obj.julkaisu.isbn;
-            issnData = obj.julkaisu.issn;
+        const orgnizationValues = domainMapping.find((x: any) => x.code === julkaisuData.organisaatiotunnus);
 
+        if (orgnizationValues.jukuriData) {
+            jukuriPublication = true;
         } else {
-            isbnData = obj.isbn;
-            issnData = obj.issn;
+            jukuriPublication = false;
         }
 
         const tempMetadataObject = [
             {"key": "dc.title", "value": julkaisuData["julkaisunnimi"]},
             {"key": "dc.type.okm", "value": this.mapJulkaisuTyyppiFields(julkaisuData["julkaisutyyppi"])},
-            {"key": "dc.contributor.organization", "value": this.mapOrganizationFields(julkaisuData["organisaatiotunnus"])},
+            {"key": "dc.contributor.organization", "value": this.mapOrganizationFields(orgnizationValues, jukuriPublication)},
             {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
             {"key": "dc.relation.conference", "value": julkaisuData["konferenssinvakiintunutnimi"]},
             {"key": "dc.relation.ispartof", "value": julkaisuData["emojulkaisunnimi"]},
             {"key": "dc.contributor.editor", "value": julkaisuData["emojulkaisuntoimittajat"]},
-            {"key": "dc.relation.ispartofjournal", "value": julkaisuData["lehdenjulkaisusarjannimi"]},
             {"key": "dc.relation.volume", "value": julkaisuData["volyymi"]},
-            {"key": "dc.relation.issue", "value": julkaisuData["numero"]},
-            {"key": "dc.relation.pagerange", "value": julkaisuData["sivut"]},
+            {"key": "dc.relation.numberinseries", "value": julkaisuData["numero"]},
+            {"key": "dc.format.pagerange", "value": julkaisuData["sivut"]},
             {"key": "dc.relation.articlenumber", "value": julkaisuData["artikkelinumero"]},
             {"key": "dc.publisher", "value": julkaisuData["kustantaja"]},
             {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
             {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
-            {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
             {"key": "dc.description.abstract", "value": fileData["abstract"]},
             {"key": "dc.identifier.urn", "value": fileData["urn"] },
             {"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) },
@@ -562,10 +567,26 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
         ];
 
+        let metadataObject: any = [];
 
-        const metadataObject =
-            [{"key": "dc.source.identifier", "value": id }];
+        if (!jukuriPublication) {
+            tempMetadataObject.push({"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]});
+            tempMetadataObject.push({"key": "dc.relation.ispartofjournal", "value": julkaisuData["lehdenjulkaisusarjannimi"]});
+            tempMetadataObject.push({"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) });
 
+
+            metadataObject = [{"key": "dc.source.identifier", "value": id }];
+
+        } else {
+            // this is just for development setup
+            tempMetadataObject.push({ "key": "dc.teh", "value": "00000" });
+            tempMetadataObject.push({ "key": "dc.relation.ispartofseries", "value": julkaisuData["lehdenjulkaisusarjannimi"]});
+            tempMetadataObject.push({"key": "dc.okm.selfarchived", "value": this.mapZeroAndOneValues(julkaisuData["julkaisurinnakkaistallennettu"]) });
+            tempMetadataObject.push({"key": "dc.okm.internationalcopublication", "value": this.mapZeroAndOneValues(julkaisuData["kansainvalinenyhteisjulkaisu"]) });
+            tempMetadataObject.push({"key": "dc.okm.corporatecopublication", "value": this.mapZeroAndOneValues(julkaisuData["yhteisjulkaisuyrityksenkanssa"]) });
+
+            metadataObject = [];
+        }
 
         // remove empty values
         for (let i = 0; i < tempMetadataObject.length; i++) {
@@ -609,6 +630,47 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 const issnobject = {"key": "dc.relation.issn", "value": value};
                 metadataObject.push(issnobject);
             });
+        }
+
+        // these fields are sent to Jukuri only
+        if (jukuriPublication) {
+            if (!this.arrayIsEmpty(organisaatiotekijaData)) {
+                organisaatiotekijaData.forEach((value: any) => {
+
+                    if (value.orcid && value.orcid !== "") {
+                        const orcidObject = {"key": "dc.contributor.orcid", "value": "https://orcid.org/" + value.orcid };
+                        metadataObject.push(orcidObject);
+                    }
+                    // uncomment in production
+                    // if (value.hrnumero && value.hrnumero !== "") {
+                    //     const hrnumeroObject = {"key": "dc.kiukuperson", "value": value.hrnumero };
+                    //     metadataObject.push(hrnumeroObject);
+                    // }
+
+                    if (!this.arrayIsEmpty(value.alayksikko)) {
+                        value.alayksikko.forEach((value: any) => {
+                            const res = value.split("-")[2];
+                            const alayksikkoObject = {"key": "dc.contributor.departmentid", "value": res };
+                            metadataObject.push(alayksikkoObject);
+                        });
+                    }
+                });
+            }
+
+
+            if (!this.arrayIsEmpty(tieteenalat)) {
+                tieteenalat.forEach((value: any) => {
+                    const tieteenalaObject = {"key": "dc.okm.discipline", "value": value.tieteenalakoodi };
+                    metadataObject.push(tieteenalaObject);
+                });
+            }
+
+            if (!this.arrayIsEmpty(projektinumeroData)) {
+                projektinumeroData.forEach((value: any) => {
+                    const pnobject = {"key": "dc.teh", "value": value};
+                    metadataObject.push(pnobject);
+                });
+            }
         }
 
         const str = julkaisuData["tekijat"];
@@ -682,6 +744,13 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         }
     }
+
+
+    mapZeroAndOneValues(value: any) {
+        console.log(value);
+        return "on";
+    }
+
 
 
     mapJulkaisuTyyppiFields(tyyppi: any) {
@@ -771,14 +840,16 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
     }
-    mapOrganizationFields(org: any) {
+
+
+    mapOrganizationFields(org: any, jukuriPublication: boolean) {
         let theseusFormat = "";
 
-        for (let i = 0; i < domainMapping.length; i++) {
-            if (domainMapping[i].code === org) {
-                theseusFormat = domainMapping[i].theseusData.theseusCode;
-            }
-        }
+        if (!jukuriPublication) {
+            theseusFormat = org.theseusData.theseusCode;
+            } else {
+             theseusFormat = org.jukuriData.jukuriCode;
+         }
 
         return theseusFormat;
     }

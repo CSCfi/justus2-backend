@@ -283,8 +283,8 @@ const contactList = [
         "code": "4100010",
         "email": "",
 		// For Luke publications are transferred to Jukurit instead of Theseus
-		"jukuritData": {
-			"theseusCode": "Luonnonvarakeskus"	
+		"jukuriData": {
+			"jukuriCode": "Luonnonvarakeskus"	
 		},
 		"visibleFields": ["hrnumero", "projektinumero"]
     },

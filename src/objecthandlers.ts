@@ -1022,7 +1022,7 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
                 if (domainMapping[key].visibleFields) {
                     visibleFields = visibleFields.concat(domainMapping[key].visibleFields);
                 }
-                if (domainMapping[key].theseusData || domainMapping[key].jukuritData) {
+                if (domainMapping[key].theseusData || domainMapping[key].jukuriData) {
                     perustiedot.showPublicationInput = true;
                 } else {
                     perustiedot.showPublicationInput = false;
