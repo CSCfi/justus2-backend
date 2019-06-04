@@ -188,51 +188,51 @@ const lukeorgtunnus = "4100010";
 
     public async postJulkaisuTheseus(julkaisunID: any, version?: any) {
         // Purely for testing, to see that the right version is coming in 
-        if (version) {
-            console.log("The julkaisuid incoming for jukuri: " + julkaisunID);
-        }
-        else {
-            console.log("The julkaisuid incoming for theseus: " + julkaisunID);
-        }
-
-        // const itemId = await this.itemIdExists(julkaisunID);
-        // if (itemId.itemid) {
-        //     // if itemid already exists, send only publication
-        //     await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
-        // } else {
-        //     const params = {"id": julkaisunID};
-        //     // ALL queries for the metadataobject
-        //     const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
-        //     const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
-        //         "${id};";
-
-        //     let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
-        //     arkistotableFields =  arkistotableFields.join(",");
-
-        //     const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
-        //         "${id};";
-        //     const julkaisuData: any = {};
-        //     let arkistoData: any = {};
-
-        //     try {
-        //         julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-        //         arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
-        //         julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
-        //         julkaisuData["julkaisu"]["isbn"] = await api.getIsbn(julkaisunID);
-        //         julkaisuData["julkaisu"]["issn"] = await api.getIssn(julkaisunID);
-        //         julkaisuData["julkaisu"]["projektinumero"] = await api.getProjektinumero(julkaisunID);
-        //         julkaisuData["tieteenala"] = await api.getTieteenala(julkaisunID);
-        //         julkaisuData["organisaatiotekija"] = await api.getOrganisaatiotekija(julkaisunID);
-        //     } catch (e) {
-        //         console.log(e);
-        //     }
-
-        //     julkaisuData["filedata"] = arkistoData;
-        //     const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
-
-        //     const self = this;
-        //     // await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
+        // if (version) {
+        //     console.log("The julkaisuid incoming for jukuri: " + julkaisunID);
         // }
+        // else {
+        //     console.log("The julkaisuid incoming for theseus: " + julkaisunID);
+        // }
+
+        const itemId = await this.itemIdExists(julkaisunID);
+        if (itemId.itemid) {
+            // if itemid already exists, send only publication
+            await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
+        } else {
+            const params = {"id": julkaisunID};
+            // ALL queries for the metadataobject
+            const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
+            const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
+                "${id};";
+
+            let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
+            arkistotableFields =  arkistotableFields.join(",");
+
+            const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+                "${id};";
+            const julkaisuData: any = {};
+            let arkistoData: any = {};
+
+            try {
+                julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
+                arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
+                julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
+                julkaisuData["julkaisu"]["isbn"] = await api.getIsbn(julkaisunID);
+                julkaisuData["julkaisu"]["issn"] = await api.getIssn(julkaisunID);
+                julkaisuData["julkaisu"]["projektinumero"] = await api.getProjektinumero(julkaisunID);
+                julkaisuData["tieteenala"] = await api.getTieteenala(julkaisunID);
+                julkaisuData["organisaatiotekija"] = await api.getOrganisaatiotekija(julkaisunID);
+            } catch (e) {
+                console.log(e);
+            }
+
+            julkaisuData["filedata"] = arkistoData;
+            const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
+
+            const self = this;
+            // await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
+        }
 
     }
 
