@@ -29,6 +29,7 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
 const jukuriAuthEmail = process.env.JUKURI_AUTH_EMAIL;
 const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
+const lukeorgtunnus = "4100010";
 
 
 
@@ -48,73 +49,109 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
      // public static getInstance(): Theseus {
      //     return Theseus._instance;
      // }
-    determineStatus = (val: any, version: any) => {
-        const self = this;
-        if (val === false) {
-            console.log("Token is invalid! " + val + " for the version: " + version);
-            self.getToken(version);
-        }
+    // determineStatus = (val: any, version: any) => {
+    //     const self = this;
+    //     if (val === false) {
+    //         console.log("Token is invalid! " + val + " for the version: " + version);
+    //         self.getToken(version);
+    //     }
 
-        else {
-            console.log("Token is valid for version: " + version);
-            this.launchPost();
+    //     else {
+    //         console.log("Token is valid for version: " + version);
+    //         this.launchPost();
 
-        }
+    //     }
 
 
-     };
+    //  };
      public async checkQueue() {
         const self = this;
-         const authTokens = [
-            {
-                token: "theseus"
-            },
-            {
-                token: "jukuri"
-            }
-         ];
-         authTokens.forEach(async function(e: any) {
-             console.log("the e " + JSON.stringify(e.token));
-              self.checkToken(self.determineStatus, e.token);
-         });
-     }
-
-
-
-    public async launchPost()  {
+        const versions = [
+                    {
+                        name: "theseus"
+                    },
+                    {
+                        name: "jukuri"  
+                    }
+                ];
+                versions.forEach(async function(e: any) {
+                    console.log("The versions: " + e.name);
+                    self.launchVersion(e.name);
+                });
+    }
+    public async launchVersion(version: any) {
         const self = this;
-        const julkaisuIDt = await connection.db.query(
-            "SELECT julkaisuid FROM julkaisujono INNER JOIN julkaisu ON julkaisujono.julkaisuid = julkaisu.id " +
-            "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING julkaisu.id");
+        this.checkToken(version).then(async function() {
+            console.log("The token was valid for version: " + version);
+            self.launchPost(version);
+         }).catch(async function(msg: any) {
+            const deeper = self;
+            console.log("The token for " + version + " was invalid! Proceeding to get a new token , this is the res " + msg);
+            deeper.getToken(version).then(async function(msg: any) {
+            const derper = deeper; 
+            derper.launchPost(version);        
+            }).catch(function() {
+                console.log("Something went wrong when getting a new token");
+            });
+     });
+    }
 
-            console.log("The initial token: " + process.env.TOKEN + " and jukurittoken " + process.env.JUKURI_TOKEN);
-
-        julkaisuIDt.forEach(async function (e: any) {
-            console.log("The id inside the for loop: " + e.julkaisuid);
-            await self.postJulkaisuTheseus(e.julkaisuid);
-        });
+    public async launchPost(version: any)  {
+       const self = this;
+       let token;
+       if (version === "jukuri") {
+           token = process.env.JUKURI_TOKEN;
+       }
+       else {
+           token = process.env.TOKEN;
+       }
+       const julkaisuIDt = await connection.db.query(
+           "SELECT julkaisujono.julkaisuid, julkaisu.organisaatiotunnus FROM julkaisujono, julkaisu WHERE julkaisu.id = julkaisujono.julkaisuID " + 
+           "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING *");
+           console.log("The initial token: " + token + " for version " + version);
+           console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
+           julkaisuIDt.forEach(async function (e: any) {
+               if (e.organisaatiotunnus === lukeorgtunnus && version === "jukuri") {
+                   console.log("The whole julkaisuIDt object for jukuri " + JSON.stringify(e));
+                   // The jukuri string we are sending is purely for testing purposes, to confirm that the right one is being sent through
+                   await self.postJulkaisuTheseus(e.julkaisuid, "jukuri");
+               }
+               else if (e.organisaatiotunnus !== lukeorgtunnus && version === "theseus") {
+                   console.log("The whole julkaisuIDt object for theseus " + JSON.stringify(e));
+                   await self.postJulkaisuTheseus(e.julkaisuid);
+               }
+           });
+           
     }
 
 
+
     async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
-
+        let baseURL = BASEURL;
+        let token = process.env.TOKEN;
+        let collectionID: string;
+        if (org === lukeorgtunnus) {
+            baseURL = JUKURIURL;
+            token = process.env.JUKURI_TOKEN;
+            collectionID = process.env.JUKURIT_COLLECTION_ID;
+        }
         const self = this;
-        let theseusCollectionId: string;
+        // let theseusCollectionId: string;
 
-        if (process.env.NODE_ENV === "prod") {
-            theseusCollectionId = this.mapCollectionId(org);
-        } else {
-            theseusCollectionId = process.env.THESEUS_COLLECTION_ID;
+        if (process.env.NODE_ENV === "prod" && org != lukeorgtunnus) {
+            collectionID = this.mapCollectionId(org);
+        } else if (org != lukeorgtunnus) {
+            collectionID = process.env.THESEUS_COLLECTION_ID;
         }
 
         const headersOpt = {
-            "rest-dspace-token": process.env.TOKEN,
+            "rest-dspace-token": token,
             "content-type": "application/json"
         };
         const options = {
             rejectUnauthorized: false,
             method: "POST",
-            uri: BASEURL + "collections/" + theseusCollectionId + "/items/",
+            uri: baseURL + "collections/" + collectionID + "/items/",
             headers: headersOpt,
             body: sendObject,
             json: true,
@@ -132,13 +169,20 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
             })
             .catch(function (res: Response, err: Error) {
-                console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + theseusCollectionId + "/items " + err + " And the full error response: " + (res as any));
+                console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
             });
 
      }
 
 
-    public async postJulkaisuTheseus(julkaisunID: any) {
+    public async postJulkaisuTheseus(julkaisunID: any, version?: any) {
+        // Purely for testing, to see that the right version is coming in 
+        // if (version) {
+        //     console.log("The julkaisuid incoming for jukuri: " + julkaisunID);
+        // }
+        // else {
+        //     console.log("The julkaisuid incoming for theseus: " + julkaisunID);
+        // }
 
         const itemId = await this.itemIdExists(julkaisunID);
         if (itemId.itemid) {
@@ -284,76 +328,82 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             });
     }
 
-     async checkToken(callback: any, version: any) {
-         let urlFinal: any;
-         let token: any;
-         if (version === "jukuri") {
-             urlFinal = JUKURIURL + "status";
-             token = process.env.JUKURI_TOKEN;
-             console.log("Version is jukuri");
-         }
-         else {
-             urlFinal = BASEURL + "status";
-             token = process.env.TOKEN;
-             console.log("Version is theseus");
-         }
-         const headersOpt = {
-             "rest-dspace-token": token,
-             "content-type": "application/json"
-         };
-         const options = {
-             rejectUnauthorized: false,
-             method: "GET",
-             uri: urlFinal,
-             headers: headersOpt,
-             json: true,
-             encoding: "utf8",
-         };
+    checkToken(version: any): Promise<any> {
+        let urlFinal = BASEURL + "status";
+        let headersOpt = {
+            "rest-dspace-token": process.env.TOKEN,
+            "content-type": "application/json"
+        };
+        if (version === "jukuri") {
+            urlFinal = JUKURIURL + "status";
+            headersOpt = {
+                "rest-dspace-token": process.env.JUKURI_TOKEN,
+                "content-type": "application/json"
+            };
+        }
+        const options = {
+            rejectUnauthorized: false,
+            method: "GET",
+            uri: urlFinal,
+            headers: headersOpt,
+            json: true,
+            encoding: "utf8",
+        };
+       return new Promise(function(resolve: any, reject: any) {
+       rp(options)
+       .then(async function (res: Response) {
+           if ((res as any)["authenticated"] === true) {
+               console.log("The auth response " + (res as any)["authenticated"]);
+               resolve(version);
+           }
+           else if ((res as any)["authenticated"] === false) {
+               reject(JSON.stringify(options));
+           }
+       });
+            });
 
-         rp(options)
-             .then(async function (res: Response) {
-                 const authenticated = (res as any)["authenticated"];
-                 console.log("The authcheck const: " + authenticated + " and version: " + version);
-                 return await callback (authenticated, version);
-             })
-             .catch(function (err: Error) {
-                 console.log("Error while checking token status: " + err + " the urlfinal " + urlFinal);
-             });
-     }
+    }
 
-     getToken(version: any) {
-         let urlFinal = BASEURL + "login";
-         let metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
-         let token = process.env.TOKEN;
-         if (version === "jukuri") {
-             urlFinal = JUKURIURL + "login";
-             metadataobj = {"email": jukuriAuthEmail, "password": jukuriAuthPassword};
-             token = process.env.JUKURI_TOKEN;
-         }
-         else {
-             console.log("Version is theseus");
-         }
-         const headersOpt = {
-             "content-type": "application/json",
-         };
-         const options = {
-             rejectUnauthorized: false,
-             method: "POST",
-             uri: urlFinal,
-             headers: headersOpt,
-             body: metadataobj,
-             json: true,
-             encoding: "utf8",
-         };
-         rp(options)
-             .then(async function (res: Response) {
-                 console.log("The new token: " + (res as any) +  " for version " + version);
-                 token = (res as any);
-             })
-             .catch(function (err: Error) {
-                 console.log("Error while getting new token: " + err);
+     getToken(version: any): Promise<any> {
+        let urlFinal = BASEURL + "login";
+        let metadataobj = {"email": theseusAuthEmail, "password": theseusAuthPassword};
+        const headersOpt = {
+            "content-type": "application/json",
+        };
+        if (version === "jukuri") {
+            urlFinal = JUKURIURL + "login";
+            metadataobj = {"email": jukuriAuthEmail, "password": jukuriAuthPassword};
+        }
+        const options = {
+            rejectUnauthorized: false,
+            method: "POST",
+            uri: urlFinal,
+            headers: headersOpt,
+            body: metadataobj,
+            json: true,
+            encoding: "utf8",
+        };
+        return new Promise(function(resolve: any, reject: any) {
+           rp(options)
+           .then(async function (res: Response) {
+               if (version === "jukuri") {
+                process.env.JUKURI_TOKEN = (res as any);
+                console.log("The new token: " + (res as any) +  " for version " + version);
+                resolve(version);
+            }
+            else if (version === "theseus") {
+                console.log("The new token: " + (res as any) + " for version " + version);
+                process.env.TOKEN = (res as any);
+                resolve(version);
+            }
+           })
+           .catch(function (err: Error) {
+               console.log("Error while getting new token: " + err + " for version " + version);
+               reject();
              });
-     }
+           });
+    }
+
 
 
     public async EmbargoUpdate(id: any, embargo: any) {
