@@ -64,6 +64,25 @@ const lukeorgtunnus = "4100010";
 
 
     //  };
+
+
+    public async tokenHandler(version: any): Promise<any> {
+        const self = this;
+        return new Promise(function(resolve: any, reject: any) {
+        self.checkToken(version).then(async function() {
+            console.log("The token was valid for version: " + version);
+            resolve(version);
+         }).catch(async function(msg: any) {
+            console.log("The token for " + version + " was invalid! Proceeding to get a new token , this is the res " + msg);
+            self.getToken(version).then(async function(msg: any) {
+            resolve(version);        
+            }).catch(function() {
+                reject(version);
+                console.log("Something went wrong when getting a new token");
+            });
+     });
+        });
+}
      public async checkQueue() {
         const self = this;
         const versions = [
@@ -76,25 +95,17 @@ const lukeorgtunnus = "4100010";
                 ];
                 versions.forEach(async function(e: any) {
                     console.log("The versions: " + e.name);
-                    self.launchVersion(e.name);
+                    self.tokenHandler(e.name)
+                    .then((version: any) => {
+                        self.launchPost(version);
+                    }
+                    ).catch((msg: any) => {
+                        console.log("Something went wrong with getting a new token for " + e.name +  " and msg " + msg);
+                    }
+                    );
                 });
     }
-    public async launchVersion(version: any) {
-        const self = this;
-        this.checkToken(version).then(async function() {
-            console.log("The token was valid for version: " + version);
-            self.launchPost(version);
-         }).catch(async function(msg: any) {
-            const deeper = self;
-            console.log("The token for " + version + " was invalid! Proceeding to get a new token , this is the res " + msg);
-            deeper.getToken(version).then(async function(msg: any) {
-            const derper = deeper; 
-            derper.launchPost(version);        
-            }).catch(function() {
-                console.log("Something went wrong when getting a new token");
-            });
-     });
-    }
+
 
     public async launchPost(version: any)  {
        const self = this;
@@ -177,51 +188,51 @@ const lukeorgtunnus = "4100010";
 
     public async postJulkaisuTheseus(julkaisunID: any, version?: any) {
         // Purely for testing, to see that the right version is coming in 
-        // if (version) {
-        //     console.log("The julkaisuid incoming for jukuri: " + julkaisunID);
-        // }
-        // else {
-        //     console.log("The julkaisuid incoming for theseus: " + julkaisunID);
-        // }
-
-        const itemId = await this.itemIdExists(julkaisunID);
-        if (itemId.itemid) {
-            // if itemid already exists, send only publication
-            await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
-        } else {
-            const params = {"id": julkaisunID};
-            // ALL queries for the metadataobject
-            const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
-            const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
-                "${id};";
-
-            let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
-            arkistotableFields =  arkistotableFields.join(",");
-
-            const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
-                "${id};";
-            const julkaisuData: any = {};
-            let arkistoData: any = {};
-
-            try {
-                julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
-                arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
-                julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
-                julkaisuData["julkaisu"]["isbn"] = await api.getIsbn(julkaisunID);
-                julkaisuData["julkaisu"]["issn"] = await api.getIssn(julkaisunID);
-                julkaisuData["julkaisu"]["projektinumero"] = await api.getProjektinumero(julkaisunID);
-                julkaisuData["tieteenala"] = await api.getTieteenala(julkaisunID);
-                julkaisuData["organisaatiotekija"] = await api.getOrganisaatiotekija(julkaisunID);
-            } catch (e) {
-                console.log(e);
-            }
-
-            julkaisuData["filedata"] = arkistoData;
-            const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
-
-            const self = this;
-            // await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
+        if (version) {
+            console.log("The julkaisuid incoming for jukuri: " + julkaisunID);
         }
+        else {
+            console.log("The julkaisuid incoming for theseus: " + julkaisunID);
+        }
+
+        // const itemId = await this.itemIdExists(julkaisunID);
+        // if (itemId.itemid) {
+        //     // if itemid already exists, send only publication
+        //     await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
+        // } else {
+        //     const params = {"id": julkaisunID};
+        //     // ALL queries for the metadataobject
+        //     const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
+        //     const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
+        //         "${id};";
+
+        //     let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
+        //     arkistotableFields =  arkistotableFields.join(",");
+
+        //     const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
+        //         "${id};";
+        //     const julkaisuData: any = {};
+        //     let arkistoData: any = {};
+
+        //     try {
+        //         julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
+        //         arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
+        //         julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
+        //         julkaisuData["julkaisu"]["isbn"] = await api.getIsbn(julkaisunID);
+        //         julkaisuData["julkaisu"]["issn"] = await api.getIssn(julkaisunID);
+        //         julkaisuData["julkaisu"]["projektinumero"] = await api.getProjektinumero(julkaisunID);
+        //         julkaisuData["tieteenala"] = await api.getTieteenala(julkaisunID);
+        //         julkaisuData["organisaatiotekija"] = await api.getOrganisaatiotekija(julkaisunID);
+        //     } catch (e) {
+        //         console.log(e);
+        //     }
+
+        //     julkaisuData["filedata"] = arkistoData;
+        //     const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
+
+        //     const self = this;
+        //     // await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
+        // }
 
     }
 
