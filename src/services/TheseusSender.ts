@@ -121,7 +121,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
            console.log("The initial token: " + token + " for version " + version);
            console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
            julkaisuIDt.forEach(async function (e: any) {
-               const jukuriPublication: boolean = self.isJukukuriPublication(e.organisaatiotunnus);
+               const jukuriPublication: boolean = self.isJukuriPublication(e.organisaatiotunnus);
                if (jukuriPublication && version === "jukuri") {
                    console.log("The whole julkaisuIDt object for jukuri " + JSON.stringify(e));
                    // The jukuri string we are sending is purely for testing purposes, to confirm that the right one is being sent through
@@ -434,7 +434,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         let token = process.env.TOKEN;
         let jukuriPublication: boolean;
 
-        jukuriPublication = this.isJukukuriPublication(orgid);
+        jukuriPublication = this.isJukuriPublication(orgid);
 
         if (jukuriPublication) {
             baseURL = JUKURIURL;
@@ -612,7 +612,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         let baseURL = BASEURL;
         let token = process.env.TOKEN;
 
-        jukuriPublication = this.isJukukuriPublication(org);
+        jukuriPublication = this.isJukuriPublication(org);
 
         if (jukuriPublication) {
             baseURL = JUKURIURL;
@@ -888,7 +888,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         }
     }
 
-     isJukukuriPublication(orgTunnus: any) {
+     isJukuriPublication(orgTunnus: any) {
          let jukuriPublication: boolean = false;
          const orgnizationValues = domainMapping.find((x: any) => x.code === orgTunnus);
 
