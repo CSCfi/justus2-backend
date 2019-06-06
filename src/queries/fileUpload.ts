@@ -195,7 +195,7 @@ async function validate(fileName: any, filePath: any) {
 
      if (isPublicatioFileInTheseus) {
          try {
-             await ts.DeleteFromTheseus(julkaisuid);
+             await ts.DeleteFromTheseus(julkaisuid, req.headers);
              await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", {
                  id: julkaisuid
              });

@@ -6,6 +6,7 @@ const path = require("path");
 const kp = require("../koodistopalvelu");
 const fs = require("fs");
 const slugify = require("slugify");
+const as = require("./authService");
 
 // Database connection
 const connection = require("./../db");
@@ -417,18 +418,37 @@ const lukeorgtunnus = "4100010";
 
 
 
-    public async EmbargoUpdate(id: any, embargo: any) {
-
-
+    public async EmbargoUpdate(id: any, embargo: any, headers: any) {
         const self = this;
+        let version = "theseus";
+        let baseURL = BASEURL;
+        let token = process.env.TOKEN;
+        let jukuriPublication;
+        const orgID = as.getOrganisationID(headers);
+        const orgValues = domainMapping.find((x: any) => x.code === orgID);
+
+        if (orgValues.jukuriData) {
+            jukuriPublication = true;
+        }
+        else {
+            jukuriPublication = false;
+        }
+
+        if (jukuriPublication) {
+            baseURL = JUKURIURL;
+            token = process.env.JUKURI_TOKEN;
+            version = "jukuri";
+        }
+        this.tokenHandler(version)
+        .then(async function() {
         const params = {"id": id};
         const bitstreamidquery = "SELECT bitstreamid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
         const bitstreamidObject = await connection.db.oneOrNone(bitstreamidquery, params);
         const bitstreamid = bitstreamidObject.bitstreamid;
 
-        const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "?expand=policies";
+        const urlFinal = baseURL + "bitstreams/" + bitstreamid + "?expand=policies";
         const headersOpt = {
-            "rest-dspace-token": process.env.TOKEN,
+            "rest-dspace-token": token,
             "content-type": "application/json",
         };
         const options = {
@@ -442,19 +462,39 @@ const lukeorgtunnus = "4100010";
         rp(options)
             .then(async function (res: Response) {
                 const policyid = (res as any)["policies"][0]["id"];
-                self.prepareUpdateEmbargo(id, embargo, bitstreamid, policyid);
+                self.prepareUpdateEmbargo(id, embargo, bitstreamid, policyid, headers);
             })
             .catch(function (err: Error) {
                 console.log("Error while catching policyid for bitstreamid: " + bitstreamid + " with error: " + err);
             });
+        })
+        .catch(() => {
+            console.log("Couldnt get policyid for " + version + " julkaisu id " + id + " since token was invalid and we couldnt get a new one");
+        });
 
     }
-    async prepareUpdateEmbargo(id: any, embargo: any, bitstreamid: any, policyid: any) {
+    async prepareUpdateEmbargo(id: any, embargo: any, bitstreamid: any, policyid: any, headers: any) {
         const self = this;
+        let baseURL = BASEURL;
+        let token = process.env.TOKEN;
+        let jukuriPublication;
+        const orgID = as.getOrganisationID(headers);
+        const orgValues = domainMapping.find((x: any) => x.code === orgID);
 
-        const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "/policy/" + policyid;
+        if (orgValues.jukuriData) {
+            jukuriPublication = true;
+        }
+        else {
+            jukuriPublication = false;
+        }
+
+        if (jukuriPublication) {
+            baseURL = JUKURIURL;
+            token = process.env.JUKURI_TOKEN;
+        }
+        const urlFinal = baseURL + "bitstreams/" + bitstreamid + "/policy/" + policyid;
         const headersOpt = {
-            "rest-dspace-token": process.env.TOKEN,
+            "rest-dspace-token": token,
             "content-type": "application/json",
         };
         const options = {
@@ -465,14 +505,32 @@ const lukeorgtunnus = "4100010";
         };
         rp(options)
             .then(async function (res: Response) {
-                self.UpdateEmbargo(id, embargo, bitstreamid);
+                self.UpdateEmbargo(id, embargo, bitstreamid, headers);
             })
             .catch(function (err: Error) {
                 console.log("Error while deleting embargotime for julkaisuid: " + id + " with error: " + err);
             });
 
     }
-    async UpdateEmbargo(id: any , embargo: any, bitstreamid: any) {
+    async UpdateEmbargo(id: any , embargo: any, bitstreamid: any, headers: any) {
+        let baseURL = BASEURL;
+        let token = process.env.TOKEN;
+        let jukuriPublication;
+        const orgID = as.getOrganisationID(headers);
+        const orgValues = domainMapping.find((x: any) => x.code === orgID);
+
+        if (orgID === orgValues) {
+            jukuriPublication = true;
+        }
+        else {
+            jukuriPublication = false;
+        }
+
+        if (jukuriPublication) {
+            baseURL = JUKURIURL;
+            token = process.env.JUKURI_TOKEN;
+        }
+
         let embargocleaned;
         if (!embargo) {
             embargocleaned = new Date().toISOString().split("T")[0];
@@ -492,9 +550,9 @@ const lukeorgtunnus = "4100010";
             "endDate": "",
         };
 
-        const urlFinal = BASEURL + "bitstreams/" + bitstreamid + "/policy";
+        const urlFinal = baseURL + "bitstreams/" + bitstreamid + "/policy";
         const headersOpt = {
-            "rest-dspace-token": process.env.TOKEN,
+            "rest-dspace-token": token,
             "content-type": "application/json",
         };
         const options = {
@@ -515,15 +573,35 @@ const lukeorgtunnus = "4100010";
             });
 
     }
-    public async DeleteFromTheseus(id: any) {
+    public async DeleteFromTheseus(id: any, headers: any) {
+        let version = "theseus";
+        let baseURL = BASEURL;
+        let token = process.env.TOKEN;
+        let jukuriPublication;
+        const orgID = as.getOrganisationID(headers);
+        const orgValues = domainMapping.find((x: any) => x.code === orgID);
 
+        if (orgValues.jukuriData) {
+            jukuriPublication = true;
+        }
+        else {
+            jukuriPublication = false;
+        }
+
+        if (jukuriPublication) {
+            baseURL = JUKURIURL;
+            token = process.env.JUKURI_TOKEN;
+            version = "jukuri";
+        }
+        this.tokenHandler(version)
+        .then(async function() {
         const params = {"id": id};
         const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
         const itemid = await connection.db.any(itemidquery, params);
 
-        const urlFinal = BASEURL + "items/" + itemid[0]["itemid"];
+        const urlFinal = baseURL + "items/" + itemid[0]["itemid"];
         const headersOpt = {
-            "rest-dspace-token": process.env.TOKEN,
+            "rest-dspace-token": token,
             "content-type": "application/json"
         };
         const options = {
@@ -539,12 +617,35 @@ const lukeorgtunnus = "4100010";
             .catch(function (err: Error) {
                 console.log("Error while deleting julkaisu: " + id + " with error: " + err);
             });
+        })
+        .catch(() => {
+            console.log("Couldnt delete " + version + " julkaisu " + id + "from their service since token was invalid, and we couldnt get a new one");
+        });
     }
 
 
 
-    public async PutTheseus(metadataObject: any, id: any) {
-        //  TODO: update also embargo time
+    public async PutTheseus(metadataObject: any, id: any, headers: any) {
+        
+        let version = "theseus";
+        let jukuriPublication;
+        let baseURL = BASEURL;
+        let token = process.env.TOKEN;
+        const orgID = as.getOrganisationID(headers);
+        const orgValues = domainMapping((x: any) => x.code === orgID);
+        if (orgValues.jukuriData) {
+            jukuriPublication = true;
+        } else {
+            jukuriPublication = false;
+        }
+        if (jukuriPublication) {
+            baseURL = JUKURIURL;
+            token = process.env.JUKURI_TOKEN;
+            version = "jukuri";
+        }
+
+        this.tokenHandler(version)
+        .then(async function() {
         const params = {"id": id};
         const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
         let itemid: any;
@@ -557,10 +658,10 @@ const lukeorgtunnus = "4100010";
         }
 
         console.log("The itemid for the item to be updated" + itemid.itemid);
-        const urlFinal = BASEURL + "items/" + itemid.itemid + "/metadata";
+        const urlFinal = baseURL + "items/" + itemid.itemid + "/metadata";
         console.log(urlFinal);
         const headersOpt = {
-            "rest-dspace-token": process.env.TOKEN,
+            "rest-dspace-token": token,
             "content-type": "application/json"
         };
 
@@ -582,6 +683,10 @@ const lukeorgtunnus = "4100010";
                 console.log("Error while updating julkaisu: " + id + " with error: " + err);
 
             });
+        })
+        .catch(() => {
+            console.log("Couldnt update metadata for " + version + " julkaisu id " + id + " because token was invalid and couldnt acquire a new one");
+        });
 
     }
 
