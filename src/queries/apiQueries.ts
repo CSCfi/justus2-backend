@@ -405,9 +405,10 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             if (isPublication) {
                 await updateArchiveTable(req.body.filedata, req.headers);
                 if (isPublicationInTheseus) {
+                    const orgid = req.body.julkaisu.organisaatiotunnus;
                     const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
-                    // await ts.PutTheseus(obj, req.params.id, req.headers);
-                    // await ts.EmbargoUpdate(req.params.id, req.body.filedata.embargo, req.headers);
+                    await ts.PutTheseus(obj, req.params.id, orgid);
+                    await ts.EmbargoUpdate(req.params.id, req.body.filedata.embargo, orgid);
                 }
             }
 

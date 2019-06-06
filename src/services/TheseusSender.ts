@@ -30,9 +30,6 @@ const urnIdentifierPrefix = process.env.URN_IDENTIFIER_PREFIX;
 
 const jukuriAuthEmail = process.env.JUKURI_AUTH_EMAIL;
 const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
-const lukeorgtunnus = "4100010";
-
-
 
  class TheseusSender {
 
@@ -108,6 +105,7 @@ const lukeorgtunnus = "4100010";
     }
 
 
+
     public async launchPost(version: any)  {
        const self = this;
        let token;
@@ -123,68 +121,19 @@ const lukeorgtunnus = "4100010";
            console.log("The initial token: " + token + " for version " + version);
            console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
            julkaisuIDt.forEach(async function (e: any) {
-               if (e.organisaatiotunnus === lukeorgtunnus && version === "jukuri") {
+               const jukuriPublication: boolean = self.isJukukuriPublication(e.organisaatiotunnus);
+               if (jukuriPublication && version === "jukuri") {
                    console.log("The whole julkaisuIDt object for jukuri " + JSON.stringify(e));
                    // The jukuri string we are sending is purely for testing purposes, to confirm that the right one is being sent through
                    await self.postJulkaisuTheseus(e.julkaisuid, "jukuri");
                }
-               else if (e.organisaatiotunnus !== lukeorgtunnus && version === "theseus") {
+               else if (!jukuriPublication && version === "theseus") {
                    console.log("The whole julkaisuIDt object for theseus " + JSON.stringify(e));
                    await self.postJulkaisuTheseus(e.julkaisuid);
                }
            });
            
     }
-
-
-
-    async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
-        let baseURL = BASEURL;
-        let token = process.env.TOKEN;
-        let collectionID: string;
-        if (org === lukeorgtunnus) {
-            baseURL = JUKURIURL;
-            token = process.env.JUKURI_TOKEN;
-            collectionID = process.env.JUKURIT_COLLECTION_ID;
-        }
-        const self = this;
-        // let theseusCollectionId: string;
-
-        if (process.env.NODE_ENV === "prod" && org != lukeorgtunnus) {
-            collectionID = this.mapCollectionId(org);
-        } else if (org != lukeorgtunnus) {
-            collectionID = process.env.THESEUS_COLLECTION_ID;
-        }
-
-        const headersOpt = {
-            "rest-dspace-token": token,
-            "content-type": "application/json"
-        };
-        const options = {
-            rejectUnauthorized: false,
-            method: "POST",
-            uri: baseURL + "collections/" + collectionID + "/items/",
-            headers: headersOpt,
-            body: sendObject,
-            json: true,
-            encoding: "utf8",
-        };
-
-        rp(options)
-            .then(async function (res: Response) {
-                const itemID = (res as any)["id"];
-                console.log("The itemid: " + itemID);
-                const handle = (res as any)["handle"];
-                console.log("The handle: " + handle);
-                console.log(res);
-
-                await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
-            })
-            .catch(function (res: Response, err: Error) {
-                console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
-            });
-
-     }
 
 
     public async postJulkaisuTheseus(julkaisunID: any, version?: any) {
@@ -199,7 +148,7 @@ const lukeorgtunnus = "4100010";
         const itemId = await this.itemIdExists(julkaisunID);
         if (itemId.itemid) {
             // if itemid already exists, send only publication
-            await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
+            // await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
         } else {
             const params = {"id": julkaisunID};
             // ALL queries for the metadataobject
@@ -232,12 +181,72 @@ const lukeorgtunnus = "4100010";
             const metadataObject =  await this.mapTheseusFields(julkaisunID, julkaisuData, "post");
 
             const self = this;
-            // await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
+            await self.sendPostReqTheseus(metadataObject, julkaisunID, julkaisuData["julkaisu"]["organisaatiotunnus"]);
         }
 
     }
 
-    async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any) {
+     async sendPostReqTheseus(sendObject: any, julkaisuID: any, org: any) {
+
+         let jukuriPublication: boolean = false;
+         const orgnizationValues = domainMapping.find((x: any) => x.code === org);
+
+         let baseURL = BASEURL;
+         let token = process.env.TOKEN;
+         let collectionID: string;
+
+
+         const self = this;
+
+         if (orgnizationValues.jukuriData) {
+             jukuriPublication = true;
+             baseURL = JUKURIURL;
+             token = process.env.JUKURI_TOKEN;
+         }
+
+
+         if (process.env.NODE_ENV === "prod") {
+             collectionID = this.mapCollectionId(orgnizationValues, jukuriPublication);
+         } else   {
+             if (jukuriPublication) {
+                 collectionID = process.env.JUKURI_COLLECTION_ID;
+             } else {
+                 collectionID = process.env.THESEUS_COLLECTION_ID;
+             }
+         }
+
+         const headersOpt = {
+             "rest-dspace-token": token,
+             "content-type": "application/json"
+         };
+         const options = {
+             rejectUnauthorized: false,
+             method: "POST",
+             uri: baseURL + "collections/" + collectionID + "/items/",
+             headers: headersOpt,
+             body: sendObject,
+             json: true,
+             encoding: "utf8",
+         };
+
+         rp(options)
+             .then(async function (res: Response) {
+                 const itemID = (res as any)["id"];
+                 console.log("The itemid: " + itemID);
+                 const handle = (res as any)["handle"];
+                 console.log("The handle: " + handle);
+                 console.log(res);
+
+                 await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
+             })
+             .catch(function (res: Response, err: Error) {
+                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
+             });
+
+     }
+
+
+     async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any) {
         // TODO, combine both queries into one
         const paramss = {"id": julkaisuID};
         const queryitemid = "UPDATE julkaisuarkisto SET itemid=" + theseusItemID + "WHERE julkaisuid = " +
@@ -253,7 +262,7 @@ const lukeorgtunnus = "4100010";
 
         if (fu.isPublicationInTheseus(julkaisuID)) {
             try {
-                await this.sendBitstreamToItem(julkaisuID, theseusItemID);
+                // await this.sendBitstreamToItem(julkaisuID, theseusItemID);
                 console.log("IT IS IN THESEUS: " + julkaisuID);
 
             } catch (e) {
@@ -418,21 +427,14 @@ const lukeorgtunnus = "4100010";
 
 
 
-    public async EmbargoUpdate(id: any, embargo: any, headers: any) {
+    public async EmbargoUpdate(id: any, embargo: any, orgid: any) {
         const self = this;
         let version = "theseus";
         let baseURL = BASEURL;
         let token = process.env.TOKEN;
-        let jukuriPublication;
-        const orgID = as.getOrganisationID(headers);
-        const orgValues = domainMapping.find((x: any) => x.code === orgID);
+        let jukuriPublication: boolean;
 
-        if (orgValues.jukuriData) {
-            jukuriPublication = true;
-        }
-        else {
-            jukuriPublication = false;
-        }
+        jukuriPublication = this.isJukukuriPublication(orgid);
 
         if (jukuriPublication) {
             baseURL = JUKURIURL;
@@ -462,7 +464,7 @@ const lukeorgtunnus = "4100010";
         rp(options)
             .then(async function (res: Response) {
                 const policyid = (res as any)["policies"][0]["id"];
-                self.prepareUpdateEmbargo(id, embargo, bitstreamid, policyid, headers);
+                self.prepareUpdateEmbargo(id, embargo, bitstreamid, policyid, jukuriPublication);
             })
             .catch(function (err: Error) {
                 console.log("Error while catching policyid for bitstreamid: " + bitstreamid + " with error: " + err);
@@ -473,20 +475,10 @@ const lukeorgtunnus = "4100010";
         });
 
     }
-    async prepareUpdateEmbargo(id: any, embargo: any, bitstreamid: any, policyid: any, headers: any) {
+    async prepareUpdateEmbargo(id: any, embargo: any, bitstreamid: any, policyid: any, jukuriPublication: boolean) {
         const self = this;
         let baseURL = BASEURL;
         let token = process.env.TOKEN;
-        let jukuriPublication;
-        const orgID = as.getOrganisationID(headers);
-        const orgValues = domainMapping.find((x: any) => x.code === orgID);
-
-        if (orgValues.jukuriData) {
-            jukuriPublication = true;
-        }
-        else {
-            jukuriPublication = false;
-        }
 
         if (jukuriPublication) {
             baseURL = JUKURIURL;
@@ -505,26 +497,16 @@ const lukeorgtunnus = "4100010";
         };
         rp(options)
             .then(async function (res: Response) {
-                self.UpdateEmbargo(id, embargo, bitstreamid, headers);
+                self.UpdateEmbargo(id, embargo, bitstreamid, jukuriPublication);
             })
             .catch(function (err: Error) {
                 console.log("Error while deleting embargotime for julkaisuid: " + id + " with error: " + err);
             });
 
     }
-    async UpdateEmbargo(id: any , embargo: any, bitstreamid: any, headers: any) {
+    async UpdateEmbargo(id: any , embargo: any, bitstreamid: any, jukuriPublication: boolean) {
         let baseURL = BASEURL;
         let token = process.env.TOKEN;
-        let jukuriPublication;
-        const orgID = as.getOrganisationID(headers);
-        const orgValues = domainMapping.find((x: any) => x.code === orgID);
-
-        if (orgID === orgValues) {
-            jukuriPublication = true;
-        }
-        else {
-            jukuriPublication = false;
-        }
 
         if (jukuriPublication) {
             baseURL = JUKURIURL;
@@ -623,21 +605,15 @@ const lukeorgtunnus = "4100010";
         });
     }
 
-
-
-    public async PutTheseus(metadataObject: any, id: any, headers: any) {
+    public async PutTheseus(metadataObject: any, id: any, org: any) {
         
         let version = "theseus";
         let jukuriPublication;
         let baseURL = BASEURL;
         let token = process.env.TOKEN;
-        const orgID = as.getOrganisationID(headers);
-        const orgValues = domainMapping((x: any) => x.code === orgID);
-        if (orgValues.jukuriData) {
-            jukuriPublication = true;
-        } else {
-            jukuriPublication = false;
-        }
+
+        jukuriPublication = this.isJukukuriPublication(org);
+
         if (jukuriPublication) {
             baseURL = JUKURIURL;
             token = process.env.JUKURI_TOKEN;
@@ -646,6 +622,7 @@ const lukeorgtunnus = "4100010";
 
         this.tokenHandler(version)
         .then(async function() {
+
         const params = {"id": id};
         const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
         let itemid: any;
@@ -911,6 +888,19 @@ const lukeorgtunnus = "4100010";
         }
     }
 
+     isJukukuriPublication(orgTunnus: any) {
+         let jukuriPublication: boolean = false;
+         const orgnizationValues = domainMapping.find((x: any) => x.code === orgTunnus);
+
+         if (orgnizationValues.jukuriData) {
+             jukuriPublication = true;
+         } else {
+             jukuriPublication = false;
+         }
+
+         return jukuriPublication;
+     }
+
 
     mapZeroAndOneValues(value: any) {
         console.log(value);
@@ -1020,13 +1010,13 @@ const lukeorgtunnus = "4100010";
         return theseusFormat;
     }
 
-    mapCollectionId(org: any) {
+    mapCollectionId(org: any, jukuriPublication: boolean) {
         let collectionId = "";
 
-        for (let i = 0; i < domainMapping.length; i++) {
-            if (domainMapping[i].code === org) {
-                collectionId = domainMapping[i].theseusData.theseusCollectionId;
-            }
+        if (!jukuriPublication) {
+            collectionId = org.theseusData.theseusCollectionId;
+        } else {
+            collectionId = org.jukuriData.jukuriCollectionId;
         }
 
         return collectionId;
