@@ -16,6 +16,7 @@ const JUKURIURL = process.env.JUKURI_BASE_URL;
 
 const fu = require("../queries/fileUpload");
 const api = require("./../queries/subQueries");
+const oh = require("./../objecthandlers");
 
 const dbHelpers = require("./../databaseHelpers");
 
@@ -59,8 +60,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
     //         this.launchPost();
 
     //     }
-
-
     //  };
 
 
@@ -268,7 +267,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             } catch (e) {
                 console.log("Error in sending  publication and its metadata to Thseus: " + e);
             }
-        }
+     }
         else {
             console.log("Metadata for item updated");
         }
@@ -556,19 +555,17 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
     }
     public async DeleteFromTheseus(id: any, headers: any) {
+
+        const params = {"id": id};
+
+        const orgQuery = "SELECT organisaatiotunnus FROM julkaisu WHERE id = " + "${id};";
+        const orgID = await connection.db.one(orgQuery, params);
+
+        const jukuriPublication: boolean = oh.isJukuriPublication(orgID["organisaatiotunnus"]) ;
+
         let version = "theseus";
         let baseURL = BASEURL;
         let token = process.env.TOKEN;
-        let jukuriPublication;
-        const orgID = as.getOrganisationID(headers);
-        const orgValues = domainMapping.find((x: any) => x.code === orgID);
-
-        if (orgValues.jukuriData) {
-            jukuriPublication = true;
-        }
-        else {
-            jukuriPublication = false;
-        }
 
         if (jukuriPublication) {
             baseURL = JUKURIURL;
@@ -576,33 +573,33 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             version = "jukuri";
         }
         this.tokenHandler(version)
-        .then(async function() {
-        const params = {"id": id};
-        const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-        const itemid = await connection.db.any(itemidquery, params);
+            .then(async function() {
 
-        const urlFinal = baseURL + "items/" + itemid[0]["itemid"];
-        const headersOpt = {
-            "rest-dspace-token": token,
-            "content-type": "application/json"
-        };
-        const options = {
-            rejectUnauthorized: false,
-            method: "DELETE",
-            uri: urlFinal,
-            headers: headersOpt,
-        };
-        rp(options)
-            .then(async function (res: Response, req: Request) {
-                console.log("Successful delete" + res);
-            })
-            .catch(function (err: Error) {
-                console.log("Error while deleting julkaisu: " + id + " with error: " + err);
-            });
-        })
-        .catch(() => {
-            console.log("Couldnt delete " + version + " julkaisu " + id + "from their service since token was invalid, and we couldnt get a new one");
-        });
+                const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
+                const itemid = await connection.db.any(itemidquery, params);
+
+                const urlFinal = baseURL + "items/" + itemid[0]["itemid"];
+                const headersOpt = {
+                    "rest-dspace-token": token,
+                    "content-type": "application/json"
+                };
+                const options = {
+                    rejectUnauthorized: false,
+                    method: "DELETE",
+                    uri: urlFinal,
+                    headers: headersOpt,
+                };
+                rp(options)
+                    .then(async function (res: Response, req: Request) {
+                        console.log("Successful delete" + res);
+                    })
+                    .catch(function (err: Error) {
+                        console.log("Error while deleting julkaisu: " + id + " with error: " + err);
+                    });
+                })
+                .catch(() => {
+                    console.log("Couldnt delete " + version + " julkaisu " + id + "from their service since token was invalid, and we couldnt get a new one");
+                });
     }
 
     public async PutTheseus(metadataObject: any, id: any, org: any) {
@@ -872,7 +869,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         if (data === "2") {
             version = "fi=Pre-print -versio|sv=Pre-print |en=Pre-print|";
         }
-
         return version;
 
     }
