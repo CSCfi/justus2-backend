@@ -11,7 +11,8 @@ const organisationConfig = require("./organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
 const koodistoUrl = process.env.KOODISTO_URL;
-const handleLink = process.env.HANDLE_LINK;
+const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
+const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
 const getRedis = (rediskey: string, success: any, error: any) => {
     client.mget(rediskey, function (err: Error, reply: any) {
@@ -848,10 +849,14 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
             };
         }
 
-
         if (x.handle && x.aid) {
+            const isJukuri = isJukuriPublication(x.organisaatiotunnus);
             data["julkaisu"] = julkaisu;
-            data["filedata"] = { "handle":  handleLink +  x.handle };
+            if (isJukuri) {
+                data["filedata"] = { "handle":  jukuriHandleLink +  x.handle };
+            } else {
+                data["filedata"] = { "handle":  theseusHandleLink +  x.handle };
+            }
             return data;
         } else if (x.aid) {
             data["julkaisu"] = julkaisu;
@@ -1059,7 +1064,24 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
             }
         }
     }
+
+
 }
+
+function isJukuriPublication(orgTunnus: any) {
+    let jukuriPublication: boolean = false;
+    const orgnizationValues = domainMapping.find((x: any) => x.code === orgTunnus);
+
+    if (orgnizationValues.jukuriData) {
+        jukuriPublication = true;
+    } else {
+        jukuriPublication = false;
+    }
+
+    return jukuriPublication;
+}
+
+
 
 
 module.exports = {
@@ -1087,5 +1109,6 @@ module.exports = {
     mapAvainsanat: mapAvainsanat,
     mapIssnAndIsbn: mapIssnAndIsbn,
     checkIfEmpty: checkIfEmpty,
-    mapOrganisaatiotekijaAndAlayksikko: mapOrganisaatiotekijaAndAlayksikko
+    mapOrganisaatiotekijaAndAlayksikko: mapOrganisaatiotekijaAndAlayksikko,
+    isJukuriPublication: isJukuriPublication
 };

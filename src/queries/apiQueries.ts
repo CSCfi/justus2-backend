@@ -20,7 +20,8 @@ import { theseus as ts } from "./../services/TheseusSender";
 // Import audit log class
 import { auditLog as auditLog } from "./../services/auditLogService";
 
-const handleLink = process.env.HANDLE_LINK;
+const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
+const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 let USER_DATA: any = {};
 
 
@@ -208,9 +209,14 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             if (handleExists || publicationIsInQueue) {
                 filedata = await db.oneOrNone(fileQuery, params);
                 data["filedata"] = filedata;
+                const isJukuriPublication: boolean = oh.isJukuriPublication;
                 const tempHandle = data["filedata"].handle;
                 if (tempHandle) {
-                    data["filedata"].handle = handleLink + tempHandle;
+                    if (isJukuriPublication) {
+                        data["filedata"].handle = jukuriHandleLink + tempHandle;
+                    } else {
+                        data["filedata"].handle = theseusHandleLink + tempHandle;
+                    }
                 } else {
                     data["filedata"].handle = "";
                 }
