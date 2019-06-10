@@ -236,7 +236,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                  console.log("The handle: " + handle);
                  console.log(res);
 
-                 await self.insertIntoArchiveTable(julkaisuID, itemID, handle);
+                 await self.insertIntoArchiveTable(julkaisuID, itemID, handle, jukuriPublication);
              })
              .catch(function (res: Response, err: Error) {
                  console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
@@ -245,7 +245,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
      }
 
 
-     async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any) {
+     async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any, jukuriPublication: any) {
         // TODO, combine both queries into one
         const paramss = {"id": julkaisuID};
         const queryitemid = "UPDATE julkaisuarkisto SET itemid=" + theseusItemID + "WHERE julkaisuid = " +
@@ -261,7 +261,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         if (fu.isPublicationInTheseus(julkaisuID)) {
             try {
-                // await this.sendBitstreamToItem(julkaisuID, theseusItemID);
+                //  await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
                 console.log("IT IS IN THESEUS: " + julkaisuID);
 
             } catch (e) {
@@ -273,7 +273,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         }
     }
 
-    async sendBitstreamToItem(julkaisuID: any, theseusID: any) {
+    async sendBitstreamToItem(julkaisuID: any, theseusID: any, jukuriPublication: any) {
         console.log("The julkaisuID when we are sending bistream: " + julkaisuID + " and the theseusID: " + theseusID);
         const params = {"id": julkaisuID};
         const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
@@ -281,6 +281,16 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         const embargo = await connection.db.oneOrNone(embargoquery, params);
         const filename = await connection.db.oneOrNone(filenamequery, params);
         const filenamecleaned = await slugify(filename["filename"].toString(), "_");
+
+        let version = "theseus";
+        let baseURL = BASEURL;
+        let token = process.env.TOKEN;
+
+        if (jukuriPublication) {
+            baseURL = JUKURIURL;
+            token = process.env.JUKURI_TOKEN;
+            version = "jukuri";
+        }
 
         let embargodate;
 
@@ -297,10 +307,14 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         const day = embargodate.split("-")[2];
         const filePath =  publicationFolder + "/" + julkaisuID;
         const filePathFull = filePath + "/" + savedFileName;
-        const urlFinal = BASEURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day + "&expand=policies";
+
+
+        this.tokenHandler(version)
+        .then(async function() {
+        const urlFinal = baseURL + "items/" + theseusID + "/bitstreams?name=" + filenamecleaned + "&description=" + filenamecleaned + "&groupId=0&year=" + year + "&month=" + month + "&day=" + day + "&expand=policies";
         console.log("Thefinalurl: " + urlFinal);
         const headersOpt = {
-            "rest-dspace-token": process.env.TOKEN,
+            "rest-dspace-token": token,
             "content-type": "application/json"
         };
         const options = {
@@ -341,11 +355,15 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 await fu.deleteJulkaisuFile(filePath, savedFileName);
 
                 console.log("File deleted from server");
-                console.log("Successfully sent publication with id " + julkaisuID + " to Theseus and updated all data!");
+                console.log("Successfully sent publication with id " + julkaisuID + " to " + version + " and updated all data!");
             })
             .catch(function (err: Error) {
                 console.log("Something went wrong with sending file: " + err);
             });
+        })
+        .catch(() => {
+            console.log("Couldn't send bitstream to " + version + " with julkaisuid " + julkaisuID + " since token was invalid and we coudln't get a new one");
+        });
     }
 
     checkToken(version: any): Promise<any> {
@@ -597,8 +615,8 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                         console.log("Error while deleting julkaisu: " + id + " with error: " + err);
                     });
                 })
-                .catch(() => {
-                    console.log("Couldnt delete " + version + " julkaisu " + id + "from their service since token was invalid, and we couldnt get a new one");
+                .catch(function(err: Error) {
+                    console.log("Couldnt delete " + version + " julkaisu " + id + "from their service since token was invalid, and we couldnt get a new one, with error message: " + err);
                 });
     }
 
