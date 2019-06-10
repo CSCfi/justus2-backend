@@ -144,6 +144,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         //     console.log("The julkaisuid incoming for theseus: " + julkaisunID);
         // }
 
+
         const itemId = await this.itemIdExists(julkaisunID);
         if (itemId.itemid) {
             // if itemid already exists, send only publication
@@ -245,7 +246,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
      }
 
 
-     async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any, jukuriPublication: any) {
+     async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any, jukuriPublication: boolean) {
         // TODO, combine both queries into one
         const paramss = {"id": julkaisuID};
         const queryitemid = "UPDATE julkaisuarkisto SET itemid=" + theseusItemID + "WHERE julkaisuid = " +
@@ -261,7 +262,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         if (fu.isPublicationInTheseus(julkaisuID)) {
             try {
-                //  await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
+                 // await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
                 console.log("IT IS IN THESEUS: " + julkaisuID);
 
             } catch (e) {
@@ -273,7 +274,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         }
     }
 
-    async sendBitstreamToItem(julkaisuID: any, theseusID: any, jukuriPublication: any) {
+    async sendBitstreamToItem(julkaisuID: any, theseusID: any, jukuriPublication: boolean) {
         console.log("The julkaisuID when we are sending bistream: " + julkaisuID + " and the theseusID: " + theseusID);
         const params = {"id": julkaisuID};
         const embargoquery = "SELECT embargo FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
@@ -369,6 +370,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
     checkToken(version: any): Promise<any> {
         let urlFinal = BASEURL + "status";
         let headersOpt = {
+
             "rest-dspace-token": process.env.TOKEN,
             "content-type": "application/json"
         };
@@ -396,6 +398,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
            }
            else if ((res as any)["authenticated"] === false) {
                reject(JSON.stringify(options));
+
            }
        });
             });
@@ -425,15 +428,15 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
            rp(options)
            .then(async function (res: Response) {
                if (version === "jukuri") {
-                process.env.JUKURI_TOKEN = (res as any);
-                console.log("The new token: " + (res as any) +  " for version " + version);
-                resolve(version);
-            }
-            else if (version === "theseus") {
-                console.log("The new token: " + (res as any) + " for version " + version);
-                process.env.TOKEN = (res as any);
-                resolve(version);
-            }
+                    process.env.JUKURI_TOKEN = (res as any);
+                    console.log("The new token: " + (res as any) +  " for version " + version);
+                    resolve(version);
+                }
+                else if (version === "theseus") {
+                    console.log("The new token: " + (res as any) + " for version " + version);
+                    process.env.TOKEN = (res as any);
+                    resolve(version);
+                }
            })
            .catch(function (err: Error) {
                console.log("Error while getting new token: " + err + " for version " + version);
@@ -572,7 +575,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             });
 
     }
-    public async DeleteFromTheseus(id: any, headers: any) {
+    public async DeleteFromTheseus(id: any) {
 
         const params = {"id": id};
 
@@ -616,7 +619,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                     });
                 })
                 .catch(function(err: Error) {
-                    console.log("Couldnt delete " + version + " julkaisu " + id + "from their service since token was invalid, and we couldnt get a new one, with error message: " + err);
+                    console.log("Error while deleting publication from " + version + " with " + id + ", with error message: " + err);
                 });
     }
 
