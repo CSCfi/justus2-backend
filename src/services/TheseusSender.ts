@@ -575,7 +575,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             });
 
     }
-    public async DeleteFromTheseus(id: any) {
+    public async DeleteFromTheseus(id: any): Promise<any> {
 
         const params = {"id": id};
 
@@ -593,6 +593,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             token = process.env.JUKURI_TOKEN;
             version = "jukuri";
         }
+        return new Promise(function(resolve: any, reject: any) {
         this.tokenHandler(version)
             .then(async function() {
 
@@ -613,14 +614,18 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 rp(options)
                     .then(async function (res: Response, req: Request) {
                         console.log("Successful delete" + res);
+                        resolve();
                     })
                     .catch(function (err: Error) {
                         console.log("Error while deleting julkaisu: " + id + " with error: " + err);
+                        reject();
                     });
                 })
                 .catch(function(err: Error) {
                     console.log("Error while deleting publication from " + version + " with " + id + ", with error message: " + err);
+                    reject();
                 });
+            });
     }
 
     public async PutTheseus(metadataObject: any, id: any, org: any) {
