@@ -193,13 +193,15 @@ async function validate(fileName: any, filePath: any) {
 
      const isPublicatioFileInTheseus = await isPublicationInTheseus(req.params.id);
 
+    
      if (isPublicatioFileInTheseus) {
-         try {
+        ts.DeleteFromTheseus(julkaisuid)
+         .then(async function() {
+        try {
 
              const params = {"id": julkaisuid};
 
-             ts.DeleteFromTheseus(julkaisuid)
-             .then(async function() {
+
              await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
 
              const obj = {"julkaisurinnakkaistallennettu": "0", "rinnakkaistallennetunversionverkkoosoite": ""};
@@ -210,14 +212,15 @@ async function validate(fileName: any, filePath: any) {
 
              await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
              return res.status(200).send("File removed successfully");
-            })
-            .catch(() => {
-                console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table");
-            });
+
          } catch (err) {
              console.log(err);
              return res.sendStatus(500);
          }
+        })
+        .catch((err: Error) => {
+            console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table, err message: " + err);   
+        });
          
      } else {
          // file is not yet transferred to Theseus so remove file from server and id from julkaisujono table
