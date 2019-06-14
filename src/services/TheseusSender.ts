@@ -576,7 +576,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
     }
     public async DeleteFromTheseus(id: any): Promise<any> {
-
+        const self = this;
         const params = {"id": id};
 
         const orgQuery = "SELECT organisaatiotunnus FROM julkaisu WHERE id = " + "${id};";
@@ -594,7 +594,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             version = "jukuri";
         }
         return new Promise(function(resolve: any, reject: any) {
-        this.tokenHandler(version)
+        self.tokenHandler(version)
             .then(async function() {
 
                 const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
