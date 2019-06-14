@@ -475,10 +475,10 @@ class TheseusSender {
 
         rp(options)
             .then(async function (res: Response, req: Request) {
-                console.log("Successful PUT" + res as any);
+                console.log("Successful PUT to Theseus" + res as any);
             })
             .catch(function (err: Error) {
-                console.log("Error while updating julkaisu: " + id + " with error: " + err);
+                console.log("Error while updating julkaisu: " + id + " to Theseus with error: " + err);
 
             });
 
