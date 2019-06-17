@@ -262,7 +262,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         if (fu.isPublicationInTheseus(julkaisuID)) {
             try {
-                 // await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
+                 await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
                 console.log("IT IS IN THESEUS: " + julkaisuID);
 
             } catch (e) {
@@ -301,14 +301,12 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             embargodate = embargo.embargo.toISOString().split("T")[0];
         }
 
-        // TODO SPLIT EMBARGO FOR URLFINAL
         console.log("The embargodate: " + embargodate);
         const year = embargodate.split("-")[0];
         const month = embargodate.split("-")[1];
         const day = embargodate.split("-")[2];
         const filePath =  publicationFolder + "/" + julkaisuID;
         const filePathFull = filePath + "/" + savedFileName;
-
 
         this.tokenHandler(version)
         .then(async function() {
@@ -745,7 +743,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         } else {
             // this is just for development setup
-            tempMetadataObject.push({ "key": "dc.teh", "value": "00000" });
+            // tempMetadataObject.push({ "key": "dc.teh", "value": "00000" });
             tempMetadataObject.push({ "key": "dc.relation.ispartofseries", "value": julkaisuData["lehdenjulkaisusarjannimi"]});
             tempMetadataObject.push({"key": "dc.okm.selfarchived", "value": this.mapZeroAndOneValues(julkaisuData["julkaisurinnakkaistallennettu"]) });
             tempMetadataObject.push({"key": "dc.okm.internationalcopublication", "value": this.mapZeroAndOneValues(julkaisuData["kansainvalinenyhteisjulkaisu"]) });
@@ -807,11 +805,10 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                         const orcidObject = {"key": "dc.contributor.orcid", "value": "https://orcid.org/" + value.orcid };
                         metadataObject.push(orcidObject);
                     }
-                    // uncomment in production
-                    // if (value.hrnumero && value.hrnumero !== "") {
-                    //     const hrnumeroObject = {"key": "dc.kiukuperson", "value": value.hrnumero };
-                    //     metadataObject.push(hrnumeroObject);
-                    // }
+                    if (value.hrnumero && value.hrnumero !== "") {
+                        const hrnumeroObject = {"key": "dc.kiekuperson", "value": value.hrnumero };
+                        metadataObject.push(hrnumeroObject);
+                    }
 
                     if (!this.arrayIsEmpty(value.alayksikko)) {
                         value.alayksikko.forEach((value: any) => {
@@ -823,14 +820,13 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 });
             }
 
-
             if (!this.arrayIsEmpty(tieteenalat)) {
                 tieteenalat.forEach((value: any) => {
                     const tieteenalaObject = {"key": "dc.okm.discipline", "value": value.tieteenalakoodi };
                     metadataObject.push(tieteenalaObject);
                 });
             }
-
+            // uncomment in production
             if (!this.arrayIsEmpty(projektinumeroData)) {
                 projektinumeroData.forEach((value: any) => {
                     const pnobject = {"key": "dc.teh", "value": value};
@@ -924,11 +920,13 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
      }
 
 
-    mapZeroAndOneValues(value: any) {
-        console.log(value);
-        return "on";
+     mapZeroAndOneValues(value: any) {
+        if (value === "1") {
+            return "on";
+        } else {
+            return "ei";
+        }
     }
-
 
 
     mapJulkaisuTyyppiFields(tyyppi: any) {
