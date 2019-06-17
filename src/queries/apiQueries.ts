@@ -22,6 +22,7 @@ import { auditLog as auditLog } from "./../services/auditLogService";
 
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
+
 let USER_DATA: any = {};
 
 

@@ -299,6 +299,12 @@ const contactList = [
         "domain": "@thl.fi",
         "code": "5610017",
         "email": ""
+    },
+	{
+        // 	Ruokavirasto #ruoka-admins
+        "domain": "@ruokavirasto.fi",
+        "code": "4080015",
+        "email": ""
     }
 ];
 

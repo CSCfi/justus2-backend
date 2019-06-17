@@ -11,6 +11,7 @@ const organisationConfig = require("./organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
 const koodistoUrl = process.env.KOODISTO_URL;
+
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
