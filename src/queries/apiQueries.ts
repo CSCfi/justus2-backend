@@ -20,7 +20,7 @@ import { theseus as ts } from "./../services/TheseusSender";
 // Import audit log class
 import { auditLog as auditLog } from "./../services/auditLogService";
 
-const handleLink = process.env.HANDLE_LINK;
+const handleLink = process.env.THESEUS_HANDLE_LINK;
 let USER_DATA: any = {};
 
 

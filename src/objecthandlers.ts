@@ -10,7 +10,7 @@ const client = redis.createClient();
 const organisationConfig = require("./organization_config");
 
 const koodistoUrl = process.env.KOODISTO_URL;
-const handleLink = process.env.HANDLE_LINK;
+const handleLink = process.env.THESEUS_HANDLE_LINK;
 
 const getRedis = (rediskey: string, success: any, error: any) => {
     client.mget(rediskey, function (err: Error, reply: any) {
