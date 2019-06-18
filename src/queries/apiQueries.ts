@@ -246,8 +246,12 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
             const julkaisuId = await db.one(saveJulkaisu);
 
+            const kayttoLokiObject = JSON.parse(JSON.stringify(req.body.julkaisu));
+            delete kayttoLokiObject["issn"];
+            delete kayttoLokiObject["isbn"];
+
             const kayttoLokiId = await auditLog.postAuditData(req.headers,
-                method, "julkaisu", julkaisuId.id, req.body.julkaisu);
+                method, "julkaisu", julkaisuId.id, kayttoLokiObject);
 
             const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
             const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + "RETURNING accessid";
@@ -311,7 +315,11 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             const julkaisu = await db.none(updateJulkaisu);
 
-            await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, req.body.julkaisu);
+            const kayttoLokiObject = JSON.parse(JSON.stringify(req.body.julkaisu));
+            delete kayttoLokiObject["issn"];
+            delete kayttoLokiObject["isbn"];
+
+            await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, kayttoLokiObject);
 
             const deletedIssnRows = await db.result("DELETE FROM julkaisu_issn WHERE julkaisuid = ${id}", {
                 id: req.params.id
