@@ -240,7 +240,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                  await self.insertIntoArchiveTable(julkaisuID, itemID, handle, jukuriPublication);
              })
              .catch(function (res: Response, err: Error) {
-                 console.log("Something went wrong with posting item " + sendObject + " to url: " + BASEURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
+                 console.log("Something went wrong with posting item " + sendObject + " with julkaisuid " + julkaisuID + " to url: " + BASEURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
              });
 
      }
@@ -345,11 +345,13 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 const urnQuery = "SELECT urn FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
                 const urn = await connection.db.oneOrNone(urnQuery, params);
 
+                console.log("Urn identifier for julkaisu " + julkaisuID + " is " + urn.urn);
+
                 const rinnakkaistallennetunversionverkkoosoite = {"rinnakkaistallennetunversionverkkoosoite":  urnIdentifierPrefix + urn.urn };
                 const updateUrn = connection.pgp.helpers.update(rinnakkaistallennetunversionverkkoosoite, ["rinnakkaistallennetunversionverkkoosoite"], "julkaisu") + "WHERE id = " +  "${id};";
                 await connection.db.none(updateUrn, params);
 
-                console.log("Rinnakkaistallennetunversionverkkoosoite updated");
+                console.log("Rinnakkaistallennetunversionverkkoosoite updated for julkaisu " + julkaisuID);
 
                 await fu.deleteJulkaisuFile(filePath, savedFileName);
 
