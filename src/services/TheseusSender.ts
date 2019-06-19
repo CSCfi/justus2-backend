@@ -242,11 +242,13 @@ class TheseusSender {
                 const urnQuery = "SELECT urn FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
                 const urn = await connection.db.oneOrNone(urnQuery, params);
 
+                console.log("Urn identifier for julkaisu " + julkaisuID + " is " + urn.urn);
+
                 const rinnakkaistallennetunversionverkkoosoite = {"rinnakkaistallennetunversionverkkoosoite":  urnIdentifierPrefix + urn.urn };
                 const updateUrn = connection.pgp.helpers.update(rinnakkaistallennetunversionverkkoosoite, ["rinnakkaistallennetunversionverkkoosoite"], "julkaisu") + "WHERE id = " +  "${id};";
                 await connection.db.none(updateUrn, params);
 
-                console.log("Rinnakkaistallennetunversionverkkoosoite updated");
+                console.log("Rinnakkaistallennetunversionverkkoosoite updated for julkaisu " + julkaisuID);
 
                 await fu.deleteJulkaisuFile(filePath, savedFileName);
 

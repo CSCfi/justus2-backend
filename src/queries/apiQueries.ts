@@ -436,6 +436,7 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
 
         return db.one(updateJulkaisuntila)
             .then((response: any) => {
+                auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, req.body);
                 return res.sendStatus(200);
             }).catch(function (err: any) {
                 console.log(err);
