@@ -146,9 +146,15 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
         const itemId = await this.itemIdExists(julkaisunID);
-        if (itemId.itemid) {
+        if (itemId && itemId.itemid) {
             // if itemid already exists, send only publication
-            // await this.sendBitstreamToItem(julkaisunID, itemId.itemid);
+            let jukuriPublication;
+            if (version === "jukuri") {
+                jukuriPublication = true;
+            } else {
+                jukuriPublication = false;
+            }
+            await this.sendBitstreamToItem(julkaisunID, itemId.itemid, jukuriPublication);
         } else {
             const params = {"id": julkaisunID};
             // ALL queries for the metadataobject
