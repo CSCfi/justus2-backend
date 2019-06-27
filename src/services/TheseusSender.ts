@@ -253,7 +253,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
      async insertIntoArchiveTable(julkaisuID: any, theseusItemID: any, theseusHandleID: any, jukuriPublication: boolean) {
-        // TODO, combine both queries into one
+
         const paramss = {"id": julkaisuID};
         const queryitemid = "UPDATE julkaisuarkisto SET itemid=" + theseusItemID + "WHERE julkaisuid = " +
             "${id};";
@@ -262,15 +262,20 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         await connection.db.any(queryitemid, paramss);
         await connection.db.any(queryhandle, paramss);
 
-        // TODO check if file exists, if so. Fire the request to send item to theseus
-        // Else, do nothing (This should never happen though, iirc.)
+        const fileExists = await this.isFileUploaded(julkaisuID);
+
         console.log("The stuff in insert temp table: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
 
         if (fu.isPublicationInTheseus(julkaisuID)) {
             try {
-                 await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
-                console.log("IT IS IN THESEUS: " + julkaisuID);
-
+                if (fileExists) {
+                    await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
+                    console.log("IT IS IN THESEUS: " + julkaisuID);
+                } else {
+                    const params = {"id": julkaisuID};
+                    await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", params);
+                    console.log("Metadata for julkaisu " + julkaisuID + " inserted");
+                }
             } catch (e) {
                 console.log("Error in sending  publication and its metadata to Thseus: " + e);
             }
@@ -925,6 +930,16 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
          }
 
          return jukuriPublication;
+     }
+
+
+     async isFileUploaded(id: number) {
+        const params = {"id": id};
+        const query = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " +
+             "${id};";
+
+         const data = await connection.db.oneOrNone(query, params);
+         return data;
      }
 
 
