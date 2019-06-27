@@ -210,7 +210,7 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
             if (handleExists || publicationIsInQueue) {
                 filedata = await db.oneOrNone(fileQuery, params);
                 data["filedata"] = filedata;
-                const isJukuriPublication: boolean = oh.isJukuriPublication;
+                const isJukuriPublication: boolean = oh.isJukuriPublication(data.julkaisu.organisaatiotunnus);
                 const tempHandle = data["filedata"].handle;
                 if (tempHandle) {
                     if (isJukuriPublication) {
