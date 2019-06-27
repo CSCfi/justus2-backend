@@ -737,12 +737,15 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             {"key": "dc.publisher", "value": julkaisuData["kustantaja"]},
             {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
             {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
-            {"key": "dc.description.abstract", "value": fileData["abstract"]},
-            {"key": "dc.identifier.urn", "value": fileData["urn"] },
-            {"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) },
             {"key": "dc.type", "value": "publication"},
-            {"key": "dc.type.other", "value": fileData["julkaisusarja"]},
         ];
+
+        if (fileData) {
+            tempMetadataObject.push({"key": "dc.description.abstract", "value": fileData["abstract"]});
+            tempMetadataObject.push({"key": "dc.identifier.urn", "value": fileData["urn"]});
+            tempMetadataObject.push({"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) });
+            tempMetadataObject.push( {"key": "dc.type.other", "value": fileData["julkaisusarja"]});
+        }
 
         let metadataObject: any = [];
 
@@ -772,21 +775,29 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             }
         }
 
-        let oikeudetObject;
-        if (fileData["oikeudet"] && fileData["oikeudet"] === "All rights reserved") {
-            oikeudetObject = {"key": "dc.rights", "value": "All rights reserved. This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited."};
-            metadataObject.push(oikeudetObject);
-        } else if (fileData["oikeudet"] && fileData["oikeudet"] !== "") {
-            oikeudetObject = {"key": "dc.rights", "value": fileData["oikeudet"]};
-            metadataObject.push(oikeudetObject);
+
+        if (fileData) {
+            let oikeudetObject;
+            if (fileData["oikeudet"] && fileData["oikeudet"] === "All rights reserved") {
+                oikeudetObject = {
+                    "key": "dc.rights",
+                    "value": "All rights reserved. This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited."
+                };
+                metadataObject.push(oikeudetObject);
+            } else if (fileData["oikeudet"] && fileData["oikeudet"] !== "") {
+                oikeudetObject = {"key": "dc.rights", "value": fileData["oikeudet"]};
+                metadataObject.push(oikeudetObject);
+            }
+
+            if (fileData["versio"] && fileData["versio"] !== "") {
+                const versio =  await this.mapVersioFields(fileData["versio"]);
+                const versionObject = {"key": "dc.type.version", "value": versio};
+                metadataObject.push(versionObject);
+            }
         }
 
 
-        if (fileData["versio"] && fileData["versio"] !== "") {
-            const versio =  await this.mapVersioFields(fileData["versio"]);
-            const versionObject = {"key": "dc.type.version", "value": versio};
-            metadataObject.push(versionObject);
-        }
+
 
         if (!this.arrayIsEmpty(avainsanaData)) {
             avainsanaData.forEach((value: any) => {
