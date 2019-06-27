@@ -278,6 +278,21 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             await db.any("COMMIT");
 
+            // For Luonnonvarakeskus metadata is always sent to Jukuri
+            const isJukuriPublication: boolean = oh.isJukuriPublication(req.body.julkaisu.organisaatiotunnus);
+
+            if (isJukuriPublication) {
+                await fileUpload.postDataToQueueTable(julkaisuId.id);
+
+                const table = new connection.pgp.helpers.ColumnSet(["julkaisuid"], {table: "julkaisuarkisto"});
+                const query = pgp.helpers.insert({"julkaisuid": julkaisuId.id}, table) + "RETURNING id";
+
+                await connection.db.one(query);
+
+                // update kaytto_loki table
+                await auditLog.postAuditData(req.headers, "POST", "julkaisuarkisto", julkaisuId.id, {"julkaisuid": julkaisuId.id});
+            }
+
             res.status(200).json({ "id":  julkaisuId.id });
 
         } catch (err) {
