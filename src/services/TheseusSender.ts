@@ -246,7 +246,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                  await self.insertIntoArchiveTable(julkaisuID, itemID, handle, jukuriPublication);
              })
              .catch(function (res: Response, err: Error) {
-                 console.log("Something went wrong with posting item " + sendObject + " with julkaisuid " + julkaisuID + " to url: " + BASEURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
+                 console.log("Something went wrong with posting item " + sendObject + " with julkaisuid " + julkaisuID + " to url: " + baseURL + "collections/" + collectionID + "/items " + err + " And the full error response: " + (res as any));
              });
 
      }
@@ -668,7 +668,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             console.log(e);
         }
 
-        console.log("The itemid for the item to be updated" + itemid.itemid);
+        console.log("The itemid for the item to be updated " + itemid.itemid);
         const urlFinal = baseURL + "items/" + itemid.itemid + "/metadata";
         console.log(urlFinal);
         const headersOpt = {
@@ -688,10 +688,10 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         rp(options)
             .then(async function (res: Response, req: Request) {
-                console.log("Successful PUT to Theseus" + res as any);
+                console.log("Successful PUT to Theseus/Jukuri");
             })
             .catch(function (err: Error) {
-                console.log("Error while updating julkaisu: " + id + " to Theseus with error: " + err);
+                console.log("Error while updating julkaisu: " + id + " to Theseus/Jukuri with error: " + err);
 
             });
         })
