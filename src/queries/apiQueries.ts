@@ -423,22 +423,30 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             }
             await insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
 
-            // TODO: check if publication is entered to justus service
             const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
             const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
 
             // if publication file is originally uploaded to Justus service,
             // we have to update data in julkaisuarkisto table,
-            // and file is already transferred to Theseus
-            // we have to update data to Theseus also
+            // and if file is already transferred to Theseus / Jukuri
+            // we have to update data there also
 
-            if (isPublication) {
+            const isFileUploaded = await ts.isFileUploaded(req.params.id);
+            const orgid = req.body.julkaisu.organisaatiotunnus;
+
+            if (isFileUploaded && isFileUploaded.filename) {
                 await updateArchiveTable(req.body.filedata, req.headers);
                 if (isPublicationInTheseus) {
-                    const orgid = req.body.julkaisu.organisaatiotunnus;
                     const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
                     await ts.PutTheseus(obj, req.params.id, orgid);
                     await ts.EmbargoUpdate(req.params.id, req.body.filedata.embargo, orgid);
+                }
+            }
+            if (isPublication && !isFileUploaded) {
+                if (isPublicationInTheseus) {
+                    const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
+                    await ts.PutTheseus(obj, req.params.id, orgid);
+                    console.log("Metadata updated to Jukuri");
                 }
             }
 
@@ -714,6 +722,7 @@ module.exports = {
     postLanguage: postLanguage,
     // PUT requests
     putJulkaisuntila: putJulkaisuntila,
-    updateJulkaisu: updateJulkaisu
+    updateJulkaisu: updateJulkaisu,
+    updateArchiveTable: updateArchiveTable
 
 };

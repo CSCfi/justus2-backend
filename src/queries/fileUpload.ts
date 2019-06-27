@@ -17,6 +17,7 @@ import { auditLog as auditLog } from "./../services/auditLogService";
 const connection = require("./../db");
 const dbHelpers = require("./../databaseHelpers");
 const external = require("./../queries/externalServices");
+const api = require("./../queries/apiQueries");
 
 const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
@@ -38,12 +39,25 @@ async function uploadJulkaisu(req: Request, res: Response) {
             try {
                 // first move file from temp folder to publications folder
                 await moveFile(file, julkaisuId);
-                // then insert id to julkaisujono table
-                await postDataToQueueTable(file, julkaisuId);
-                // then insert publication related other data to julkaisuarkisto table
-                await postDataToArchiveTable(file, julkaisuData, req.headers);
+
+                const itemId = await metaDataAlreadyUpdated(julkaisuId);
+                const julkaisuIdExists = await fetchJulkaisuIdFromArchiveTable(julkaisuId);
+
+                if (itemId && itemId.itemid) {
+                    await postDataToArchiveTable(file, julkaisuData, req.headers, true);
+                    await ts.sendBitstreamToItem(julkaisuId, itemId.itemid, true);
+                } else {
+                    if (julkaisuIdExists) {
+                        await postDataToArchiveTable(file, julkaisuData, req.headers, true);
+
+                    } else {
+                        await postDataToQueueTable(julkaisuId);
+                        await postDataToArchiveTable(file, julkaisuData, req.headers, false);
+                    }
+                }
 
                 return res.status(200).json("OK");
+
 
             } catch (e) {
                 console.log(e);
@@ -96,7 +110,7 @@ async function uploadJulkaisu(req: Request, res: Response) {
 }
 
 
-async function postDataToArchiveTable(file: any, data: any, headers: any) {
+async function postDataToArchiveTable(file: any, data: any, headers: any, julkaisuIdOrItemIdExists?: boolean) {
 
     const tableColumns = dbHelpers.julkaisuarkisto;
     const obj: any = {};
@@ -142,17 +156,27 @@ async function postDataToArchiveTable(file: any, data: any, headers: any) {
             obj["urn"] = data.urn;
         }
 
-    const table = new connection.pgp.helpers.ColumnSet(tableColumns, {table: "julkaisuarkisto"});
-    const query = connection.pgp.helpers.insert(obj, table) + "RETURNING id";
+        let query;
+        let method;
+        const table = new connection.pgp.helpers.ColumnSet(tableColumns, {table: "julkaisuarkisto"});
 
-    await connection.db.one(query);
+        if (julkaisuIdOrItemIdExists) {
+            query = connection.pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
+            method = "PUT";
+        } else {
+            query = connection.pgp.helpers.insert(obj, table) + "RETURNING id";
+            method = "POST";
+        }
 
+
+    await connection.db.oneOrNone(query);
     // update kaytto_loki table
-    await auditLog.postAuditData(headers, "POST", "julkaisuarkisto", data.julkaisuid, data);
+    await auditLog.postAuditData(headers, method, "julkaisuarkisto", data.julkaisuid, data);
 
 }
 
-async function postDataToQueueTable(file: any, julkaisuid: any) {
+async function postDataToQueueTable(julkaisuid: any) {
+
     const tableColumns = new connection.pgp.helpers.ColumnSet(["julkaisuid"], {table: "julkaisujono"});
     const query = connection.pgp.helpers.insert({"julkaisuid": julkaisuid }, tableColumns) + "RETURNING id";
     await connection.db.one(query);
@@ -191,16 +215,14 @@ async function validate(fileName: any, filePath: any) {
     const julkaisuid = req.params.id;
     const filePath = publicationFolder + "/" + julkaisuid;
 
-     const isPublicatioFileInTheseus = await isPublicationInTheseus(req.params.id);
+    const isPublicatioFileInTheseus = await isPublicationInTheseus(req.params.id);
 
-    
      if (isPublicatioFileInTheseus) {
         ts.DeleteFromTheseus(julkaisuid)
          .then(async function() {
         try {
 
              const params = {"id": julkaisuid};
-
 
              await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
 
@@ -265,6 +287,16 @@ async function fileHasBeenUploadedToJustus(id: any) {
     return data;
 }
 
+async function metaDataAlreadyUpdated(id: any) {
+    const params = {"id": id};
+    const query = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " +
+        "${id};";
+
+    const data = await connection.db.oneOrNone(query, params);
+    console.log(data);
+
+    return data;
+}
 
 async function isPublicationInTheseus(id: any) {
 
@@ -280,6 +312,21 @@ async function isPublicationInTheseus(id: any) {
         return true;
     }
 }
+
+async function fetchJulkaisuIdFromArchiveTable(id: any) {
+    const params = {"id": id};
+    const query = "SELECT 1 FROM julkaisuarkisto WHERE julkaisuid = " +
+        "${id};";
+
+    const data = await connection.db.oneOrNone(query, params);
+    if (data) {
+        return true;
+    } else {
+        return false;
+    }
+
+}
+
 
 async function downloadJulkaisu(req: Request, res: Response) {
 
@@ -316,6 +363,7 @@ module.exports = {
     fileHasBeenUploadedToJustus: fileHasBeenUploadedToJustus,
     isPublicationInTheseus: isPublicationInTheseus,
     deleteJulkaisuFile: deleteJulkaisuFile,
-    downloadJulkaisu: downloadJulkaisu
+    downloadJulkaisu: downloadJulkaisu,
+    postDataToQueueTable: postDataToQueueTable
 
 };
