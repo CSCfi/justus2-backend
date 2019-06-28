@@ -268,7 +268,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         if (fu.isPublicationInTheseus(julkaisuID)) {
             try {
-                if (fileExists) {
+                if (fileExists && fileExists.filename) {
                     await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
                     console.log("IT IS IN THESEUS: " + julkaisuID);
                 } else {
