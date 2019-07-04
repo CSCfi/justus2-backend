@@ -750,7 +750,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         let metadataObject: any = [];
 
         if (!jukuriPublication) {
-            tempMetadataObject.push({"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]});
+            tempMetadataObject.push({"key": "dc.okm.selfarchived", "value": this.mapRinnakkaistallennusFields(julkaisuData["julkaisurinnakkaistallennettu"])});
             tempMetadataObject.push({"key": "dc.relation.ispartofjournal", "value": julkaisuData["lehdenjulkaisusarjannimi"]});
             tempMetadataObject.push({"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) });
 
@@ -955,11 +955,25 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
      mapZeroAndOneValues(value: any) {
-        if (value === "1") {
-            return "on";
+         if (value === "1") {
+             return "on";
+         } else {
+             return "ei";
+         }
+
+     }
+
+    mapRinnakkaistallennusFields(value: any) {
+
+        let theseusFormat;
+
+        if (value === "0") {
+            theseusFormat = "fi=Ei rinnakkaistallennettu|sv=icke-parallel publicerad|en=not self-archived|";
         } else {
-            return "ei";
+            theseusFormat = "fi=Rinnakkaistallennettu|sv=parallellpublicerad|en=self-archived version|";
         }
+        return theseusFormat;
+
     }
 
 
@@ -1047,7 +1061,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         }
 
         return theseusFormat;
-
 
     }
 
