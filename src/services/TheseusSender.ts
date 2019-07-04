@@ -520,7 +520,7 @@ class TheseusSender {
             {"key": "dc.publisher", "value": julkaisuData["kustantaja"]},
             {"key": "dc.language.iso", "value": julkaisuData["julkaisunkieli"]},
             {"key": "dc.relation.doi", "value": julkaisuData["doitunniste"]},
-            {"key": "dc.okm.selfarchived", "value": julkaisuData["julkaisurinnakkaistallennettu"]},
+            {"key": "dc.okm.selfarchived", "value": this.mapRinnakkaistallennusFields(julkaisuData["julkaisurinnakkaistallennettu"])},
             {"key": "dc.description.abstract", "value": fileData["abstract"]},
             {"key": "dc.identifier.urn", "value": fileData["urn"] },
             {"key": "dc.embargo.terms", "value": this.cleanEmbargo(fileData["embargo"]) },
@@ -647,6 +647,19 @@ class TheseusSender {
             return embargoDate.split("T")[0];
 
         }
+    }
+
+    mapRinnakkaistallennusFields(value: any) {
+
+        let theseusFormat;
+
+        if (value === "0") {
+            theseusFormat = "fi=Ei rinnakkaistallennettu|sv=icke-parallel publicerad|en=not self-archived|";
+        } else {
+            theseusFormat = "fi=Rinnakkaistallennettu|sv=parallellpublicerad|en=self-archived version|";
+        }
+
+        return theseusFormat;
     }
 
 
