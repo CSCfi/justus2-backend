@@ -164,6 +164,7 @@ async function postDataToArchiveTable(file: any, data: any, headers: any, julkai
             query = connection.pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
             method = "PUT";
         } else {
+            obj["destination"] = "theseus";
             query = connection.pgp.helpers.insert(obj, table) + "RETURNING id";
             method = "POST";
         }

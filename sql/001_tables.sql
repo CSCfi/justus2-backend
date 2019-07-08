@@ -237,6 +237,7 @@ CREATE TABLE julkaisuarkisto
   oikeudet character varying,
   versio character varying(1),
   julkaisusarja character varying,
+  destination character varying,
   CONSTRAINT julkaisuarkisto_pkey PRIMARY KEY (id),
   CONSTRAINT fk_julkaisujono FOREIGN KEY (julkaisuid)
       REFERENCES julkaisu (id) MATCH SIMPLE

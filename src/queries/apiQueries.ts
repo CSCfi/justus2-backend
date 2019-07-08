@@ -284,8 +284,8 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             if (isJukuriPublication) {
                 await fileUpload.postDataToQueueTable(julkaisuId.id);
 
-                const table = new connection.pgp.helpers.ColumnSet(["julkaisuid"], {table: "julkaisuarkisto"});
-                const query = pgp.helpers.insert({"julkaisuid": julkaisuId.id}, table) + "RETURNING id";
+                const table = new connection.pgp.helpers.ColumnSet(["julkaisuid", "destination"], {table: "julkaisuarkisto"});
+                const query = pgp.helpers.insert({"julkaisuid": julkaisuId.id, "destination": "jukuri"}, table) + "RETURNING id";
 
                 await connection.db.one(query);
 

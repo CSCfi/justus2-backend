@@ -53,7 +53,8 @@ const julkaisuarkisto = [
       "abstract",
       "versio",
       "oikeudet",
-      "julkaisusarja"
+      "julkaisusarja",
+      "destination"
 ];
 
 const julkaisuarkistoUpdateFields = [
