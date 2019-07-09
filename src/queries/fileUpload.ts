@@ -217,30 +217,36 @@ async function validate(fileName: any, filePath: any) {
     const julkaisuid = req.params.id;
     const filePath = publicationFolder + "/" + julkaisuid;
 
-    const isPublicatioFileInTheseus = await isPublicationInTheseus(req.params.id);
+    const isPublicatioFileInTheseus = await isPublicationInTheseus(julkaisuid);
+    const jukuriPublication = await isJukuriPublication(julkaisuid);
 
      if (isPublicatioFileInTheseus) {
+
+         if (jukuriPublication) {
+             return res.status(403).send("Publication is already approved, remove file from Jukuri");
+         }
+
         ts.DeleteFromTheseus(julkaisuid)
          .then(async function() {
-        try {
+            try {
 
-             const params = {"id": julkaisuid};
+                 const params = {"id": julkaisuid};
 
-             await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
+                 await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
 
-             const obj = {"julkaisurinnakkaistallennettu": "0", "rinnakkaistallennetunversionverkkoosoite": ""};
-             const updateRinnakkaistallennusColumns = connection.pgp.helpers.update(obj,
-                 ["julkaisurinnakkaistallennettu", "rinnakkaistallennetunversionverkkoosoite"], "julkaisu")
-                 + "WHERE id = ${id}";
-             await connection.db.oneOrNone(updateRinnakkaistallennusColumns, params);
+                 const obj = {"julkaisurinnakkaistallennettu": "0", "rinnakkaistallennetunversionverkkoosoite": ""};
+                 const updateRinnakkaistallennusColumns = connection.pgp.helpers.update(obj,
+                     ["julkaisurinnakkaistallennettu", "rinnakkaistallennetunversionverkkoosoite"], "julkaisu")
+                     + "WHERE id = ${id}";
+                 await connection.db.oneOrNone(updateRinnakkaistallennusColumns, params);
 
-             await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
-             return res.status(200).send("File removed successfully");
+                 await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
+                 return res.status(200).send("File removed successfully");
 
-         } catch (err) {
-             console.log(err);
-             return res.sendStatus(500);
-         }
+             } catch (err) {
+                 console.log(err);
+                 return res.sendStatus(500);
+             }
         })
         .catch((err: Error) => {
             console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table, err message: " + err);   
@@ -251,16 +257,23 @@ async function validate(fileName: any, filePath: any) {
          try {
 
              const params = {"id": julkaisuid};
-             const obj = {"julkaisurinnakkaistallennettu": "0" };
-             const updateRinnakkaistallennusColumns = connection.pgp.helpers.update(obj,
-                 ["julkaisurinnakkaistallennettu"], "julkaisu") + "WHERE id = ${id}";
-             await connection.db.oneOrNone(updateRinnakkaistallennusColumns, params);
-
              await deleteJulkaisuFile(filePath, savedFileName);
-             await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", params);
-             await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
-             await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
+
+             if (jukuriPublication) {
+                 await connection.db.result("UPDATE julkaisuarkisto set filename = null, mimetype = null, embargo = null, " +
+                     "abstract = null, versio = null, oikeudet = null, julkaisusarja = null  WHERE julkaisuid = ${id}", params);
+
+                 await auditLog.postAuditData(req.headers, "PUT", "julkaisuarkisto", julkaisuid,
+                     [{ "filename": "null", "mimetype": "null", "embargo": "null", "abstract": "null", "versio": "null", "oikeudet": "null", "julkaisusarja": "null" }]);
+
+             } else {
+                 await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", params);
+                 await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
+                 await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
+             }
+
              return res.status(200).send("File removed successfully");
+
          } catch (err) {
              console.log(err);
              return res.sendStatus(500);
@@ -274,6 +287,21 @@ async function validate(fileName: any, filePath: any) {
 async function deleteJulkaisuFile(fPath: any, fName: any) {
     await fs.unlinkSync(fPath + "/" + fName);
     await fs.rmdirSync(fPath);
+}
+
+async function isJukuriPublication(id: any) {
+    const params = {"id": id};
+    const query = "SELECT destination FROM julkaisuarkisto WHERE julkaisuid = " +
+        "${id};";
+
+    const data = await connection.db.oneOrNone(query, params);
+
+    if (data.destination === "jukuri") {
+        return true;
+    } else {
+        return false;
+    }
+
 }
 
 
@@ -333,7 +361,6 @@ async function fetchJulkaisuIdFromArchiveTable(id: any) {
 async function downloadJulkaisu(req: Request, res: Response) {
 
         const isFileInTheseus = await isPublicationInTheseus(req.params.id);
-        console.log(isFileInTheseus);
         console.log(publicationFolder + "/" + req.params.id + "/file.blob");
 
         if (!isFileInTheseus) {
