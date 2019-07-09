@@ -161,6 +161,7 @@ async function postDataToArchiveTable(file: any, data: any, headers: any, julkai
         const table = new connection.pgp.helpers.ColumnSet(tableColumns, {table: "julkaisuarkisto"});
 
         if (julkaisuIdOrItemIdExists) {
+            obj["destination"] = "jukuri";
             query = connection.pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
             method = "PUT";
         } else {
