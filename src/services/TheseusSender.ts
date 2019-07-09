@@ -976,13 +976,13 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         }
 
         if (value === "0") {
-            return "Ei vastausta";
+            return "0 = Ei vastausta";
         }
         if (value === "1") {
-            return "Open access -julkaisukanavassa ilmestynyt julkaisu";
+            return "1 = Open access -julkaisukanavassa ilmestynyt julkaisu";
         }
         if (value === "2") {
-            return "Hybridijulkaisukanavassa ilmestynyt avoin julkaisu";
+            return "2 = Hybridijulkaisukanavassa ilmestynyt avoin julkaisu";
         }
      }
 
