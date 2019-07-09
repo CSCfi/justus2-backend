@@ -85,7 +85,8 @@ const theseusJulkaisuFields = [
     "julkaisurinnakkaistallennettu",
     "rinnakkaistallennetunversionverkkoosoite",
     "yhteisjulkaisuyrityksenkanssa",
-    "kansainvalinenyhteisjulkaisu"
+    "kansainvalinenyhteisjulkaisu",
+    "avoinsaatavuus"
 ];
 
 

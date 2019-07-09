@@ -764,6 +764,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             tempMetadataObject.push({"key": "dc.okm.selfarchived", "value": this.mapZeroAndOneValues(julkaisuData["julkaisurinnakkaistallennettu"]) });
             tempMetadataObject.push({"key": "dc.okm.internationalcopublication", "value": this.mapZeroAndOneValues(julkaisuData["kansainvalinenyhteisjulkaisu"]) });
             tempMetadataObject.push({"key": "dc.okm.corporatecopublication", "value": this.mapZeroAndOneValues(julkaisuData["yhteisjulkaisuyrityksenkanssa"]) });
+            tempMetadataObject.push({"key": "dc.okm.openaccess", "value": this.mapOpenAccess(julkaisuData["avoinsaatavuus"]) });
 
             metadataObject = [];
         }
@@ -955,12 +956,34 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
      mapZeroAndOneValues(value: any) {
+
+        if (!value || value === "") {
+            return "";
+        }
+
          if (value === "1") {
              return "on";
          } else {
              return "ei";
          }
 
+     }
+
+     mapOpenAccess(value: any) {
+
+        if (!value || value === "") {
+            return "";
+        }
+
+        if (value === "0") {
+            return "Ei vastausta";
+        }
+        if (value === "1") {
+            return "Open access -julkaisukanavassa ilmestynyt julkaisu";
+        }
+        if (value === "2") {
+            return "Hybridijulkaisukanavassa ilmestynyt avoin julkaisu";
+        }
      }
 
     mapRinnakkaistallennusFields(value: any) {
