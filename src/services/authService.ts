@@ -24,7 +24,8 @@ const getUserData = function (headers: any) {
             "email": "",
             "rooli": "",
             "nimi": name,
-            "showPublicationInput": <boolean> undefined
+            "showPublicationInput": <boolean> undefined,
+            "jukuriUser": <boolean> undefined
         };
 
         const role = getRole(headers["shib-group"]);

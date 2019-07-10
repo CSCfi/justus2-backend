@@ -1028,11 +1028,16 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
                 if (domainMapping[key].visibleFields) {
                     visibleFields = visibleFields.concat(domainMapping[key].visibleFields);
                 }
-                if (domainMapping[key].theseusData || domainMapping[key].jukuriData) {
+
+                if (domainMapping[key].theseusData) {
                     perustiedot.showPublicationInput = true;
+                } else if (domainMapping[key].jukuriData) {
+                    perustiedot.showPublicationInput = true;
+                    perustiedot.jukuriUser = true;
                 } else {
                     perustiedot.showPublicationInput = false;
                 }
+
             }
         });
 
