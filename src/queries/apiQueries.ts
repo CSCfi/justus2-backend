@@ -442,7 +442,8 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
                     await ts.EmbargoUpdate(req.params.id, req.body.filedata.embargo, orgid);
                 }
             }
-            if (isPublication && !isFileUploaded) {
+
+            if (isPublication && !isFileUploaded.filename) {
                 if (isPublicationInTheseus) {
                     const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
                     await ts.PutTheseus(obj, req.params.id, orgid);
