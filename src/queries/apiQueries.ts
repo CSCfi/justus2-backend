@@ -290,7 +290,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
                 await connection.db.one(query);
 
                 // update kaytto_loki table
-                await auditLog.postAuditData(req.headers, "POST", "julkaisuarkisto", julkaisuId.id, {"julkaisuid": julkaisuId.id});
+                await auditLog.postAuditData(req.headers, "POST", "julkaisuarkisto", julkaisuId.id, {"julkaisuid": julkaisuId.id, "destination": "jukuri"});
             }
 
             res.status(200).json({ "id":  julkaisuId.id });
