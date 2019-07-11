@@ -435,7 +435,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             const orgid = req.body.julkaisu.organisaatiotunnus;
 
             if (isFileUploaded && isFileUploaded.filename) {
-                await updateArchiveTable(req.body.filedata, req.headers);
+                await updateArchiveTable(req.body.filedata, req.headers, req.params.id);
                 if (isPublicationInTheseus) {
                     const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
                     await ts.PutTheseus(obj, req.params.id, orgid);
@@ -489,8 +489,6 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
     }
 
 }
-
-
 
 async function getAllData(data: any) {
     for (let i = 0; i < data.length; i++) {
@@ -664,11 +662,11 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
     await auditLog.postAuditData(headers, "POST", "alayksikko", jid, alayksikkoObj);
 }
 
-async function updateArchiveTable(data: any, headers: any) {
+async function updateArchiveTable(data: any, headers: any, id: any) {
 
     const obj: any = {};
 
-    const updateColumns = dbHelpers.julkaisuarkistoUpdateFields;
+    let updateColumns: any = [];
 
     if (!data.embargo || data.embargo === "" ) {
         obj["embargo"] = undefined;
@@ -700,9 +698,21 @@ async function updateArchiveTable(data: any, headers: any) {
         obj["julkaisusarja"] = data.julkaisusarja;
     }
 
-    const table = new connection.pgp.helpers.ColumnSet(updateColumns, {table: "julkaisuarkisto"});
-    const query = pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
+    const jukuriPublication: boolean = await fileUpload.isJukuriPublication(id);
 
+    let table;
+    if (jukuriPublication) {
+        const jukuriUpdateColumns = updateColumns.slice();
+        jukuriUpdateColumns.push("urn");
+        obj["urn"] = data.urn;
+        table = new connection.pgp.helpers.ColumnSet(jukuriUpdateColumns, {table: "julkaisuarkisto"});
+
+    } else {
+        updateColumns =  dbHelpers.julkaisuarkistoUpdateFields;
+        table = new connection.pgp.helpers.ColumnSet(updateColumns, {table: "julkaisuarkisto"});
+    }
+
+    const query = pgp.helpers.update(obj, table) + " WHERE julkaisuid = " +  parseInt(data.julkaisuid);
     await db.none(query);
 
     // update kaytto_loki table

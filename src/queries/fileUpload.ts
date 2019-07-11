@@ -393,6 +393,7 @@ module.exports = {
     isPublicationInTheseus: isPublicationInTheseus,
     deleteJulkaisuFile: deleteJulkaisuFile,
     downloadJulkaisu: downloadJulkaisu,
-    postDataToQueueTable: postDataToQueueTable
+    postDataToQueueTable: postDataToQueueTable,
+    isJukuriPublication: isJukuriPublication
 
 };
