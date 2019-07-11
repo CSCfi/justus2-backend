@@ -260,11 +260,11 @@ async function validate(fileName: any, filePath: any) {
              await deleteJulkaisuFile(filePath, savedFileName);
 
              if (jukuriPublication) {
-                 await connection.db.result("UPDATE julkaisuarkisto set filename = null, mimetype = null, embargo = null, " +
+                 await connection.db.result("UPDATE julkaisuarkisto set filename = null, mimetype = null, urn = null, embargo = null, " +
                      "abstract = null, versio = null, oikeudet = null, julkaisusarja = null  WHERE julkaisuid = ${id}", params);
 
                  await auditLog.postAuditData(req.headers, "PUT", "julkaisuarkisto", julkaisuid,
-                     [{ "filename": "null", "mimetype": "null", "embargo": "null", "abstract": "null", "versio": "null", "oikeudet": "null", "julkaisusarja": "null" }]);
+                     [{ "filename": "null", "mimetype": "null", "urn": "null", "embargo": "null", "abstract": "null", "versio": "null", "oikeudet": "null", "julkaisusarja": "null" }]);
 
              } else {
                  await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", params);
