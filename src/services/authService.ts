@@ -89,8 +89,6 @@ const parseDomainFromHeadersData = function(data: any) {
 
 const getRole = function(data: any) {
 
-    console.log(data);
-
     if (data.match(/\/justus#group-admins($|;)/) !== null) {
         return "owner";
     }
