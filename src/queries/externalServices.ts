@@ -276,10 +276,15 @@ function parseCrossRefData(data: any) {
         obj["isbn"] = [""];
     }
 
+    if (data["container-title"]) {
+        obj["lehdenjulkaisusarjannimi"] = data["container-title"][0];
+    }
+
     obj["volyymi"] = data.volume || "";
     obj["numero"] = data.issue || "";
     obj["sivut"] = data.page || "";
     obj["artikkelinumero"] = data["article-number"] || "";
+    obj["kustantaja"] = data["publisher"] || "";
 
     let tekijat = "";
 
