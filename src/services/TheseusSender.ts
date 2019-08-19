@@ -945,7 +945,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
      }
 
 
-     async isFileUploaded(id: number) {
+     async isFileUploaded(id: any) {
         const params = {"id": id};
         const query = "SELECT filename FROM julkaisuarkisto WHERE julkaisuid = " +
              "${id};";
