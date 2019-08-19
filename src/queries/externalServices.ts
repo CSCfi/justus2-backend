@@ -179,14 +179,19 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
             console.log(error);
             res.sendStatus(500);
         }
-        if (req.query.lahde.toLowerCase() === "crossref") {
-            ret = parseCrossRefData(data["message"]);
-        }
-        if (req.query.lahde.toLowerCase() === "virta") {
-            ret = parseVirtaData(data);
+
+        if (response.statusCode === 404) {
+            res.sendStatus(404);
+        } else {
+            if (req.query.lahde.toLowerCase() === "crossref") {
+                ret = parseCrossRefData(data["message"]);
+            }
+            if (req.query.lahde.toLowerCase() === "virta") {
+                ret = parseVirtaData(data);
+            }
+            res.status(200).json( ret );
         }
 
-        res.status(200).json( ret );
     });
 }
 
