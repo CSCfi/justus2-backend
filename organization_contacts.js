@@ -248,7 +248,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Oulun ammattikorkeakoulu|sv=Oulun ammattikorkeakoulu|en=Oulu University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Poliisiammattikorkeakoulu  #polamk-admins
