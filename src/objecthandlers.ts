@@ -604,7 +604,6 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                 yksikotarray.push(twntysix);
             if (yksikot2016 && yksikot2017 && yksikot2018 && yksikot2019  && yksikot2016.length || yksikot2017.length || yksikot2018.length || yksikot2019.length) {
                 visibleFields.push("alayksikko");
-                requiredFields.push("alayksikko");
 
                 const organisationName = setOrganisationName(e, lang);
 
@@ -880,6 +879,11 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
             for (let j = 0; j < obj[i].tempalayksikko.length; j++) {
                 obj[i].alayksikko.push(obj[i].tempalayksikko[j].alayksikko);
             }
+
+            if (obj[i].tempalayksikko.length < 1) {
+                obj[i].alayksikko.push("");
+            }
+
             delete obj[i].tempalayksikko;
         }
         return obj;
@@ -1021,12 +1025,16 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
         });
 
         let visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
-        const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
+        let requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
 
         Object.keys(domainMapping).forEach(function (val, key) {
             if (domainMapping[key].code === org) {
                 if (domainMapping[key].visibleFields) {
                     visibleFields = visibleFields.concat(domainMapping[key].visibleFields);
+                }
+
+                if (domainMapping[key].requiredFields) {
+                    requiredFields = requiredFields.concat(domainMapping[key].requiredFields);
                 }
 
                 if (domainMapping[key].theseusData) {
@@ -1047,7 +1055,6 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
               yarray.push(twosix);
               if (y2016.length || y2017.length || y2018.length || y2019.length) {
                   visibleFields.push("alayksikko");
-                  requiredFields.push("alayksikko");
               const orgall =  {
                 perustiedot,
                 alayksikot: yarray,

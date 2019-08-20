@@ -1,3 +1,6 @@
+// Visible and required fields listed here are additional to the common fields listed in organization config file.
+// Fields listed here are organization specific.
+
 const contactList = [
     {
         "domain": "@csc.fi",
@@ -23,8 +26,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Yrkehögskolan Arcada|sv=Yrkehögskolan Arcada|en=Arcada University of Applied Sciences|"	
-		}
-		
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Centria-ammattikorkeakoulu  #centria-admins
@@ -33,7 +36,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Centria-ammattikorkeakoulu|sv=Centria-ammattikorkeakoulu|en=Centria University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Diakonia-ammattikorkeakoulu  #diak-admins
@@ -42,7 +46,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Diakonia-ammattikorkeakoulu|sv=Diakonia-ammattikorkeakoulu|en=Diaconia University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Haaga-Helia ammattikorkeakoulu  #haaga-helia-admins
@@ -51,7 +56,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Haaga-Helia ammattikorkeakoulu|sv=Haaga-Helia ammattikorkeakoulu|en=Haaga-Helia University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Humanistinen ammattikorkeakoulu  #humak-admins
@@ -60,7 +66,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Humanistinen ammattikorkeakoulu|sv=Humanistinen ammattikorkakoulu|en=Humak University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Hämeen ammattikorkeakoulu
@@ -69,7 +76,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Hämeen ammattikorkeakoulu|sv=Hämeen ammattikorkeakoulu|en=Häme University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Jyväskylän ammattikorkeakoulu  #jamk-admins
@@ -78,7 +86,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Jyväskylän ammattikorkeakoulu|sv=Jyväskylän ammattikorkeakoulu|en=JAMK University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Kajaanin ammattikorkeakoulu  #kamk-admins
@@ -87,7 +96,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Kajaanin ammattikorkeakoulu|sv=Kajaanin ammattikorkeakoulu|en=Kajaani University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Karelia-ammattikorkeakoulu  #karelia-admins
@@ -96,7 +106,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Karelia-ammattikorkeakoulu|sv=Karelia-ammattikorkeakoulu|en=Karelia University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // nb! xamk may have 3 domains (mahd. kyamk.fi ja mamk.fi)
@@ -106,7 +117,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Kaakkois-Suomen ammattikorkeakoulu|sv=Kaakkois-Suomen ammattikorkeakoulu|en=South-Eastern Finland University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Kaakkois-Suomen ammattikorkeakoulu  #xamk-admins
@@ -115,7 +127,8 @@ const contactList = [
         "email": "",
        	"theseusData": {
 			"theseusCode": "fi=Kaakkois-Suomen ammattikorkeakoulu|sv=Kaakkois-Suomen ammattikorkeakoulu|en=South-Eastern Finland University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Kaakkois-Suomen ammattikorkeakoulu  #xamk-admins
@@ -124,7 +137,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Kaakkois-Suomen ammattikorkeakoulu|sv=Kaakkois-Suomen ammattikorkeakoulu|en=South-Eastern Finland University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Lahden ammattikorkeakoulu  #lamk-admins
@@ -133,7 +147,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Lahden ammattikorkeakoulu|sv=Lahden ammattikorkeakoulu|en=Lahti University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Laurea-ammattikorkeakoulu  #laurea-admins
@@ -142,7 +157,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Laurea-ammattikorkeakoulu|sv=Laurea-ammattikorkeakoulu|en=Laurea University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Metropolia ammattikorkeakoulu  #metropolia-admins
@@ -151,7 +167,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Metropolia Ammattikorkeakoulu|sv=Metropolia Ammattikorkeakoulu|en=Metropolia University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Satakunnan ammattikorkeakoulu  #samk-admins
@@ -160,7 +177,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Satakunnan ammattikorkeakoulu|sv=Satakunnan ammattikorkeakoulu|en=Satakunta University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Seinäjoen ammattikorkeakoulu  #seamk-admins
@@ -169,7 +187,8 @@ const contactList = [
         "email": "",
         "theseusData": {
 			"theseusCode": "fi=Seinäjoen ammattikorkeakoulu|sv=Seinäjoen ammattikorkeakoulu|en=Seinäjoki University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Tampereen ammattikorkeakoulu  #tamk-admins
@@ -178,7 +197,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Tampereen ammattikorkeakoulu|sv=Tampereen ammattikorkeakoulu|en=Tampere University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Tampereen ammattikorkeakoulu  #tamk-admins
@@ -187,7 +207,8 @@ const contactList = [
         "email": "",
 	    "theseusData": {
 			"theseusCode": "fi=Tampereen ammattikorkeakoulu|sv=Tampereen ammattikorkeakoulu|en=Tampere University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Yrkeshögskolan Novia  #novia-admins
@@ -196,8 +217,38 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Yrkehögskolan Novia|sv=Yrkehögskolan Novia|en=Novia University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
 
+    },
+	{
+        // Savonia-ammattikorkeakoulu
+        "domain": "@savonia.fi",
+        "code": "02537",
+        "email": "",
+		"theseusData": {
+			"theseusCode": "fi=Savonia-ammattikorkeakoulu|sv=Savonia-ammattikorkeakoulu|en=Savonia University of Applied Sciences|"	
+		},
+		"requiredFields": ["alayksikko"]
+    },
+    {
+        // Turun ammattikorkeakoulu
+        "domain": "@turkuamk.fi",
+        "code": "02509",
+        "email": "",
+		"theseusData": {
+			"theseusCode": "fi=Turun ammattikorkeakoulu|sv=Turun ammattikorkeakoulu|en=Turku University of Applied Sciences|"	
+		},
+		"requiredFields": ["alayksikko"]
+    },
+    {
+        // Oulun ammattikorkeakoulu #oamk-admins
+        "domain": "@oamk.fi",
+        "code": "02471",
+        "email": "",
+		"theseusData": {
+			"theseusCode": "fi=Oulun ammattikorkeakoulu|sv=Oulun ammattikorkeakoulu|en=Oulu University of Applied Sciences|"	
+		}
     },
     {
         // Poliisiammattikorkeakoulu  #polamk-admins
@@ -206,7 +257,8 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Poliisiammattikorkeakoulu|sv=Polisyrkeshögskolan|en=Police University College|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // Poliisiammattikorkeakoulu
@@ -243,39 +295,14 @@ const contactList = [
         "code": "02358",
         "email": ""
     },
-    {
-        // Savonia-ammattikorkeakoulu
-        "domain": "@savonia.fi",
-        "code": "02537",
-        "email": "",
-		"theseusData": {
-			"theseusCode": "fi=Savonia-ammattikorkeakoulu|sv=Savonia-ammattikorkeakoulu|en=Savonia University of Applied Sciences|"	
-		}
-    },
-    {
-        // Turun ammattikorkeakoulu
-        "domain": "@turkuamk.fi",
-        "code": "02509",
-        "email": "",
-       	"theseusData": {
-			"theseusCode": "fi=Turun ammattikorkeakoulu|sv=Turun ammattikorkeakoulu|en=Turku University of Applied Sciences|"	
-		}
-    },
-    {
-        // Oulun ammattikorkeakoulu #oamk-admins
-        "domain": "@oamk.fi",
-        "code": "02471",
-        "email": "",
-		"theseusData": {
-			"theseusCode": "fi=Oulun ammattikorkeakoulu|sv=Oulun ammattikorkeakoulu|en=Oulu University of Applied Sciences|"	
-		}
-    },
+
 	// Testikäytössä
 	{
         // Taideyliopisto
         "domain": "@uniarts.fi",
         "code": "10103",
-        "email": ""
+        "email": "",
+		"requiredFields": ["alayksikko"]
     },
     {
         // Luonnonvarakeskus
@@ -286,13 +313,14 @@ const contactList = [
 		"jukuriData": {
 			"jukuriCode": "Luonnonvarakeskus"	
 		},
-		"visibleFields": ["hrnumero", "projektinumero"]
+		"visibleFields": ["hrnumero", "projektinumero"],
     },
     {
         // 	Geologian tutkimuskeskus #gtk-admins
         "domain": "@gtk.fi",
         "code": "5040011",
-        "email": ""
+        "email": "",
+		"requiredFields": ["alayksikko"]
     },
     {
         // 	Terveyden ja hyvinvoinnin laitos #thl-admins
