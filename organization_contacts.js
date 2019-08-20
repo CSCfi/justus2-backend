@@ -257,8 +257,7 @@ const contactList = [
         "email": "",
 		"theseusData": {
 			"theseusCode": "fi=Poliisiammattikorkeakoulu|sv=Polisyrkeshögskolan|en=Police University College|"	
-		},
-		"requiredFields": ["alayksikko"]
+		}
     },
     {
         // Poliisiammattikorkeakoulu
