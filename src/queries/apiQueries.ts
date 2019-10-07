@@ -87,7 +87,7 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 }
 
 
-function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
+async function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
 
@@ -101,50 +101,152 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
         const julkaisuTableFields = dbHelpers.getListFields("j");
         let query;
+        let queryCount;
 
-        // owners can see all data in julkaisu table
-        const queryAllOrganisations = "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
+        const currentPage = parseInt(req.query.currentPage);
+        const odottavat = req.query.odottavat;
+        let showOnlyPublicationsWaitingForApprove;
+
+        if (odottavat === "true") {
+            showOnlyPublicationsWaitingForApprove = true;
+        } else {
+            showOnlyPublicationsWaitingForApprove = false;
+        }
+
+        const pageSize = 30;
+        const offset = currentPage * pageSize - pageSize;
+
+        let queryAllOrganisations;
+        let queryByOrganisationCode;
+        let queryForMembers;
+
+        let queryCountForOwners;
+        let queryCountForAdmins;
+        let queryCountForMembers;
+
+        const baseQuery =
+            "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
             " FROM julkaisu AS j" +
-            " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
-            " ORDER BY j.id;";
+            " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid";
 
-        // admins can see all publications for organisation
-        const queryByOrganisationCode = "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
-            " FROM julkaisu AS j" +
-            " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
-            " WHERE j.organisaatiotunnus = " +
-            "${code} ORDER BY j.id;";
+        const baseQueryForCount =
+            "SELECT count(*)" +
+            " FROM julkaisu" +
+            " WHERE julkaisuntila = ''";
 
-        // members can only see own publications, so verify that uid in kaytto_loki table matches current user's uid
-        const queryForMembers = "SELECT j.id, j.accessid, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
-            " FROM julkaisu AS j" +
-            " INNER JOIN kaytto_loki AS kl on j.accessid = kl.id" +
-            " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
-            " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
-            " ORDER BY j.id;";
 
+        if (showOnlyPublicationsWaitingForApprove) {
+
+            // owners can see all data in julkaisu table
+            queryAllOrganisations = baseQuery +
+                " WHERE j.julkaisuntila = '';";
+
+            // admins can see all publications for organisation
+            queryByOrganisationCode = baseQuery +
+                " WHERE j.organisaatiotunnus = ${code}" +
+                " AND j.julkaisuntila = ''" +
+                " ORDER BY j.modified DESC;";
+
+            // members can only see own publications, so verify that uid in kaytto_loki table matches current user's uid
+            queryForMembers =
+                "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
+                " FROM julkaisu AS j" +
+                " INNER JOIN kaytto_loki AS kl on j.accessid = kl.id" +
+                " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
+                " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
+                " AND j.julkaisuntila = ''" +
+                " ORDER BY j.modified DESC;";
+
+            queryCountForOwners = baseQueryForCount + ";";
+
+            queryCountForAdmins = baseQueryForCount +
+                " AND organisaatiotunnus = ${code};";
+
+            queryCountForMembers =
+                "SELECT count(*)" +
+                " FROM julkaisu" +
+                " INNER JOIN kaytto_loki AS kl on accessid = kl.id" +
+                " WHERE julkaisuntila = ''" +
+                " AND organisaatiotunnus = ${code}" +
+                " AND kl.uid = ${uid};";
+
+        } else {
+            queryAllOrganisations = baseQuery +
+                " WHERE j.julkaisuntila <> ''" +
+                " AND CAST(j.julkaisuntila AS INT) > -1" +
+                " ORDER BY j.modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+            queryByOrganisationCode = baseQuery +
+                " WHERE j.organisaatiotunnus = ${code}" +
+                " AND j.julkaisuntila <> ''" +
+                " AND CAST(j.julkaisuntila AS INT) > -1" +
+                " ORDER BY j.modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+
+
+            queryForMembers =
+                "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
+                " FROM julkaisu AS j" +
+                " INNER JOIN kaytto_loki AS kl on j.accessid = kl.id" +
+                " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
+                " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid}"  +
+                " AND j.julkaisuntila <> ''" +
+                " AND CAST(j.julkaisuntila AS INT) > -1" +
+                " ORDER BY j.modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+
+            queryCountForOwners = "SELECT count(*)" +
+                " FROM julkaisu" +
+                " WHERE julkaisuntila <> ''" +
+                " AND CAST(julkaisuntila AS INT) > -1;";
+
+            queryCountForAdmins = "SELECT count(*)" +
+                " FROM julkaisu" +
+                " WHERE organisaatiotunnus = ${code}" +
+                " AND julkaisuntila <> ''" +
+                " AND CAST(julkaisuntila AS INT) > -1;";
+
+            queryCountForMembers =
+                "SELECT count(*)" +
+                " FROM julkaisu" +
+                " INNER JOIN kaytto_loki AS kl on accessid = kl.id" +
+                " WHERE organisaatiotunnus = ${code}" +
+                " AND julkaisuntila <> ''" +
+                " AND CAST(julkaisuntila AS INT) > -1" +
+                " AND kl.uid = ${uid};";
+
+        }
         let params = {};
 
         // user 00000 can fetch data from all organisations or filter by organisation
         if (USER_DATA.rooli === "owner" && USER_DATA.organisaatio === "00000") {
             query = queryAllOrganisations;
+            queryCount = queryCountForOwners;
             if (req.params.organisaatiotunnus) {
                 params = {"code": req.params.organisaatiotunnus};
                 query = queryByOrganisationCode;
+                queryCount = queryCountForAdmins;
             }
         }
         if (USER_DATA.rooli === "admin") {
             params = {"code": USER_DATA.organisaatio};
             query = queryByOrganisationCode;
+            queryCount = queryCountForAdmins;
         }
         if (USER_DATA.rooli === "member") {
             params = {"code": USER_DATA.organisaatio, "uid": USER_DATA.uid};
             query = queryForMembers;
+            queryCount = queryCountForMembers;
         }
+
+        let count: any;
+        count = await db.one(queryCount, params);
 
         db.any(query, params)
             .then((response: any) => {
                 const data = oh.ObjectHandlerJulkaisudata(response, false);
+                res.setHeader("Access-Control-Expose-Headers", "TotalCount");
+                res.setHeader("TotalCount", count["count"]);
                 res.status(200).json({data});
             })
             .catch((err: any) => {
@@ -153,8 +255,6 @@ function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
     } else {
         return res.status(403).send("Permission denied");
     }
-
-
 
 }
 
