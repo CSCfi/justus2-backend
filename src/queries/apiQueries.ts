@@ -335,21 +335,21 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
 
     if (nimiTekijaHaku && !vuosiHaku && !tilaHaku) {
         hakuQuery = nimiTekijaHakuQuery + approved + " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = nimiTekijaHakuCount + ";";
+        countQuery = nimiTekijaHakuCount + approved + ";";
         if (organisaatioHaku) {
             hakuQuery = nimiTekijaHakuQuery + approved + " AND organisaatiotunnus = ${code}" +
                 " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = nimiTekijaHakuCount + " AND organisaatiotunnus = ${code};";
+            countQuery = nimiTekijaHakuCount + approved + " AND organisaatiotunnus = ${code};";
         }
     }
 
     if (vuosiHaku && !nimiTekijaHaku && !tilaHaku) {
         hakuQuery = vuosiHakuQuery + approved + " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = vuosiHakuCount + ";";
+        countQuery = vuosiHakuCount + approved + ";";
         if (organisaatioHaku) {
             hakuQuery = vuosiHakuQuery + approved + " AND organisaatiotunnus = ${code}" +
                 " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = vuosiHakuCount + " AND organisaatiotunnus = ${code};";
+            countQuery = vuosiHakuCount + approved + " AND organisaatiotunnus = ${code};";
         }
     }
 
@@ -367,11 +367,11 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     if (nimiTekijaHaku && vuosiHaku && !tilaHaku) {
         hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + approved + " ORDER BY modified DESC" +
             " LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = nimiTekijaHakuCount + vuosiAndQuery + ";";
+        countQuery = nimiTekijaHakuCount + vuosiAndQuery + approved + ";";
         if (organisaatioHaku) {
             hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + approved + " AND organisaatiotunnus = ${code}" +
                 " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = nimiTekijaHakuCount + vuosiAndQuery + " AND organisaatiotunnus = ${code};";
+            countQuery = nimiTekijaHakuCount + vuosiAndQuery + approved + " AND organisaatiotunnus = ${code};";
         }
     }
 
