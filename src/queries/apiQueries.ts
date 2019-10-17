@@ -282,16 +282,14 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     if (req.query.nimiTekija && req.query.nimiTekija != "") {
         nimiTekija = req.query.nimiTekija.toLowerCase();
         nimiTekijaHaku = true;
-    }
-
-    if (req.query.julkaisunTila && req.query.julkaisunTila != "") {
+    } else if (req.query.julkaisunTila && req.query.julkaisunTila != "") {
         julkaisuntila = req.query.julkaisunTila;
         tilaHaku = true;
-    }
-
-    if (req.query.julkaisuVuosi && req.query.julkaisuVuosi != "") {
+    } else if (req.query.julkaisuVuosi && req.query.julkaisuVuosi != "") {
         julkaisuvuosi = req.query.julkaisuVuosi;
         vuosiHaku = true;
+    } else {
+        return res.status(500).send("Empty search");
     }
 
     const nimiTekijaHakuQuery = "SELECT * FROM julkaisu WHERE (LOWER(julkaisunnimi) LIKE '%" + nimiTekija + "%' OR LOWER(tekijat) LIKE '%" + nimiTekija + "%')";
