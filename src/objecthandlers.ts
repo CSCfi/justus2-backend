@@ -11,6 +11,7 @@ const organisationConfig = require("./organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
 const koodistoUrl = process.env.KOODISTO_URL;
+const callerId = process.env.KOODISTO_CALLER_ID;
 
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
@@ -168,7 +169,17 @@ function ObjectHandlerJulkaisuntilat(obj: any, lang: any): object[] {
 
 function httpgetCombiner(URL: String, callback: Function) {
     let data = "";
-    https.get(URL, (resp: Response) => {
+    const options = {
+        host: koodistoUrl,
+        port: 443,
+        path: "/koodisto-service/rest/json" + URL,
+        rejectUnauthorized: false,
+        headers: {
+            "Caller-Id": callerId
+        }
+    };
+
+    https.get(options, (resp: Response) => {
         resp.on("data", (chunk: any) => {
             data += chunk;
         });
@@ -203,7 +214,8 @@ function ObjectHandlerTieteenalat(obj: any, lang: any) {
     ];
     obj.forEach((e: any) => {
         const determinator = e.koodiArvo;
-        const url: string =  koodistoUrl + "/tieteenala/koodi?onlyValidKoodis=false";
+        const url: string = "/tieteenala/koodi?onlyValidKoodis=false";
+
         httpgetCombiner(url, parse);
         function parse(alatieteenalatRAW: object[]) {
             const alatieteenalat: object[] = [
@@ -261,7 +273,7 @@ function ObjectHandlerJulkaisunluokat(obj: any, lang: any) {
 
     obj.forEach((e: any) => {
         const spec = e.koodiArvo.toLowerCase();
-        const url: string =  koodistoUrl + "/relaatio/sisaltyy-alakoodit/julkaisunpaaluokka_" + spec;
+        const url: string =  "/relaatio/sisaltyy-alakoodit/julkaisunpaaluokka_" + spec;
         httpgetCombiner(url, parse);
         function parse(alaluokatRAW: object[]) {
             const alaluokat: object[] = [

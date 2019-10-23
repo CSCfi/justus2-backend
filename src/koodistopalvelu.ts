@@ -12,7 +12,9 @@ const client = redis.createClient();
 const OH = require("./objecthandlers");
 
 const koodistoUrl = process.env.KOODISTO_URL;
+const callerId = process.env.KOODISTO_CALLER_ID;
 const organisationConfig = require("./organization_config");
+
 
 // Import TheseusSender class
 import { theseus as ts } from "./services/TheseusSender";
@@ -72,18 +74,6 @@ function UpdateKoodistopalveluRedis(res: Response) {
             }).then(() => {
                 return setTaideAlanTyyppiKategoriaSV(res);
             }).then(() => {
-                return setTaiteenalatFI(res);
-            }).then(() => {
-                return setTaiteenalatEN(res);
-            }).then(() => {
-                return setTaiteenalatSV(res);
-            }).then(() => {
-                return  setTieteenalatFI(res);
-            }).then(() => {
-                return  setTieteenalatEN(res);
-            }).then(() => {
-                return  setTieteenalatSV(res);
-            }).then(() => {
                 return setTekijanRooliFI(res);
             }).then(() => {
                 return setTekijanRooliEN(res);
@@ -95,6 +85,18 @@ function UpdateKoodistopalveluRedis(res: Response) {
                 return setValtiotEN(res);
             }).then(() => {
                 return setValtiotSV(res);
+            }).then(() => {
+                return setTaiteenalatFI(res);
+            }).then(() => {
+                return setTaiteenalatEN(res);
+            }).then(() => {
+                return setTaiteenalatSV(res);
+            }).then(() => {
+                return  setTieteenalatFI(res);
+            }).then(() => {
+                return  setTieteenalatEN(res);
+            }).then(() => {
+                return  setTieteenalatSV(res);
             }).then(() => {
                 return setJulkaisunLuokatFI(res);
             }).then(() => {
@@ -112,7 +114,18 @@ function UpdateKoodistopalveluRedis(res: Response) {
 // Used for apis where you need to combine multiple external api calls and set redis later
 // when you have combined the data
 function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, lang: any ) {
-    https.get(URL, (resp: Response) => {
+
+    const options = {
+        host: koodistoUrl,
+        port: 443,
+        path: "/koodisto-service/rest/json" + URL,
+        rejectUnauthorized: false,
+        headers: {
+            "Caller-Id": callerId
+        }
+    };
+
+    https.get(options, (resp: Response) => {
         let data = "";
         resp.on("data", (chunk: any) => {
             data += chunk;
@@ -129,7 +142,9 @@ function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, l
 }
 
 
+// Only finto and jufo services use this function, so no caller-id is needed
 export function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
+
     if (secondURL) {
         const urls = [URL, secondURL];
         const first: object []  = [
@@ -177,7 +192,7 @@ export function HTTPGETshow (URL: String, res: Response, objecthandler: Function
                     const newdata = JSON.parse(data);
                     res.send(objecthandler(newdata, queryParams));
                 }
-    
+
             });
         })
         .on("error", (err: Error) => {
@@ -187,8 +202,19 @@ export function HTTPGETshow (URL: String, res: Response, objecthandler: Function
 }
 
 function HTTPSUBGET (URL: String) {
+
     return new Promise((resolve, reject) => {
-        https.get(URL, (resp: Response) => {
+        const options = {
+            host: koodistoUrl,
+            port: 443,
+            path: "/koodisto-service/rest/json" + URL,
+            rejectUnauthorized: false,
+            headers: {
+                "Caller-Id": callerId
+            }
+        };
+
+        https.get(options, (resp: any) =>  {
             let data = "";
             resp.on("data", (chunk: any) => {
                 data += chunk;
@@ -210,10 +236,10 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
             const proms: object [] = [];
             for (const i in orgid) {
                 if (orgid[i].length > 5) {
-                    proms.push(HTTPSUBGET(koodistoUrl + "/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + orgid[i]));
+                    proms.push(HTTPSUBGET("/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + orgid[i]));
                 }
                 else {
-                    proms.push(HTTPSUBGET(koodistoUrl + "/oppilaitosnumero/koodi/oppilaitosnumero_" + orgid[i]));
+                    proms.push(HTTPSUBGET("/oppilaitosnumero/koodi/oppilaitosnumero_" + orgid[i]));
                 }
             }
             Promise.all(proms).then((values: object []) => {
@@ -250,95 +276,96 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
 }
 
 function setJulkaisunTilatFI(res: Response) {
-    return HTTPGET(koodistoUrl + "/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatFI", OH.ObjectHandlerJulkaisuntilat, "FI");
+    return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatFI", OH.ObjectHandlerJulkaisuntilat, "FI");
 }
 function setJulkaisunTilatEN(res: Response) {
-    return HTTPGET(koodistoUrl + "/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatEN", OH.ObjectHandlerJulkaisuntilat, "EN");
+    return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatEN", OH.ObjectHandlerJulkaisuntilat, "EN");
 }
 function setJulkaisunTilatSV(res: Response) {
-    return HTTPGET(koodistoUrl + "/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatSV", OH.ObjectHandlerJulkaisuntilat, "SV");
+    return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatSV", OH.ObjectHandlerJulkaisuntilat, "SV");
 }
 function setKieletFI(res: Response) {
-    return HTTPGET(koodistoUrl + "/kieli/koodi?onlyValidKoodis=false", res, "getKieletFI", OH.ObjectHandlerKielet, "FI");
+    return HTTPGET("/kieli/koodi?onlyValidKoodis=false", res, "getKieletFI", OH.ObjectHandlerKielet, "FI");
 }
 function setKieletEN(res: Response) {
-    return HTTPGET(koodistoUrl + "/kieli/koodi?onlyValidKoodis=false", res, "getKieletEN", OH.ObjectHandlerKielet, "EN");
+    return HTTPGET("/kieli/koodi?onlyValidKoodis=false", res, "getKieletEN", OH.ObjectHandlerKielet, "EN");
 }
 function setKieletSV(res: Response) {
-    return HTTPGET(koodistoUrl + "/kieli/koodi?onlyValidKoodis=false", res, "getKieletSV", OH.ObjectHandlerKielet, "SV");
+    return HTTPGET("/kieli/koodi?onlyValidKoodis=false", res, "getKieletSV", OH.ObjectHandlerKielet, "SV");
 }
 function setValtiotFI(res: Response) {
-    return HTTPGET(koodistoUrl + "/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotFI", OH.ObjectHandlerValtiot, "FI");
+    return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotFI", OH.ObjectHandlerValtiot, "FI");
 }
 function setValtiotEN(res: Response) {
-    return HTTPGET(koodistoUrl + "/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotEN", OH.ObjectHandlerValtiot, "EN");
+    return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotEN", OH.ObjectHandlerValtiot, "EN");
 }
 function setValtiotSV(res: Response) {
-    return HTTPGET(koodistoUrl + "/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotSV", OH.ObjectHandlerValtiot, "SV");
+    return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotSV", OH.ObjectHandlerValtiot, "SV");
 }
 function setTaideAlanTyyppiKategoriaFI(res: Response) {
-    return HTTPGET(koodistoUrl + "/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaFI", OH.ObjectHandlerTaidealantyyppikategoria, "FI");
+    return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaFI", OH.ObjectHandlerTaidealantyyppikategoria, "FI");
 }
 function setTaideAlanTyyppiKategoriaEN(res: Response) {
-    return HTTPGET(koodistoUrl + "/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaEN", OH.ObjectHandlerTaidealantyyppikategoria, "EN");
+    return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaEN", OH.ObjectHandlerTaidealantyyppikategoria, "EN");
 }
 function setTaideAlanTyyppiKategoriaSV(res: Response) {
-    return HTTPGET(koodistoUrl + "/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaSV", OH.ObjectHandlerTaidealantyyppikategoria, "SV");
+    return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaSV", OH.ObjectHandlerTaidealantyyppikategoria, "SV");
 }
 function setTaiteenalatFI(res: Response) {
-    return HTTPGET(koodistoUrl + "/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatFI", OH.ObjectHandlerTaiteenalat, "FI");
+    return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatFI", OH.ObjectHandlerTaiteenalat, "FI");
 }
 function setTaiteenalatEN(res: Response) {
-    return HTTPGET(koodistoUrl + "/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatEN", OH.ObjectHandlerTaiteenalat, "EN");
+    return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatEN", OH.ObjectHandlerTaiteenalat, "EN");
 }
 function setTaiteenalatSV(res: Response) {
-    return HTTPGET(koodistoUrl + "/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatSV", OH.ObjectHandlerTaiteenalat, "SV");
-}
-function setTieteenalatFI(res: Response) {
-    return HTTPGETcombiner(koodistoUrl + "/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "FI");
-}
-function setTieteenalatEN(res: Response) {
-    return HTTPGETcombiner(koodistoUrl + "/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "EN");
-}
-function setTieteenalatSV(res: Response) {
-    return HTTPGETcombiner(koodistoUrl + "/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "SV");
+    return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatSV", OH.ObjectHandlerTaiteenalat, "SV");
 }
 function setTekijanRooliFI(res: Response) {
-    return HTTPGET(koodistoUrl +  "/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliFI", OH.ObjectHandlerRoolit, "FI");
+    return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliFI", OH.ObjectHandlerRoolit, "FI");
 }
 function setTekijanRooliEN(res: Response) {
-    return HTTPGET(koodistoUrl +  "/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliEN", OH.ObjectHandlerRoolit, "EN");
+    return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliEN", OH.ObjectHandlerRoolit, "EN");
 }
 function setTekijanRooliSV(res: Response) {
-    return HTTPGET(koodistoUrl +  "/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliSV", OH.ObjectHandlerRoolit);
+    return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliSV", OH.ObjectHandlerRoolit, "SV");
+}
+function setTieteenalatFI(res: Response) {
+    return HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "FI");
+}
+function setTieteenalatEN(res: Response) {
+    return HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "EN");
+}
+function setTieteenalatSV(res: Response) {
+    return HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "SV");
 }
 function setJulkaisunLuokatFI(res: Response) {
-    return HTTPGETcombiner(koodistoUrl + "/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "FI");
+    return HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "FI");
 }
 function setJulkaisunLuokatEN(res: Response) {
-    return HTTPGETcombiner(koodistoUrl + "/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "EN");
+    return HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "EN");
 }
 function setJulkaisunLuokatSV(res: Response) {
-    return HTTPGETcombiner(koodistoUrl + "/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "SV");
+    return HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "SV");
 }
 function setAlaYksikot(res: Response) {
-    return HTTPGET(koodistoUrl +  "/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
+    console.log("in set alayksiköt");
+    return HTTPGET("/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
 }
  function setOrgListausFI(res: Response) {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET(koodistoUrl, res, "getOrgListausFI", OH.ObjectHandlerOrgListaus, "FI", orgid);
+    return HTTPGET("", res, "getOrgListausFI", OH.ObjectHandlerOrgListaus, "FI", orgid);
 }
 
 function setOrgListausSV(res: Response) {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET(koodistoUrl, res, "getOrgListausSV", OH.ObjectHandlerOrgListaus, "SV", orgid);
+    return HTTPGET("", res, "getOrgListausSV", OH.ObjectHandlerOrgListaus, "SV", orgid);
 }
 function setOrgListausEN(res: Response) {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET(koodistoUrl, res, "getOrgListausEN", OH.ObjectHandlerOrgListaus, "EN", orgid);
+    return HTTPGET("", res, "getOrgListausEN", OH.ObjectHandlerOrgListaus, "EN", orgid);
 }
 
 module.exports = {
 HTTPGETshow: HTTPGETshow,
-HTTPGET: HTTPGET,
+HTTPGET: HTTPGET
 };
