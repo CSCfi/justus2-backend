@@ -284,13 +284,16 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     if (req.query.nimiTekija && req.query.nimiTekija != "") {
         nimiTekija = req.query.nimiTekija.toLowerCase();
         nimiTekijaHaku = true;
-    } else if (req.query.julkaisunTila && req.query.julkaisunTila != "") {
+    }
+    if (req.query.julkaisunTila && req.query.julkaisunTila != "") {
         julkaisuntila = req.query.julkaisunTila;
         tilaHaku = true;
-    } else if (req.query.julkaisuVuosi && req.query.julkaisuVuosi != "") {
+    }
+    if (req.query.julkaisuVuosi && req.query.julkaisuVuosi != "") {
         julkaisuvuosi = req.query.julkaisuVuosi;
         vuosiHaku = true;
-    } else {
+    }
+    if (!vuosiHaku && !tilaHaku && !nimiTekijaHaku) {
         return res.status(500).send("Empty search");
     }
 

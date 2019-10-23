@@ -348,7 +348,6 @@ function setJulkaisunLuokatSV(res: Response) {
     return HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "SV");
 }
 function setAlaYksikot(res: Response) {
-    console.log("in set alayksiköt");
     return HTTPGET("/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
 }
  function setOrgListausFI(res: Response) {
