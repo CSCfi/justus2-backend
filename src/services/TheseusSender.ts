@@ -765,6 +765,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             tempMetadataObject.push({"key": "dc.okm.internationalcopublication", "value": this.mapZeroAndOneValues(julkaisuData["kansainvalinenyhteisjulkaisu"]) });
             tempMetadataObject.push({"key": "dc.okm.corporatecopublication", "value": this.mapZeroAndOneValues(julkaisuData["yhteisjulkaisuyrityksenkanssa"]) });
             tempMetadataObject.push({"key": "dc.okm.openaccess", "value": this.mapOpenAccess(julkaisuData["avoinsaatavuus"]) });
+            tempMetadataObject.push({"key": "dc.identifier.url", "value": (julkaisuData["pysyvaverkkoosoite"]) });
 
             metadataObject = [];
         }
