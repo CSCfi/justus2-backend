@@ -31,7 +31,7 @@ app.use(cookieParser());
 app.use(session({
     store: new RedisStore(),
     secret: sessionSecret,
-    cookie: { maxAge: 24 * 60 * 60 * 1000, secure: false }, // 1 day
+    cookie: { maxAge: 8 * 60 * 60 * 1000, secure: false }, // 8 hours
     resave: true,
     autoreconnect: true,
     saveUninitialized: true,
