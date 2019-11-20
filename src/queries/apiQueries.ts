@@ -269,6 +269,8 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
         return res.status(403).send("Permission denied");
     }
 
+    const julkaisuTableFields = dbHelpers.getListFields("j");
+
     const pageSize = 30;
     const currentPage = parseInt(req.query.currentPage);
     const offset = currentPage * pageSize - pageSize;
@@ -297,14 +299,23 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
         return res.status(500).send("Empty search");
     }
 
-    const nimiTekijaHakuQuery = "SELECT * FROM julkaisu WHERE (LOWER(julkaisunnimi) LIKE '%" + nimiTekija + "%' OR LOWER(tekijat) LIKE '%" + nimiTekija + "%')";
+    // Fetch only fields which are needed in publication list, fetch also publication file related data
+    const baseQuery =
+        "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
+        " FROM julkaisu AS j" +
+        " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid";
+
+    const nimiTekijaHakuQuery = baseQuery +
+        " WHERE (LOWER(j.julkaisunnimi) LIKE '%" + nimiTekija + "%' OR LOWER(j.tekijat) LIKE '%" + nimiTekija + "%')";
     const nimiTekijaHakuCount = "SELECT COUNT(*) FROM julkaisu WHERE (LOWER(julkaisunnimi) LIKE '%" + nimiTekija + "%' OR LOWER(tekijat) LIKE '%" + nimiTekija + "%')";
 
-    const tilaHakuQuery = "SELECT * FROM julkaisu WHERE julkaisuntila = ${tila}";
+    const tilaHakuQuery = baseQuery +
+        " WHERE julkaisuntila = ${tila}";
     const tilaHakuCount = "SELECT COUNT(*) FROM julkaisu WHERE julkaisuntila = ${tila}";
     const tilaAndQuery = " AND julkaisuntila = ${tila}";
 
-    const vuosiHakuQuery = "SELECT * FROM julkaisu WHERE julkaisuvuosi = ${vuosi}";
+    const vuosiHakuQuery = baseQuery +
+        " WHERE julkaisuvuosi = ${vuosi}";
     const vuosiHakuCount = "SELECT COUNT(*) FROM julkaisu WHERE julkaisuvuosi = ${vuosi}";
     const vuosiAndQuery = " AND julkaisuvuosi = ${vuosi}";
 
