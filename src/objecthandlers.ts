@@ -610,6 +610,11 @@ function ObjectHandlerOrgListaus(obj: any, orgid: any, lang: any) {
                 const visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
                 const requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
 
+                twntysix.yksikot.sort(compare);
+                twntyseven.yksikot.sort(compare);
+                twntyeight.yksikot.sort(compare);
+                twntynine.yksikot.sort(compare);
+
                 yksikotarray.push(twntynine);
                 yksikotarray.push(twntyeight);
                 yksikotarray.push(twntyseven);
@@ -1061,11 +1066,18 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
             }
         });
 
-              yarray.push(twonine);
-              yarray.push(twoeight);
-              yarray.push(twoseven);
-              yarray.push(twosix);
-              if (y2016.length || y2017.length || y2018.length || y2019.length) {
+
+        twosix.yksikot.sort(compare);
+        twoseven.yksikot.sort(compare);
+        twoeight.yksikot.sort(compare);
+        twonine.yksikot.sort(compare);
+
+        yarray.push(twonine);
+        yarray.push(twoeight);
+        yarray.push(twoseven);
+        yarray.push(twosix);
+
+        if (y2016.length || y2017.length || y2018.length || y2019.length) {
                   visibleFields.push("alayksikko");
               const orgall =  {
                 perustiedot,
@@ -1084,14 +1096,24 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
                     requiredFields
                   };
                   callbacker(orgallx);
-
-
             }
         }
     }
 
-
 }
+
+function compare(a: any, b: any) {
+    if ( a.selite < b.selite ) {
+        return -1;
+    }
+    if ( a.selite > b.selite ) {
+        return 1;
+    }
+    return 0;
+}
+
+
+
 
 function isJukuriPublication(orgTunnus: any) {
     let jukuriPublication: boolean = false;
