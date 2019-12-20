@@ -273,7 +273,7 @@ const contactList = [
         // LAB ammattikorkeakoulu
         "domain": "@lab.fi",
         "code": "10126",
-        "email": "julkaisut@lab.fi",
+        "email": "",
 		"theseusData": {
 				"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
 		},
@@ -304,6 +304,7 @@ const contactList = [
         "code": "02358",
         "email": ""
     },
+
 
 	// Testikäytössä
 	{
