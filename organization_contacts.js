@@ -269,6 +269,15 @@ const contactList = [
 			"theseusCode": "fi=Poliisiammattikorkeakoulu|sv=Polisyrkeshögskolan|en=Police University College|"	
 		}
     },
+	{
+        // LAB ammattikorkeakoulu
+        "domain": "@lab.fi",
+        "code": "10126",
+        "email": "julkaisut@lab.fi",
+		"theseusData": {
+				"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
+		},
+    },
     {
         // tutkimusorganisaatio
         // Ilmatieteen laitos  #fmi-admins
