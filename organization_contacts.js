@@ -276,7 +276,7 @@ const contactList = [
         "email": "",
 		"theseusData": {
 				"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
-		},
+		}
     },
     {
         // tutkimusorganisaatio
