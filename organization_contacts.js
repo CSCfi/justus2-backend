@@ -270,12 +270,24 @@ const contactList = [
 		}
     },
 	{
-        // LAB ammattikorkeakoulu
+        // LAB ammattikorkeakoulu #lab-admins
+		// nb! lab has two domains
         "domain": "@lab.fi",
         "code": "10126",
         "email": "",
 		"theseusData": {
-				"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
+			"theseusCollectionId": 1475,
+			"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
+		}
+    },
+	{
+        // LAB ammattikorkeakoulu
+        "domain": "@lut.fi",
+        "code": "10126",
+        "email": "",
+		"theseusData": {
+			"theseusCollectionId": 1475,
+			"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
 		}
     },
     {
