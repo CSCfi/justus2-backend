@@ -570,11 +570,13 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             }
 
             res.status(200).json({ "id":  julkaisuId.id });
+            console.log("Succesfully saved julkaisu with id: " + julkaisuId.id);
 
         } catch (err) {
+            console.log(err);
+            console.log("Error in posting new publication with error code: " + err);
             await db.any("ROLLBACK");
             res.sendStatus(500);
-            console.log(err);
         }
     } else {
         return res.status(403).send("Permission denied");
@@ -728,11 +730,13 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             }
 
             await db.any("COMMIT");
+            console.log("Succesfully updated julkaisu with id: " + req.params.id);
             return res.sendStatus(200);
 
         } catch (err) {
             // if error exists in any query, rollback
             console.log(err);
+            console.log("Error in updating publication: " + req.params.id + " with error code: " + err);
             await db.any("ROLLBACK");
             return res.status(500).send("Error in updating publication");
         }
@@ -905,10 +909,12 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
 
     const orgTekijaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
 
+    console.log("Saving organisaatiotekija data for id: " + jid);
     const organisaatiotekijaColumns = new pgp.helpers.ColumnSet(dbHelpers.organisaatiotekija, {table: "organisaatiotekija"});
     const saveOrganisaatiotekija = pgp.helpers.insert(orgTekijaObj, organisaatiotekijaColumns) + "RETURNING id";
 
     const orgid = await db.many(saveOrganisaatiotekija);
+    console.log("Organisaatiotekija id for publication " + jid + " is: " + orgid);
 
     const kayttolokiObj = JSON.parse(JSON.stringify(orgTekijaObj));
 
@@ -931,11 +937,15 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
         }
     }
 
+    console.log("Saving alayksikko data for publication: " + jid + " with organisaatiotekijaid: " + orgid);
+
     const alayksikkoColumns = new pgp.helpers.ColumnSet(["organisaatiotekijaid", "alayksikko"], {table: "alayksikko"});
     const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + "RETURNING id";
 
     await db.any(saveAlayksikko);
     await auditLog.postAuditData(headers, "POST", "alayksikko", jid, alayksikkoObj);
+
+    console.log("Organisaatiotekija and alayksikko data saved for puplication: " + jid);
 }
 
 async function updateArchiveTable(data: any, headers: any, id: any) {
