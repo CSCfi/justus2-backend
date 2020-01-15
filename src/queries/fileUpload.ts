@@ -3,9 +3,7 @@ import { Request, Response, NextFunction } from "express";
 const fs = require("fs");
 const path = require("path");
 
-// File upload dependencies
-const multer  = require("multer");
-const upload = multer({ dest: process.env.TEMP_FILE_FOLDER });
+
 
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
@@ -22,16 +20,31 @@ const api = require("./../queries/apiQueries");
 const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
 
+// File upload dependencies
+const multer  = require("multer");
 
 async function uploadJulkaisu(req: Request, res: Response) {
 
-    // TODO: Check access rights for publication in question
+    const upload = multer({ dest: process.env.TEMP_FILE_FOLDER }).single("file");
 
-    upload.single("file")(req, res, async function () {
+    // TODO: Check access rights for publication in question
+    upload(req, res, async function () {
 
         const julkaisuId = req.body.data.julkaisuid;
         const julkaisuData = req.body.data;
         const file = (<any>req).file;
+
+        if (!julkaisuId || !julkaisuData) {
+            console.log("Error occurred, publication file related data is missing: " + req.body.data.julkaisuid);
+            return res.status(500).send("Publication related data is missing");
+        }
+
+        if (!file) {
+            console.log("Error occurred, publication file is missing for julkaisu: " + req.body.data.julkaisuid);
+            return res.status(500).send("Publication file is missing");
+        }
+
+        console.log("Starting file upload for publication: " + julkaisuId);
 
         const valid = await validate(file.originalname, file.path);
 
@@ -56,6 +69,7 @@ async function uploadJulkaisu(req: Request, res: Response) {
                     }
                 }
 
+                console.log("Successfully uploaded file for publication: " + julkaisuId);
                 return res.status(200).json("OK");
 
 
@@ -98,13 +112,15 @@ async function uploadJulkaisu(req: Request, res: Response) {
                     const query = connection.pgp.helpers.update({"julkaisurinnakkaistallennettu": "0"}, table) + " WHERE id = " +  parseInt(julkaisuId);
                     await connection.db.none(query);
 
-                    return res.status(500).send("Failure in file upload");
+                    console.log(e);
 
+                    return res.status(500).send(e.code);
                 }
             }
         } else {
             return res.status(403).send("Invalid file");
         }
+
 
     });
 }
