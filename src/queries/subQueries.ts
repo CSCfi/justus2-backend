@@ -10,7 +10,6 @@ async function getIssn(julkaisuid: any) {
         return [""];
     } else {
         result = oh.mapIssnAndIsbn("issn", result);
-        console.log(result);
         return result;
     }
 }

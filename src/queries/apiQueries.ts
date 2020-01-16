@@ -421,7 +421,6 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     }
 
     count = await db.one(countQuery, params);
-    console.log(count);
 
     db.any(hakuQuery, params)
         .then((response: any) => {
@@ -520,7 +519,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
         const method = "POST";
 
         const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-        const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + "RETURNING id";
+        const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + " RETURNING id";
 
         // begin transaction
         await db.any("BEGIN");
@@ -538,7 +537,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
                 method, "julkaisu", julkaisuId.id, kayttoLokiObject);
 
             const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
-            const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + "RETURNING accessid";
+            const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + " RETURNING accessid";
 
             await db.one(insertAccessId);
 
@@ -561,7 +560,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
                 await fileUpload.postDataToQueueTable(julkaisuId.id);
 
                 const table = new connection.pgp.helpers.ColumnSet(["julkaisuid", "destination"], {table: "julkaisuarkisto"});
-                const query = pgp.helpers.insert({"julkaisuid": julkaisuId.id, "destination": "jukuri"}, table) + "RETURNING id";
+                const query = pgp.helpers.insert({"julkaisuid": julkaisuId.id, "destination": "jukuri"}, table) + " RETURNING id";
 
                 await connection.db.one(query);
 
@@ -755,7 +754,7 @@ async function putJulkaisuntila(req: Request, res: Response, next: NextFunction)
 
     if (isAdmin && hasAccessToPublication) {
         const julkaisuColumns = new pgp.helpers.ColumnSet(["julkaisuntila", "modified", "username"], {table: "julkaisu"});
-        const updateJulkaisuntila = pgp.helpers.update(req.body, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id) + "RETURNING id";
+        const updateJulkaisuntila = pgp.helpers.update(req.body, julkaisuColumns) + "WHERE id = " +  parseInt(req.params.id) + " RETURNING id";
 
         return db.one(updateJulkaisuntila)
             .then((response: any) => {
@@ -803,7 +802,7 @@ async function insertIssnAndIsbn(julkaisu: any, jid: any, headers: any, identifi
 
     const table = "julkaisu_" + identifier;
     const columns = new pgp.helpers.ColumnSet(["julkaisuid", identifier], {table: table});
-    const save = pgp.helpers.insert(obj, columns) + "RETURNING id";
+    const save = pgp.helpers.insert(obj, columns) + " RETURNING id";
     await db.many(save);
 
     await auditLog.postAuditData(headers, "POST", table, jid, obj);
@@ -824,7 +823,7 @@ async function insertProjektinumero(julkaisu: any, jid: any, headers: any) {
         }
     }
     const columns = new pgp.helpers.ColumnSet(["julkaisuid", "projektinumero"], {table: "julkaisu_projektinumero"});
-    const save = pgp.helpers.insert(projektinumeroObj, columns) + "RETURNING id";
+    const save = pgp.helpers.insert(projektinumeroObj, columns) + " RETURNING id";
     await db.many(save);
 
     await auditLog.postAuditData(headers, "POST", "julkaisu_projektinumero", jid, projektinumeroObj); 
@@ -835,7 +834,7 @@ async function insertTieteenala(obj: any, jid: any, headers: any) {
 
     const tieteenalaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
     const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.tieteenala, {table: "tieteenala"});
-    const saveTieteenala = pgp.helpers.insert(tieteenalaObj, tieteenalaColumns) + "RETURNING id";
+    const saveTieteenala = pgp.helpers.insert(tieteenalaObj, tieteenalaColumns) + " RETURNING id";
 
     await db.many(saveTieteenala);
     await auditLog.postAuditData(headers, "POST", "tieteenala", jid, tieteenalaObj);
@@ -847,7 +846,7 @@ async function insertTaiteenala(obj: any, jid: any, headers: any) {
 
     const taiteenalaObj =  dbHelpers.addJulkaisuIdToObject(obj, jid);
     const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.taiteenala, {table: "taiteenala"});
-    const saveTieteenala = pgp.helpers.insert(taiteenalaObj, tieteenalaColumns) + "RETURNING id";
+    const saveTieteenala = pgp.helpers.insert(taiteenalaObj, tieteenalaColumns) + " RETURNING id";
 
     await db.many(saveTieteenala);
     await auditLog.postAuditData(headers, "POST", "taiteenala", jid, taiteenalaObj);
@@ -860,7 +859,7 @@ async function insertAvainsanat(obj: any, jid: any, headers: any) {
 
     const avainsanaObj = dbHelpers.constructObject(obj, jid, "avainsana");
     const avainsanatColumns = new pgp.helpers.ColumnSet(["julkaisuid", "avainsana"], {table: "avainsana"});
-    const saveAvainsanat = pgp.helpers.insert(avainsanaObj, avainsanatColumns) + "RETURNING id";
+    const saveAvainsanat = pgp.helpers.insert(avainsanaObj, avainsanatColumns) + " RETURNING id";
 
     await db.many(saveAvainsanat);
     await auditLog.postAuditData(headers, "POST", "avainsana", jid, avainsanaObj);
@@ -872,7 +871,7 @@ async function insertTyyppikategoria(obj: any, jid: any, headers: any) {
 
     const tyyppikategoriaObj = dbHelpers.constructObject(obj, jid, "tyyppikategoria");
     const tyyppikategoriaColumns = new pgp.helpers.ColumnSet(["julkaisuid", "tyyppikategoria"], {table: "taidealantyyppikategoria"});
-    const saveTyyppikategoria = pgp.helpers.insert(tyyppikategoriaObj, tyyppikategoriaColumns) + "RETURNING id";
+    const saveTyyppikategoria = pgp.helpers.insert(tyyppikategoriaObj, tyyppikategoriaColumns) + " RETURNING id";
 
     await db.many(saveTyyppikategoria);
     await auditLog.postAuditData(headers, "POST", "taidealantyyppikategoria", jid, tyyppikategoriaObj);
@@ -897,7 +896,7 @@ async function insertLisatieto(obj: any, jid: any, headers: any) {
     });
 
     const lisatietoColumns = new pgp.helpers.ColumnSet(["julkaisuid", "lisatietotyyppi", "lisatietoteksti"], {table: "lisatieto"});
-    const saveLisatieto = pgp.helpers.insert(lisatietoObj, lisatietoColumns) + "RETURNING id";
+    const saveLisatieto = pgp.helpers.insert(lisatietoObj, lisatietoColumns) + " RETURNING id";
 
     await db.many(saveLisatieto);
     await auditLog.postAuditData(headers, "POST", "lisatieto", jid, lisatietoObj);
@@ -911,10 +910,12 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
 
     console.log("Saving organisaatiotekija data for id: " + jid);
     const organisaatiotekijaColumns = new pgp.helpers.ColumnSet(dbHelpers.organisaatiotekija, {table: "organisaatiotekija"});
-    const saveOrganisaatiotekija = pgp.helpers.insert(orgTekijaObj, organisaatiotekijaColumns) + "RETURNING id";
+    const saveOrganisaatiotekija = pgp.helpers.insert(orgTekijaObj, organisaatiotekijaColumns) + " RETURNING id";
+
+    console.log(saveOrganisaatiotekija);
 
     const orgid = await db.many(saveOrganisaatiotekija);
-    console.log("Organisaatiotekija id for publication " + jid + " is: " + orgid);
+    console.log("Saved organisaatiotekija data for publication " + jid);
 
     const kayttolokiObj = JSON.parse(JSON.stringify(orgTekijaObj));
 
@@ -929,7 +930,6 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
         return Promise.resolve(true);
     }
 
-
     const alayksikkoObj = [];
     for (let i = 0; i < orgid.length; i++) {
         for (let j = 0; j < obj[i].alayksikko.length; j++) {
@@ -937,10 +937,12 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
         }
     }
 
-    console.log("Saving alayksikko data for publication: " + jid + " with organisaatiotekijaid: " + orgid);
+    console.log("Saving alayksikko data for publication: " + jid);
 
     const alayksikkoColumns = new pgp.helpers.ColumnSet(["organisaatiotekijaid", "alayksikko"], {table: "alayksikko"});
-    const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + "RETURNING id";
+    const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + " RETURNING id";
+
+    console.log(saveAlayksikko);
 
     await db.any(saveAlayksikko);
     await auditLog.postAuditData(headers, "POST", "alayksikko", jid, alayksikkoObj);
