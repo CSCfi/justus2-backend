@@ -396,7 +396,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
        rp(options)
        .then(async function (res: Response) {
            if ((res as any)["authenticated"] === true) {
-               console.log("The auth response " + (res as any)["authenticated"]);
+               // console.log("The auth response " + (res as any)["authenticated"]);
                resolve(version);
            }
            else if ((res as any)["authenticated"] === false) {
