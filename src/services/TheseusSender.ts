@@ -67,7 +67,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         const self = this;
         return new Promise(function(resolve: any, reject: any) {
         self.checkToken(version).then(async function() {
-            console.log("The token was valid for version: " + version);
+            // console.log("The token was valid for version: " + version);
             resolve(version);
          }).catch(async function(msg: any) {
             console.log("The token for " + version + " was invalid! Proceeding to get a new token , this is the res " + msg);
@@ -87,11 +87,11 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                         name: "theseus"
                     },
                     {
-                        name: "jukuri"  
+                        name: "jukuri"
                     }
                 ];
                 versions.forEach(async function(e: any) {
-                    console.log("The versions: " + e.name);
+                    // console.log("The versions: " + e.name);
                     self.tokenHandler(e.name)
                     .then((version: any) => {
                         self.launchPost(version);
@@ -117,8 +117,8 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
        const julkaisuIDt = await connection.db.query(
            "SELECT julkaisujono.julkaisuid, julkaisu.organisaatiotunnus FROM julkaisujono, julkaisu WHERE julkaisu.id = julkaisujono.julkaisuID " + 
            "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING *");
-           console.log("The initial token: " + token + " for version " + version);
-           console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
+           // console.log("The initial token: " + token + " for version " + version);
+           // console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
            julkaisuIDt.forEach(async function (e: any) {
                const jukuriPublication: boolean = self.isJukuriPublication(e.organisaatiotunnus);
                if (jukuriPublication && version === "jukuri") {
@@ -136,14 +136,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
     public async postJulkaisuTheseus(julkaisunID: any, version?: any) {
-        // Purely for testing, to see that the right version is coming in 
-        // if (version) {
-        //     console.log("The julkaisuid incoming for jukuri: " + julkaisunID);
-        // }
-        // else {
-        //     console.log("The julkaisuid incoming for theseus: " + julkaisunID);
-        // }
-
 
         const itemId = await this.itemIdExists(julkaisunID);
         if (itemId && itemId.itemid) {
