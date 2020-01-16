@@ -118,7 +118,7 @@ async function uploadJulkaisu(req: Request, res: Response) {
                 }
             }
         } else {
-            return res.status(403).send("Invalid file");
+            return res.status(500).send("Invalid file");
         }
 
 
@@ -182,7 +182,7 @@ async function postDataToArchiveTable(file: any, data: any, headers: any, julkai
             method = "PUT";
         } else {
             obj["destination"] = "theseus";
-            query = connection.pgp.helpers.insert(obj, table) + "RETURNING id";
+            query = connection.pgp.helpers.insert(obj, table) + " RETURNING id";
             method = "POST";
         }
 
@@ -196,7 +196,7 @@ async function postDataToArchiveTable(file: any, data: any, headers: any, julkai
 async function postDataToQueueTable(julkaisuid: any) {
 
     const tableColumns = new connection.pgp.helpers.ColumnSet(["julkaisuid"], {table: "julkaisujono"});
-    const query = connection.pgp.helpers.insert({"julkaisuid": julkaisuid }, tableColumns) + "RETURNING id";
+    const query = connection.pgp.helpers.insert({"julkaisuid": julkaisuid }, tableColumns) + " RETURNING id";
     await connection.db.one(query);
 
 }
@@ -339,8 +339,6 @@ async function metaDataAlreadyUpdated(id: any) {
         "${id};";
 
     const data = await connection.db.oneOrNone(query, params);
-    console.log(data);
-
     return data;
 }
 
