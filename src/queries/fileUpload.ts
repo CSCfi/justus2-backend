@@ -107,22 +107,24 @@ async function uploadJulkaisu(req: Request, res: Response) {
                         }
                     }
 
-                    const table = new connection.pgp.helpers.ColumnSet(["julkaisurinnakkaistallennettu"], {table: "julkaisu"});
-
-                    const query = connection.pgp.helpers.update({"julkaisurinnakkaistallennettu": "0"}, table) + " WHERE id = " +  parseInt(julkaisuId);
-                    await connection.db.none(query);
-
+                    await removeJulkaisurinnakkaistallennettuValue(julkaisuId);
                     console.log(e);
-
                     return res.status(500).send(e.code);
                 }
             }
         } else {
+            await removeJulkaisurinnakkaistallennettuValue(julkaisuId);
             return res.status(500).send("Invalid file");
         }
 
 
     });
+}
+
+async function removeJulkaisurinnakkaistallennettuValue(id: any) {
+    const table = new connection.pgp.helpers.ColumnSet(["julkaisurinnakkaistallennettu"], {table: "julkaisu"});
+    const query = connection.pgp.helpers.update({"julkaisurinnakkaistallennettu": "0"}, table) + " WHERE id = " +  parseInt(id);
+    await connection.db.none(query);
 }
 
 
