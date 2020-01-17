@@ -10,6 +10,9 @@ RUN npm run build -- --prod
 
 FROM centos:7
 
+ENV TZ=Europe/Helsinki
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Initialize system
 RUN useradd -ms /bin/false -d /app node && \
     yum install -y epel-release && \
