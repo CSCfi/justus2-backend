@@ -22,98 +22,59 @@ import { theseus as ts } from "./services/TheseusSender";
 // REMEMBER THIS
 // (node:1239) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 connect listeners added. Use emitter.setMaxListeners() to increase limit
 
+SetKoodistoDataToRedis();
+
 // Scheduler for updating Koodistopalvelu data inside redis
 // Each star represents a different value, beginning from second and ending in day
 // So if we want to update it once a day at midnight we would use ("0 0 0 * * *")
-schedule.scheduleJob("0 0 0 * * *", function(res: Response) {
-   UpdateKoodistopalveluRedis(res);
-});
-schedule.scheduleJob("15 0 0 * * *", function(res: Response) {
-   UpdateOrgListaus(res);
+schedule.scheduleJob("0 0 0 * * *", function() {
+    UpdateKoodistopalveluRedis().then(() => {
+        console.log("Scheduled koodisto update completed");
+    });
 });
 
 // Interval timer for checking julkaisujono
 setInterval(() =>  ts.checkQueue(), 30000);
 
 
-function UpdateOrgListaus(res: Response) {
-    return new Promise((resolve, reject) => {
-        setOrgListausFI(res).then(() => {
-            return setOrgListausSV(res);
-        }).then(() => {
-            return setOrgListausEN(res);
-        });
+ function SetKoodistoDataToRedis() {
+    client.on("connect", function () {
+        console.log("Connected to redis");
+         UpdateKoodistopalveluRedis().then(() => {
+             console.log("Koodisto data to redis updated");
+         });
 
     });
 }
 
-UpdateKoodistopalveluRedis(undefined).then(function() {
-    return UpdateOrgListaus(undefined);
-});
-
-function UpdateKoodistopalveluRedis(res: Response) {
-    return new Promise((resolve, reject) => {
-        client.on("connect", () => {
-            console.log("Connected to redis");
-            setAlaYksikot(res).then(() => {
-                return setKieletFI(res);
-            }).then(() => {
-                return setKieletEN(res);
-            }).then(() => {
-                return setKieletSV(res);
-            }).then(() => {
-                return setJulkaisunTilatFI(res);
-            }).then(() => {
-                return setJulkaisunTilatEN(res);
-            }).then(() => {
-                return setJulkaisunTilatSV(res);
-            }).then(() => {
-                return setTaideAlanTyyppiKategoriaFI(res);
-            }).then(() => {
-                return setTaideAlanTyyppiKategoriaEN(res);
-            }).then(() => {
-                return setTaideAlanTyyppiKategoriaSV(res);
-            }).then(() => {
-                return setTekijanRooliFI(res);
-            }).then(() => {
-                return setTekijanRooliEN(res);
-            }).then(() => {
-                return setTekijanRooliSV(res);
-            }).then(() => {
-                return setValtiotFI(res);
-            }).then(() => {
-                return setValtiotEN(res);
-            }).then(() => {
-                return setValtiotSV(res);
-            }).then(() => {
-                return setTaiteenalatFI(res);
-            }).then(() => {
-                return setTaiteenalatEN(res);
-            }).then(() => {
-                return setTaiteenalatSV(res);
-            }).then(() => {
-                return  setTieteenalatFI(res);
-            }).then(() => {
-                return  setTieteenalatEN(res);
-            }).then(() => {
-                return  setTieteenalatSV(res);
-            }).then(() => {
-                return setJulkaisunLuokatFI(res);
-            }).then(() => {
-                return setJulkaisunLuokatEN(res);
-            }).then(() => {
-                return setJulkaisunLuokatSV(res);
-            }).then(() => {
-                console.log("Data from Koodistopalvelu updated");
-                resolve();
-            });
-        });
+async function UpdateKoodistopalveluRedis() {
+    console.log("Updating koodisto data to redis");
+    setAlaYksikot().then(() => {
+        return setKielet();
+    }).then(() => {
+        return setJulkaisunTilat();
+    }).then(() => {
+        return setTaideAlanTyyppiKategoria();
+    }).then(() => {
+        return setTekijanRooli();
+    }).then(() => {
+        return setValtiot();
+    }).then(() => {
+        return setTaiteenalat();
+    }).then(() => {
+        return setTieteenalat();
+    }).then(() => {
+        return setJulkaisunLuokat();
+    }).then(() => {
+        return setOrgListaus();
+    }).then(() => {
+        resolve();
     });
 }
 
 // Used for apis where you need to combine multiple external api calls and set redis later
 // when you have combined the data
-function HTTPGETcombiner (URL: String, res: Response, objecthandler: Function, lang: any ) {
+function HTTPGETcombiner (URL: String, objecthandler: Function, lang: any ) {
 
     const options = {
         host: koodistoUrl,
@@ -263,6 +224,7 @@ function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?
         else {
             HTTPSUBGET(URL).then((data) => {
                 const newdata = JSON.parse(String(data));
+
                 client.set(redisInfo, JSON.stringify(objecthandler(newdata, lang)));
                 console.log("Set info for " + redisInfo + " from Objecthandlers to redis successfully!");
                 resolve();
@@ -274,92 +236,98 @@ function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?
     });
 }
 
-function setJulkaisunTilatFI(res: Response) {
-    return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatFI", OH.ObjectHandlerJulkaisuntilat, "FI");
+function setAlaYksikot() {
+    return HTTPGET("/alayksikkokoodi/koodi?onlyValidKoodis=false", "getAlayksikot", OH.ObjectHandlerAlayksikot);
 }
-function setJulkaisunTilatEN(res: Response) {
-    return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatEN", OH.ObjectHandlerJulkaisuntilat, "EN");
+
+function setJulkaisunTilat() {
+    return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", "getJulkaisunTilatFI", OH.ObjectHandlerJulkaisuntilat, "FI")
+    .then(() => {
+        return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", "getJulkaisunTilatEN", OH.ObjectHandlerJulkaisuntilat, "EN");
+    }).then(() => {
+        return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", "getJulkaisunTilatSV", OH.ObjectHandlerJulkaisuntilat, "SV");
+    }).then(() => {
+        resolve();
+    });
 }
-function setJulkaisunTilatSV(res: Response) {
-    return HTTPGET("/julkaisuntila/koodi?onlyValidKoodis=false", res, "getJulkaisunTilatSV", OH.ObjectHandlerJulkaisuntilat, "SV");
+
+function setKielet() {
+    return HTTPGET("/kieli/koodi?onlyValidKoodis=false", "getKieletFI", OH.ObjectHandlerKielet, "FI")
+    .then(() => {
+        return HTTPGET("/kieli/koodi?onlyValidKoodis=false", "getKieletSV", OH.ObjectHandlerKielet, "SV");
+    }).then(() => {
+        return HTTPGET("/kieli/koodi?onlyValidKoodis=false", "getKieletEN", OH.ObjectHandlerKielet, "EN");
+    }).then(() => {
+        resolve();
+    });
 }
-function setKieletFI(res: Response) {
-    return HTTPGET("/kieli/koodi?onlyValidKoodis=false", res, "getKieletFI", OH.ObjectHandlerKielet, "FI");
+
+function setValtiot() {
+    return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", "getValtiotFI", OH.ObjectHandlerValtiot, "FI")
+    .then(() => {
+        return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", "getValtiotSV", OH.ObjectHandlerValtiot, "SV");
+    }).then(() => {
+        return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", "getValtiotEN", OH.ObjectHandlerValtiot, "EN");
+    }).then(() => {
+        resolve();
+    });
 }
-function setKieletEN(res: Response) {
-    return HTTPGET("/kieli/koodi?onlyValidKoodis=false", res, "getKieletEN", OH.ObjectHandlerKielet, "EN");
+
+function setTaideAlanTyyppiKategoria() {
+    return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", "getTaideAlanTyyppiKategoriaFI", OH.ObjectHandlerTaidealantyyppikategoria, "FI")
+   .then(() => {
+        return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", "getTaideAlanTyyppiKategoriaSV", OH.ObjectHandlerTaidealantyyppikategoria, "SV");
+    }).then(() => {
+        return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", "getTaideAlanTyyppiKategoriaEN", OH.ObjectHandlerTaidealantyyppikategoria, "EN");
+    }).then(() => {
+        resolve();
+    });
+ }
+
+function setTaiteenalat() {
+    return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", "getTaiteenalatFI", OH.ObjectHandlerTaiteenalat, "FI")
+    .then(() => {
+        return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", "getTaiteenalatSV", OH.ObjectHandlerTaiteenalat, "SV");
+    }).then(() => {
+        return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", "getTaiteenalatEN", OH.ObjectHandlerTaiteenalat, "EN");
+    }).then(() => {
+        resolve();
+    });
 }
-function setKieletSV(res: Response) {
-    return HTTPGET("/kieli/koodi?onlyValidKoodis=false", res, "getKieletSV", OH.ObjectHandlerKielet, "SV");
+
+function setTekijanRooli() {
+    return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", "getTekijanRooliFI", OH.ObjectHandlerRoolit, "FI")
+    .then(() => {
+        return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", "getTekijanRooliSV", OH.ObjectHandlerRoolit, "SV");
+    }).then(() => {
+        return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", "getTekijanRooliEN", OH.ObjectHandlerRoolit, "EN");
+    }).then(() => {
+        resolve();
+    });
 }
-function setValtiotFI(res: Response) {
-    return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotFI", OH.ObjectHandlerValtiot, "FI");
+
+function setTieteenalat() {
+    HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", OH.ObjectHandlerTieteenalat, "FI");
+    HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", OH.ObjectHandlerTieteenalat, "SV");
+    HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", OH.ObjectHandlerTieteenalat, "EN");
 }
-function setValtiotEN(res: Response) {
-    return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotEN", OH.ObjectHandlerValtiot, "EN");
+
+function setJulkaisunLuokat() {
+    HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", OH.ObjectHandlerJulkaisunluokat, "FI");
+    HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", OH.ObjectHandlerJulkaisunluokat, "EN");
+    HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", OH.ObjectHandlerJulkaisunluokat, "SV");
 }
-function setValtiotSV(res: Response) {
-    return HTTPGET("/maatjavaltiot2/koodi?onlyValidKoodis=false", res, "getValtiotSV", OH.ObjectHandlerValtiot, "SV");
-}
-function setTaideAlanTyyppiKategoriaFI(res: Response) {
-    return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaFI", OH.ObjectHandlerTaidealantyyppikategoria, "FI");
-}
-function setTaideAlanTyyppiKategoriaEN(res: Response) {
-    return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaEN", OH.ObjectHandlerTaidealantyyppikategoria, "EN");
-}
-function setTaideAlanTyyppiKategoriaSV(res: Response) {
-    return HTTPGET("/taidealantyyppikategoria/koodi?onlyValidKoodis=false", res, "getTaideAlanTyyppiKategoriaSV", OH.ObjectHandlerTaidealantyyppikategoria, "SV");
-}
-function setTaiteenalatFI(res: Response) {
-    return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatFI", OH.ObjectHandlerTaiteenalat, "FI");
-}
-function setTaiteenalatEN(res: Response) {
-    return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatEN", OH.ObjectHandlerTaiteenalat, "EN");
-}
-function setTaiteenalatSV(res: Response) {
-    return HTTPGET("/taiteenala/koodi?onlyValidKoodis=false", res, "getTaiteenalatSV", OH.ObjectHandlerTaiteenalat, "SV");
-}
-function setTekijanRooliFI(res: Response) {
-    return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliFI", OH.ObjectHandlerRoolit, "FI");
-}
-function setTekijanRooliEN(res: Response) {
-    return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliEN", OH.ObjectHandlerRoolit, "EN");
-}
-function setTekijanRooliSV(res: Response) {
-    return HTTPGET("/julkaisuntekijanrooli/koodi?onlyValidKoodis=false", res, "getTekijanRooliSV", OH.ObjectHandlerRoolit, "SV");
-}
-function setTieteenalatFI(res: Response) {
-    return HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "FI");
-}
-function setTieteenalatEN(res: Response) {
-    return HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "EN");
-}
-function setTieteenalatSV(res: Response) {
-    return HTTPGETcombiner("/paatieteenala/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerTieteenalat, "SV");
-}
-function setJulkaisunLuokatFI(res: Response) {
-    return HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "FI");
-}
-function setJulkaisunLuokatEN(res: Response) {
-    return HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "EN");
-}
-function setJulkaisunLuokatSV(res: Response) {
-    return HTTPGETcombiner("/julkaisunpaaluokka/koodi?onlyValidKoodis=false", res, OH.ObjectHandlerJulkaisunluokat, "SV");
-}
-function setAlaYksikot(res: Response) {
-    return HTTPGET("/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
-}
-function setOrgListausFI() {
+
+function setOrgListaus() {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET("", "getOrgListausFI", OH.ObjectHandlerOrgNames, "FI", orgid);
-}
-function setOrgListausSV() {
-    const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET("", "getOrgListausSV", OH.ObjectHandlerOrgNames, "SV", orgid);
-}
-function setOrgListausEN() {
-    const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET("", "getOrgListausEN", OH.ObjectHandlerOrgNames, "EN", orgid);
+    return HTTPGET("", "getOrgListausFI", OH.ObjectHandlerOrgNames, "FI", orgid)
+    .then(() => {
+        return HTTPGET("", "getOrgListausSV", OH.ObjectHandlerOrgNames, "SV", orgid);
+    }).then(() => {
+        return HTTPGET("", "getOrgListausEN", OH.ObjectHandlerOrgNames, "EN", orgid);
+    }).then(() => {
+        resolve();
+    });
 }
 
 module.exports = {
