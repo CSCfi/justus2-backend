@@ -230,9 +230,9 @@ function HTTPSUBGET (URL: String) {
     });
 }
 
-function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: Function, lang?: any, orgid?: any) {
+function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?: any, orgid?: any) {
     return new Promise((resolve, reject) => {
-        if (objecthandler.name === "ObjectHandlerOrgListaus") {
+        if (objecthandler.name === "ObjectHandlerOrgNames") {
             const proms: object [] = [];
             for (const i in orgid) {
                 if (orgid[i].length > 5) {
@@ -253,8 +253,7 @@ function HTTPGET (URL: String, res: Response, redisInfo: String, objecthandler: 
                         console.log(err);
                     }
                 }
-                client.set(redisInfo, JSON.stringify(objecthandler(list, orgid, lang)));
-                client.set("getOrgNames", JSON.stringify(OH.ObjectHandlerOrgNames(list, orgid, lang)));
+                OH.ObjectHandlerOrgNames(list, orgid, lang);
                 resolve();
             }).catch((err: Error) => {
                 console.log("Error: " + err);
@@ -350,18 +349,17 @@ function setJulkaisunLuokatSV(res: Response) {
 function setAlaYksikot(res: Response) {
     return HTTPGET("/alayksikkokoodi/koodi?onlyValidKoodis=false", res, "getAlayksikot", OH.ObjectHandlerAlayksikot);
 }
- function setOrgListausFI(res: Response) {
+function setOrgListausFI() {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET("", res, "getOrgListausFI", OH.ObjectHandlerOrgListaus, "FI", orgid);
+    return HTTPGET("", "getOrgListausFI", OH.ObjectHandlerOrgNames, "FI", orgid);
 }
-
-function setOrgListausSV(res: Response) {
+function setOrgListausSV() {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET("", res, "getOrgListausSV", OH.ObjectHandlerOrgListaus, "SV", orgid);
+    return HTTPGET("", "getOrgListausSV", OH.ObjectHandlerOrgNames, "SV", orgid);
 }
-function setOrgListausEN(res: Response) {
+function setOrgListausEN() {
     const orgid = organisationConfig.getOrganisationCodes();
-    return HTTPGET("", res, "getOrgListausEN", OH.ObjectHandlerOrgListaus, "EN", orgid);
+    return HTTPGET("", "getOrgListausEN", OH.ObjectHandlerOrgNames, "EN", orgid);
 }
 
 module.exports = {

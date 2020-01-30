@@ -4,7 +4,6 @@ import { Request, Response, NextFunction } from "express";
 const redis = require("redis");
 const client = redis.createClient();
 
-
 // Scheduler for updating Koodistopalvelu data inside redis
 // Each star represents a different value, beginning from second and ending in day
 // So if we want to update it once a day at midnight we would use ("* 0 0 * * *")
@@ -24,11 +23,12 @@ function getOrganisaatioListaus(req: Request, res: Response, next: NextFunction)
 
     let redisKey;
     if (!req.session.language) {
-        redisKey = "getOrgListausFI";
+        redisKey = "organizationCodesFI";
     }
     else {
-        redisKey = "getOrgListaus" + req.session.language;
+        redisKey = "organizationCodes" + req.session.language;
     }
+
     getRedis(redisKey, function success(reply: any) {
         res.status(200).json(
             JSON.parse(reply)
