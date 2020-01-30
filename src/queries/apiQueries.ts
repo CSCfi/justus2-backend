@@ -599,6 +599,22 @@ function postLanguage(req: Request, res: Response) {
     }
 }
 
+function impersonateUser(req: Request, res: Response) {
+
+    if (!req.session.userData || !req.session.userData.owner) {
+        return res.status(403).send("Permission denied");
+    }
+
+    req.session.userData.organisaatio = req.body.organizationId;
+    req.session.userData.rooli = req.body.role;
+
+    oh.ObjectHandlerUser(req.session.userData, req.session.language, function(result: any) {
+        res.status(200).json(
+            result
+        );
+    });
+}
+
 // PUT requests
 async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
@@ -1020,6 +1036,7 @@ module.exports = {
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,
+    impersonateUser: impersonateUser,
     // PUT requests
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu,

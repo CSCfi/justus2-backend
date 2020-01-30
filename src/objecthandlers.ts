@@ -963,11 +963,11 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
 
 function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
     const org = perustiedot.organisaatio;
-    getrediscallback("getOrgListaus" + lang, addorgname);
+    getrediscallback("organizationCodes" + lang, addorgname);
     function addorgname(reply: any) {
         reply.forEach((s: any) =>  {
             if (s.arvo === org) {
-                const orgname = s.selite;
+                const orgname = s.value;
                 perustiedot.organisaationimi = orgname;
             }
         });

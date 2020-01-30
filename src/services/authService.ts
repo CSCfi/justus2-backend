@@ -25,11 +25,11 @@ const getUserData = function (headers: any) {
             "rooli": "",
             "nimi": name,
             "showPublicationInput": <boolean> undefined,
-            "jukuriUser": <boolean> undefined
+            "jukuriUser": <boolean> undefined,
+            "owner": <boolean> undefined
         };
 
         const role = getRole(headers["shib-group"]);
-
         let domainMapped = false;
 
         Object.keys(domainMapping).forEach(function (val, key) {
@@ -43,6 +43,10 @@ const getUserData = function (headers: any) {
                 return false;
             }
         });
+
+        if (userData.organisaatio === "00000") {
+            userData["owner"] = true;
+        }
 
         if (!domainMapped) {
             return false;

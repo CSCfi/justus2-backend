@@ -26,6 +26,9 @@ router.post("/julkaisu", db.postJulkaisu);
 router.post("/language", db.postLanguage);
 router.post("/upload", fu.uploadJulkaisu);
 
+// For owners
+router.post("/impersonate", db.impersonateUser);
+
 // PUT requests
 router.put("/julkaisu/:id", db.updateJulkaisu);
 router.put("/julkaisuntila/:id", db.putJulkaisuntila);
