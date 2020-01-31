@@ -29,22 +29,46 @@ let USER_DATA: any = {};
 // Add Query functions here and define them in the module.exports at the end
 // All GET requests first
 
-
 function getUser(req: Request, res: Response, next: NextFunction) {
 
-    const userData = authService.getUserData(req.headers);
+    let userData;
 
-    if (!userData) {
-        return res.status(401).send("Unauthorized");
+    if (req.session.userData) {
+        userData = req.session.userData;
+        userData["showPublicationInput"] = <boolean> undefined;
+        userData["jukuriUser"] = <boolean> undefined;
+    } else {
+
+        userData = authService.getUserData(req.headers);
+
+        if (!userData || !userData.domain) {
+            return res.status(401).send("Unauthorized");
+        }
+
+        req.session.userData = {};
+
+        req.session["userData"].domain = userData.domain;
+        req.session["userData"].organisaatio = userData.organisaatio;
+        req.session["userData"].email = userData.email;
+        req.session["userData"].rooli = userData.rooli;
+        req.session["userData"].nimi = userData.nimi;
+        req.session["userData"].owner = userData.owner;
+        req.session["userData"].ip = req.headers["x-forwarded-for"] || (req.connection && req.connection.remoteAddress) || "";
+        req.session["userData"].uid = req.headers["shib-uid"];
+
     }
-    else {
-        userData.kieli = req.session.language;
-        oh.ObjectHandlerUser(userData, req.session.language, function(result: any) {
-            res.status(200).json(
-                result
-            );
-        });
+
+    if (!req.session.language) {
+        req.session.language = "FI";
     }
+
+    userData.kieli = req.session.language;
+    oh.ObjectHandlerUser(userData, req.session.language, function(result: any) {
+        res.status(200).json(
+            result
+        );
+    });
+
 }
 
 

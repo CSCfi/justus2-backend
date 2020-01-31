@@ -48,7 +48,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("port", 3000);
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
-app.use(require("./services/populateUserData"));
+// app.use(require("./services/populateUserData"));
 app.get("/", homeController.index);
 app.use("/", apiRouter);
 app.use(expressValidator);
