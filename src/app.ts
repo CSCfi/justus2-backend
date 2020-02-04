@@ -34,11 +34,9 @@ app.use(session({
     cookie: { maxAge: 8 * 60 * 60 * 1000, secure: false }, // 8 hours,
     resave: true,
     autoreconnect: true,
-    saveUninitialized: true,
+    saveUninitialized: false,
     rolling: true
-
 }));
-
 
 // CONNECT TO PSQL INSIDE VAGRANT "psql -h 10.10.10.10 -U appaccount -d justus"
 // psql -h 10.10.10.10 -U appaccount -d justus < node_modules/connect-pg-simple/table.sql
