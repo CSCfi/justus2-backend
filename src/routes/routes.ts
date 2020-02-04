@@ -24,6 +24,7 @@ router.get("/download/:id", fu.downloadJulkaisu);
 // POST requests
 router.post("/julkaisu", db.postJulkaisu);
 router.post("/language", db.postLanguage);
+router.post("/logout", db.logout);
 router.post("/upload", fu.uploadJulkaisu);
 
 // For owners

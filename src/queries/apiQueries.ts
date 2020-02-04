@@ -1048,6 +1048,16 @@ async function updateArchiveTable(data: any, headers: any, id: any) {
 
 }
 
+function logout(req: Request, res: Response, next: NextFunction) {
+    req.session.destroy(err => {
+        if (err) {
+            console.log(err);
+            return next(err);
+        }
+        res.status(200).send("Logout successful");
+    });
+}
+
 
 
 module.exports = {
@@ -1064,6 +1074,7 @@ module.exports = {
     // PUT requests
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu,
-    updateArchiveTable: updateArchiveTable
+    updateArchiveTable: updateArchiveTable,
+    logout: logout
 
 };
