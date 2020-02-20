@@ -800,15 +800,17 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
 
 }
     function parsealayksikot(obj: any, orgid: any, callbacker: any) {
-        const yarray: object [] = [
-        ];
-        const y2017: object [] = [
-        ];
-        const y2016: object [] = [
-        ];
-        const y2018: object [] = [
-        ];
+        const yarray: object [] = [];
+        const y2017: object [] = [];
+        const y2016: object [] = [];
+        const y2018: object [] = [];
         const y2019: object [] = [];
+        const y2020: object [] = [];
+
+        const twotwenty = {
+            vuosi: "2020",
+            yksikot: y2020,
+        };
         const twonine = {
             vuosi: "2019",
             yksikot: y2019,
@@ -851,6 +853,13 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
                     };
                     y2019.push(y29);
                 }
+                else if (orgid === match && year === "2020") {
+                    const y20 = {
+                        arvo: x.arvo,
+                        selite: x.selite,
+                    };
+                    y2020.push(y20);
+                }
                 else if (orgid === match && year != "2017" && year != "2018") {
                     const y26 = {
                         arvo: x.arvo,
@@ -886,18 +895,19 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
             }
         });
 
-
         twosix.yksikot.sort(compare);
         twoseven.yksikot.sort(compare);
         twoeight.yksikot.sort(compare);
         twonine.yksikot.sort(compare);
+        twotwenty.yksikot.sort(compare);
 
+        yarray.push(twotwenty);
         yarray.push(twonine);
         yarray.push(twoeight);
         yarray.push(twoseven);
         yarray.push(twosix);
 
-        if (y2016.length || y2017.length || y2018.length || y2019.length) {
+        if (y2016.length || y2017.length || y2018.length || y2019.length || y2020.length) {
                   visibleFields.push("alayksikko");
               const orgall =  {
                 perustiedot,
