@@ -31,13 +31,6 @@ let USER_DATA: any = {};
 
 function getUser(req: Request, res: Response, next: NextFunction) {
 
-    console.log(process.env.THESEUS_BASE_URL);
-    console.log(process.env.THESEUS_HANDLE_LINK);
-    console.log(process.env.THESEUS_COLLECTION_ID);
-    console.log(process.env.JUKURI_BASE_URL);
-    console.log(process.env.JUKURI_HANDLE_LINK);
-    console.log(process.env.JUKURI_COLLECTION_ID);
-
     let userData;
 
     if (req.session.userData) {
