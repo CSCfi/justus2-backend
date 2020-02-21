@@ -278,7 +278,8 @@ const contactList = [
 		"theseusData": {
 			"theseusCollectionId": 1475,
 			"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
 	{
         // LAB ammattikorkeakoulu
@@ -288,7 +289,8 @@ const contactList = [
 		"theseusData": {
 			"theseusCollectionId": 1475,
 			"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
-		}
+		},
+		"requiredFields": ["alayksikko"]
     },
     {
         // tutkimusorganisaatio
