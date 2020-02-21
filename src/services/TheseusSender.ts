@@ -721,7 +721,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             {"key": "dc.date.issued", "value": julkaisuData["julkaisuvuosi"]},
             {"key": "dc.relation.conference", "value": julkaisuData["konferenssinvakiintunutnimi"]},
             {"key": "dc.relation.ispartof", "value": julkaisuData["emojulkaisunnimi"]},
-            {"key": "dc.contributor.editor", "value": julkaisuData["emojulkaisuntoimittajat"]},
             {"key": "dc.relation.volume", "value": julkaisuData["volyymi"]},
             {"key": "dc.relation.numberinseries", "value": julkaisuData["numero"]},
             {"key": "dc.format.pagerange", "value": julkaisuData["sivut"]},
@@ -859,21 +858,21 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         const oneTekija = tekijatStr.split("; ");
 
         oneTekija.forEach((value: any) => {
-            const tekijatobject = {"key": "dc.contributor.author", "value": value}; // formaatti, sukunimi, etunimi
+            const tekijatobject = {"key": "dc.contributor.author", "value": value}; // formaatti: sukunimi, etunimi
             metadataObject.push(tekijatobject);
         });
 
 
-        // const emojulkaisuntoimittajatStr = julkaisuData["emojulkaisuntoimittajat"];
-        // const oneToimittaja = emojulkaisuntoimittajatStr.split("; ");
-        //
-        // // Check that array is not empty
-        // if (oneToimittaja[0] !== "") {
-        //     oneToimittaja.forEach((value: any) => {
-        //         const tekijatobject = {"key": "dc.contributor.editor", "value": value}; // formaatti, sukunimi, etunimi
-        //         metadataObject.push(tekijatobject);
-        //     });
-        // }
+        const emojulkaisuntoimittajatStr = julkaisuData["emojulkaisuntoimittajat"];
+        const oneToimittaja = emojulkaisuntoimittajatStr.split("; ");
+
+        // Check that array is not empty
+        if (oneToimittaja[0] !== "") {
+            oneToimittaja.forEach((value: any) => {
+                const emojulkaisunTekijaObject = {"key": "dc.contributor.editor", "value": value}; // formaatti: sukunimi, etunimi
+                metadataObject.push(emojulkaisunTekijaObject);
+            });
+        }
 
 
         let postMetadataObject: any = {};
