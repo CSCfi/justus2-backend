@@ -34,35 +34,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
  class TheseusSender {
 
-     // private static _instance: Theseus = new Theseus();
-     //
-     // // private _score:number = 0;
-     //
-     // constructor() {
-     //     if (Theseus._instance) {
-     //         throw new Error("Error: Instantiation failed: Use SingletonDemo.getInstance() instead of new.");
-     //     }
-     //     Theseus._instance = this;
-     // }
-     //
-     // public static getInstance(): Theseus {
-     //     return Theseus._instance;
-     // }
-    // determineStatus = (val: any, version: any) => {
-    //     const self = this;
-    //     if (val === false) {
-    //         console.log("Token is invalid! " + val + " for the version: " + version);
-    //         self.getToken(version);
-    //     }
-
-    //     else {
-    //         console.log("Token is valid for version: " + version);
-    //         this.launchPost();
-
-    //     }
-    //  };
-
-
     public async tokenHandler(version: any): Promise<any> {
         const self = this;
         return new Promise(function(resolve: any, reject: any) {
