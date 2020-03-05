@@ -52,6 +52,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         });
 }
      public async checkQueue() {
+
         const self = this;
         const versions = [
                     {
@@ -62,7 +63,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                     }
                 ];
                 versions.forEach(async function(e: any) {
-                    // console.log("The versions: " + e.name);
                     self.tokenHandler(e.name)
                     .then((version: any) => {
                         self.launchPost(version);
@@ -73,8 +73,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                     );
                 });
     }
-
-
 
     public async launchPost(version: any)  {
        const self = this;
@@ -88,7 +86,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
        const julkaisuIDt = await connection.db.query(
            "SELECT julkaisujono.julkaisuid, julkaisu.organisaatiotunnus FROM julkaisujono, julkaisu WHERE julkaisu.id = julkaisujono.julkaisuID " + 
            "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING *");
-           // console.log("The initial token: " + token + " for version " + version);
+           console.log("The initial token: " + token + " for version " + version);
            // console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
            julkaisuIDt.forEach(async function (e: any) {
                const jukuriPublication: boolean = self.isJukuriPublication(e.organisaatiotunnus);
@@ -342,6 +340,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
     }
 
     checkToken(version: any): Promise<any> {
+
         let urlFinal = BASEURL + "status";
         let headersOpt = {
 
@@ -363,6 +362,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             json: true,
             encoding: "utf8",
         };
+
        return new Promise(function(resolve: any, reject: any) {
        rp(options)
        .then(async function (res: Response) {
@@ -372,9 +372,10 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
            }
            else if ((res as any)["authenticated"] === false) {
                reject(JSON.stringify(options));
-
            }
-       });
+           }).catch(function (err: Error) {
+               console.log("Error in checking token for: " + version  + " with error " + err);
+           });
             });
 
     }
@@ -401,6 +402,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         return new Promise(function(resolve: any, reject: any) {
            rp(options)
            .then(async function (res: Response) {
+
                if (version === "jukuri") {
                     process.env.JUKURI_TOKEN = (res as any);
                     console.log("The new token: " + (res as any) +  " for version " + version);
@@ -844,7 +846,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 metadataObject.push(emojulkaisunTekijaObject);
             });
         }
-
 
         let postMetadataObject: any = {};
 
