@@ -14,6 +14,8 @@ const dbHelpers = require("./../databaseHelpers");
 const authService = require("./../services/authService");
 const fileUpload = require("./../queries/fileUpload");
 
+const csvParser = require("./../services/csvReader");
+
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
 
@@ -1101,6 +1103,29 @@ async function getPersonListaus(req: Request, res: Response) {
 
 }
 
+async function updatePerson(req: Request, res: Response) {
+
+    const data = {
+        "etunimi": req.body.etunimi,
+        "sukunimi": req.body.sukunimi,
+        "email": req.body.email,
+        "modified": new Date()
+    };
+
+    try {
+        const updateColumns = new pgp.helpers.ColumnSet(["etunimi", "sukunimi", "email", "modified"], {table: "person"});
+        const updatePersonData = pgp.helpers.update(data, updateColumns) + "WHERE id = " +  parseInt(req.params.id) + " RETURNING id";
+        await db.one(updatePersonData);
+
+        res.status(200).send( "Update successful!" );
+
+    } catch (e) {
+        console.log(e);
+        res.status(500).send(  e.message );
+    }
+
+}
+
 function logout(req: Request, res: Response, next: NextFunction) {
     req.session.destroy(err => {
         if (err) {
@@ -1129,6 +1154,7 @@ module.exports = {
     updateJulkaisu: updateJulkaisu,
     updateArchiveTable: updateArchiveTable,
     getPersonListaus: getPersonListaus,
+    updatePerson: updatePerson,
     logout: logout
 
 };

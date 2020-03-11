@@ -63,5 +63,7 @@ router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
 // Person table queries
 router.get("/organisaatiotekijat", db.getPersonListaus);
+router.put("/updateperson/:id", db.updatePerson);
+
 export = router;
 

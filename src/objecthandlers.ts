@@ -707,6 +707,35 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
     });
 }
 
+function ObjectHandlerPersonData(obj: any) {
+
+    let personData: any = {};
+
+    return obj.map((row: any) => {
+
+        personData = {
+            "id": row.id,
+            "hrnumero": row.hrnumero,
+            "etunimi": row.etunimi,
+            "sukunimi": row.sukunimi,
+            "organisaatio": row.o_organisaatiotunniste,
+            "email": row.email,
+            "orcid": row.i_orcid,
+            "modified": row.modified,
+            "alayksikko": [{
+                "id": row.o_id,
+                "arvo": row.o_alayksikko
+            }]
+        };
+
+
+        return personData;
+    });
+
+
+
+}
+
     function  mapOrganisaatiotekijaAndAlayksikko(obj: any) {
 
         for (let i = 0; i < obj.length; i++) {
@@ -986,5 +1015,6 @@ module.exports = {
     mapIssnAndIsbn: mapIssnAndIsbn,
     checkIfEmpty: checkIfEmpty,
     mapOrganisaatiotekijaAndAlayksikko: mapOrganisaatiotekijaAndAlayksikko,
-    isJukuriPublication: isJukuriPublication
+    isJukuriPublication: isJukuriPublication,
+    ObjectHandlerPersonData: ObjectHandlerPersonData
 };
