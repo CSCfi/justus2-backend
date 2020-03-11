@@ -1081,8 +1081,8 @@ async function getPersonListaus(req: Request, res: Response) {
 
         } else {
 
-            query = "SELECT p.hrnumero, p.etunimi, p.sukunimi, p.email, p.modified, " +
-                "o.id as o_id, o.organisaatiotunniste as o_organisaatiotunniste, o.alayksikko as o_alayksikko, " +
+            query = "SELECT p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, p.modified, " +
+                "o.organisaatiotunniste as o_organisaatiotunniste, o.alayksikko as o_alayksikko1, " +
                 "i.id AS i_id, i.tunniste AS i_orcid " +
                 "FROM person p " +
                 "INNER JOIN person_organization o ON p.id = o.personid " +

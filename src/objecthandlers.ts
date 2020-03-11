@@ -722,10 +722,7 @@ function ObjectHandlerPersonData(obj: any) {
             "email": row.email,
             "orcid": row.i_orcid,
             "modified": row.modified,
-            "alayksikko": [{
-                "id": row.o_id,
-                "arvo": row.o_alayksikko
-            }]
+            "alayksikko": [row.o_alayksikko1]
         };
 
 
