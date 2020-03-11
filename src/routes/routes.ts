@@ -61,5 +61,7 @@ router.get("/haku/taiteenalat", koodistopalvelu.getTaiteenalat);
 router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
 router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
+// Person table queries
+router.get("/organisaatiotekijat", db.getPersonListaus);
 export = router;
 

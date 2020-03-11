@@ -1048,6 +1048,59 @@ async function updateArchiveTable(data: any, headers: any, id: any) {
 
 }
 
+async function getPersonListaus(req: Request, res: Response) {
+
+    //  TODO: validate organization from headers
+    USER_DATA = req.session.userData;
+    const hasOrganisation = await authService.hasOrganisation(USER_DATA);
+    const isAdmin = await authService.isAdmin(USER_DATA);
+
+    try {
+
+        let query;
+        let personData;
+
+        if (req.query.writeCSV === "true") {
+            console.log("writeCSV true");
+            query = "SELECT  p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, " +
+                "i.tunniste AS orcid, " +
+                "o.organisaatiotunniste as organisaatio, o.alayksikko as alayksikko1 " +
+                "FROM person p " +
+                "INNER JOIN person_organization o ON p.id = o.personid " +
+                "INNER JOIN person_identifier i ON p.id = i.personid " +
+                "WHERE o.organisaatiotunniste = '02536' " +
+                "AND i.tunnistetyyppi = 'orcid' " +
+                "ORDER BY p.modified DESC;";
+
+            personData = await db.any(query);
+            await csvParser.writeCSV(personData);
+            console.log("CSV parsing done");
+            res.status(200).sendStatus(200);
+
+        } else {
+
+            query = "SELECT p.hrnumero, p.etunimi, p.sukunimi, p.email, p.modified, " +
+                "o.id as o_id, o.organisaatiotunniste as o_organisaatiotunniste, o.alayksikko as o_alayksikko, " +
+                "i.id AS i_id, i.tunniste AS i_orcid " +
+                "FROM person p " +
+                "INNER JOIN person_organization o ON p.id = o.personid " +
+                "INNER JOIN person_identifier i ON p.id = i.personid " +
+                "WHERE o.organisaatiotunniste = '02536' " +
+                "AND i.tunnistetyyppi = 'orcid' " +
+                "ORDER BY p.modified DESC;";
+
+            personData = await db.any(query);
+            const persons = oh.ObjectHandlerPersonData(personData);
+            res.status(200).json({ persons });
+        }
+
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+
+}
+
 function logout(req: Request, res: Response, next: NextFunction) {
     req.session.destroy(err => {
         if (err) {
@@ -1075,6 +1128,7 @@ module.exports = {
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu,
     updateArchiveTable: updateArchiveTable,
+    getPersonListaus: getPersonListaus,
     logout: logout
 
 };

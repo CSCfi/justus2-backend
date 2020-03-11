@@ -90,6 +90,8 @@ const theseusJulkaisuFields = [
     "pysyvaverkkoosoite"
 ];
 
+const personFields = ["hrnumero", "sukunimi", "etunimi", "email"];
+
 
 const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "hrnumero", "rooli"];
 const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
@@ -141,6 +143,7 @@ module.exports = {
     taiteenala: taiteenala,
     kaytto_loki: kaytto_loki,
     theseusJulkaisuFields: theseusJulkaisuFields,
+    personFields: personFields,
     addJulkaisuIdToObject: addJulkaisuIdToObject,
     constructObject: constructObject,
     getTableFields: fields,
