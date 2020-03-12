@@ -2,6 +2,8 @@ const csv = require("csv-parser");
 const fs = require("fs");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
+const csvFolder = process.env.CSV_FOLDER;
+
 // Database connection from db.ts
 const connection = require("./../db");
 
@@ -69,7 +71,7 @@ module.exports = {
 async function createJsonObject(fileName: string) {
 
     const results: any = [];
-    const folderPath = "./csv-data/" + fileName;
+    const folderPath = csvFolder + fileName;
     fs.createReadStream(folderPath)
         .pipe(csv(
             {
