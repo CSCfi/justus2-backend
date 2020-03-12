@@ -27,7 +27,7 @@ const session = require ("express-session");
 const cookieParser = require("cookie-parser");
 const RedisStore = require("connect-redis")(session);
 
-// const csvParser = require("./services/csvReader");
+const csvParser = require("./services/csvReader");
 
 
 app.use(cookieParser());
@@ -42,7 +42,7 @@ app.use(session({
 }));
 
 
-// csvParser.readCSV();
+csvParser.readCSV();
 // csvParser.writeCSV();
 
 // CONNECT TO PSQL INSIDE VAGRANT "psql -h 10.10.10.10 -U appaccount -d justus"
