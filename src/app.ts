@@ -42,7 +42,7 @@ app.use(session({
 }));
 
 
-csvParser.readCSV();
+// csvParser.readCSV();
 // csvParser.writeCSV();
 
 // CONNECT TO PSQL INSIDE VAGRANT "psql -h 10.10.10.10 -U appaccount -d justus"

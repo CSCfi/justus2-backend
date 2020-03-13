@@ -25,6 +25,8 @@ import { auditLog as auditLog } from "./../services/auditLogService";
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
+const fs = require("fs");
+
 let USER_DATA: any = {};
 
 
@@ -1050,6 +1052,54 @@ async function updateArchiveTable(data: any, headers: any, id: any) {
 
 }
 
+async function downloadPersons(req: Request, res: Response) {
+
+    USER_DATA = req.session.userData;
+    const hasOrganisation = await authService.hasOrganisation(USER_DATA);
+    const isAdmin = await authService.isAdmin(USER_DATA);
+
+    // TODO: consider naming conventions; would it be best to use organization code
+
+    if (hasOrganisation && isAdmin) {
+
+        const organization = USER_DATA.organisaatio;
+
+        const csvFilePath = process.env.CSV_DOWNLOAD_FOLDER;
+        const fileName = "persons.csv";
+
+        const query = "SELECT  p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, " +
+            "i.tunniste AS orcid, " +
+            "o.organisaatiotunniste as organisaatio, o.alayksikko as alayksikko1 " +
+            "FROM person p " +
+            "INNER JOIN person_organization o ON p.id = o.personid " +
+            "INNER JOIN person_identifier i ON p.id = i.personid " +
+            "WHERE o.organisaatiotunniste = '02536' " +
+            "AND i.tunnistetyyppi = 'orcid' " +
+            "ORDER BY p.modified DESC;";
+
+        const personData = await db.any(query);
+        // create CSV file to CSV-data folder
+        csvParser.writeCSV(personData).then(() => {
+            // send data to UI
+            res.download(csvFilePath + "file.csv", fileName, function (err: any) {
+
+
+                if (err) {
+                    console.log(err);
+                }
+
+                // delete file
+                fs.unlinkSync(csvFilePath + "file.csv");
+
+            });
+        });
+
+    } else {
+        return res.status(403).send("Permission denied");
+    }
+
+}
+
 async function getPersonListaus(req: Request, res: Response) {
 
     //  TODO: validate organization from headers
@@ -1057,29 +1107,12 @@ async function getPersonListaus(req: Request, res: Response) {
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
-    try {
+    if (hasOrganisation && isAdmin) {
 
-        let query;
-        let personData;
+        try {
 
-        if (req.query.writeCSV === "true") {
-            console.log("writeCSV true");
-            query = "SELECT  p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, " +
-                "i.tunniste AS orcid, " +
-                "o.organisaatiotunniste as organisaatio, o.alayksikko as alayksikko1 " +
-                "FROM person p " +
-                "INNER JOIN person_organization o ON p.id = o.personid " +
-                "INNER JOIN person_identifier i ON p.id = i.personid " +
-                "WHERE o.organisaatiotunniste = '02536' " +
-                "AND i.tunnistetyyppi = 'orcid' " +
-                "ORDER BY p.modified DESC;";
-
-            personData = await db.any(query);
-            await csvParser.writeCSV(personData);
-            console.log("CSV parsing done");
-            res.status(200).sendStatus(200);
-
-        } else {
+            let query;
+            let personData;
 
             query = "SELECT p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, p.modified, " +
                 "o.organisaatiotunniste as o_organisaatiotunniste, o.alayksikko as o_alayksikko1, " +
@@ -1093,12 +1126,16 @@ async function getPersonListaus(req: Request, res: Response) {
 
             personData = await db.any(query);
             const persons = oh.ObjectHandlerPersonData(personData);
-            res.status(200).json({ persons });
+            res.status(200).json({persons});
         }
 
-    } catch (err) {
-        console.log(err);
-        res.sendStatus(500);
+        catch (err) {
+            console.log(err);
+            res.sendStatus(500);
+        }
+
+    } else {
+        return res.status(403).send("Permission denied");
     }
 
 }
@@ -1154,6 +1191,7 @@ module.exports = {
     updateJulkaisu: updateJulkaisu,
     updateArchiveTable: updateArchiveTable,
     getPersonListaus: getPersonListaus,
+    downloadPersons: downloadPersons,
     updatePerson: updatePerson,
     logout: logout
 

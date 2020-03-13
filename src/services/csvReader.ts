@@ -2,7 +2,7 @@ const csv = require("csv-parser");
 const fs = require("fs");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
-const csvFolder = process.env.CSV_FOLDER;
+const csvFolder = process.env.CSV_DOWNLOAD_FOLDER;
 
 // Database connection from db.ts
 const connection = require("./../db");
@@ -37,13 +37,14 @@ module.exports = {
 
         const csvWriter = createCsvWriter({
 
-            path: "./csv-writer/persons.csv",
+            path: csvFolder + "file.csv",
             header: [
                 {id: "hrnumero", title: "hrnumero"},
                 {id: "etunimi", title: "etunimi"},
                 {id: "sukunimi", title: "sukunimi"},
                 {id: "email", title: "email"},
                 {id: "orcid", title: "orcid"},
+                {id: "organisaatio", title: "organisaatio"},
                 {id: "alayksikko1", title: "alayksikko1"}
 
             ],
@@ -54,17 +55,14 @@ module.exports = {
          // TODO: Validation: Required fields: hrnumero, etunimi, sukunimi, alayksikko1 (for specific organizations), validate also alayksikko format
 
         for (let i = 0; i < data.length; i++) {
-            console.log(i);
             await records.push({
                 hrnumero: data[i].hrnumero, etunimi: data[i].etunimi, sukunimi: data[i].sukunimi, email: data[i].email,
-                orcid: data[i].orcid, alayksikko1: data[i].alayksikko1
+                orcid: data[i].orcid, organisaatio: data[i].organisaatio, alayksikko1: data[i].alayksikko1
             });
         }
 
-        csvWriter.writeRecords(records)
-            .then(() => {
-                console.log("...Done");
-            });
+        return await csvWriter.writeRecords(records);
+
     }
 };
 
