@@ -289,6 +289,10 @@ WITH (
 ALTER TABLE julkaisu_isbn
 OWNER TO appaccount;
 
+-- Table: julkaisu_projektinumero
+
+-- DROP TABLE julkaisu_projektinumero;
+
 CREATE TABLE julkaisu_projektinumero
 (
   id bigserial NOT NULL,
@@ -304,4 +308,71 @@ WITH (
 );
 ALTER TABLE julkaisu_projektinumero
 OWNER TO appaccount;
+
+-- Table: person
+
+-- DROP TABLE person;
+
+CREATE TABLE person
+(
+  id bigserial NOT NULL,
+  hrnumero character varying NOT NULL,
+  etunimi character varying,
+  sukunimi character varying,
+  email character varying,
+  created timestamp with time zone NOT NULL DEFAULT now(),
+  modified timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT person_pkey PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+
+ALTER TABLE person
+  OWNER TO appaccount;
+  
+-- Table: person_organization
+
+-- DROP TABLE person_organization;
+  
+CREATE TABLE person_organization
+(
+  id bigserial NOT NULL,
+  personid bigint NOT NULL,
+  organisaatiotunniste character varying NOT NULL,
+  alayksikko character varying,
+  created timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT person_organization_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_person FOREIGN KEY (personid)
+      REFERENCES person (id) MATCH SIMPLE
+	  ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE person_organization
+	OWNER TO appaccount;
+	
+-- Table: person_identifier
+
+-- DROP TABLE person_identifier;
+	
+CREATE TABLE person_identifier
+(
+  id bigserial NOT NULL,
+  personid bigint NOT NULL,
+  tunnistetyyppi character varying NOT NULL,
+  tunniste character varying NOT NULL,
+  created timestamp with time zone NOT NULL DEFAULT now(),
+  modified timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT person_identifier_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_person FOREIGN KEY (personid)
+      REFERENCES person (id) MATCH SIMPLE
+	  ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE person_identifier
+	OWNER TO appaccount;
 
