@@ -1058,41 +1058,42 @@ async function downloadPersons(req: Request, res: Response) {
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
-    // TODO: consider naming conventions; would it be best to use organization code
-
     if (hasOrganisation && isAdmin) {
 
-        const organization = USER_DATA.organisaatio;
+        // const organization = USER_DATA.organisaatio;
+        const organization: string = "02536";
 
-        const csvFilePath = process.env.CSV_DOWNLOAD_FOLDER;
-        const fileName = "persons.csv";
+        try {
 
-        const query = "SELECT  p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, " +
-            "i.tunniste AS orcid, " +
-            "o.organisaatiotunniste as organisaatio, o.alayksikko as alayksikko1 " +
-            "FROM person p " +
-            "INNER JOIN person_organization o ON p.id = o.personid " +
-            "INNER JOIN person_identifier i ON p.id = i.personid " +
-            "WHERE o.organisaatiotunniste = '02536' " +
-            "AND i.tunnistetyyppi = 'orcid' " +
-            "ORDER BY p.modified DESC;";
+            const csvFilePath = process.env.CSV_DOWNLOAD_FOLDER;
+            const fileName = organization + "_persons.csv";
+            console.log(fileName);
 
-        const personData = await db.any(query);
-        // create CSV file to CSV-data folder
-        csvParser.writeCSV(personData).then(() => {
-            // send data to UI
-            res.download(csvFilePath + "file.csv", fileName, function (err: any) {
+            // query persons and organisational units
+            const persons = await queryPersons(organization);
 
+            // query orcid
+            for (let i = 0; i < persons.length; i++) {
+                const personid = persons[i].id;
+                persons[i].orcid = await sq.getOrcidData(personid);
+            }
 
+            // create CSV file to csv-download folder
+            csvParser.writeCSV(persons, organization).then(() => {
+                // send data to UI
+                res.download(csvFilePath + organization + "_file.csv", fileName, function (err: any) {
                 if (err) {
                     console.log(err);
                 }
-
-                // delete file
-                fs.unlinkSync(csvFilePath + "file.csv");
-
+                // after download delete csv file
+                fs.unlinkSync(csvFilePath + organization + "_file.csv");
+                });
             });
-        });
+
+        } catch (e) {
+            console.log(e);
+            res.status(500).send(  e.message );
+        }
 
     } else {
         return res.status(403).send("Permission denied");
@@ -1137,6 +1138,25 @@ async function getPersonListaus(req: Request, res: Response) {
     } else {
         return res.status(403).send("Permission denied");
     }
+
+}
+
+async function queryPersons(organization: string) {
+
+    const params = {"organisaatio": organization};
+    let queryParsonsAndOrganizations;
+    let persons;
+
+    queryParsonsAndOrganizations = "SELECT p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, p.modified " +
+        ", json_agg(o.alayksikko) AS alayksikko " +
+        "FROM person p " +
+        "INNER JOIN person_organization o ON p.id = o.personid " +
+        "WHERE o.organisaatiotunniste = ${organisaatio} " +
+        "GROUP BY p.id " +
+        "ORDER BY p.id;";
+
+    persons = await db.any(queryParsonsAndOrganizations, params);
+    return persons;
 
 }
 

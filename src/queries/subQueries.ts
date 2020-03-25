@@ -87,8 +87,21 @@ function getOrgTekijatAndAlayksikko(id: any) {
                 });
         }).then(t.batch);
     });
-
 }
+
+async function getOrcidData(id: number) {
+    const params = {"id": id};
+    const query =  "SELECT tunniste FROM person_identifier WHERE tunnistetyyppi = 'orcid'" +
+        " and personid = ${id};";
+    const result = await con.db.oneOrNone(query, params);
+
+    if (!result) {
+        return result;
+    } else {
+        return result.tunniste;
+    }
+}
+
 module.exports = {
     getIsbn: getIsbn,
     getIssn: getIssn,
@@ -98,7 +111,8 @@ module.exports = {
     getTieteenala: getTieteenala,
     getTaiteenala: getTaiteenala,
     getTyyppikategoria: getTyyppikategoria,
-    getLisatieto: getLisatieto
+    getLisatieto: getLisatieto,
+    getOrcidData: getOrcidData
 
 
 };

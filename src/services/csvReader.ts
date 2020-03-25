@@ -31,13 +31,12 @@ module.exports = {
         createJsonObject("person3.csv");
     },
 
-    writeCSV: async function(data: any) {
+    async function writeCSV(data: any, org: string) {
 
         // TODO: if no data, return empty CSV with headers
 
         const csvWriter = createCsvWriter({
-
-            path: csvFolder + "file.csv",
+            path: csvFolder + org + "_file.csv",
             header: [
                 {id: "hrnumero", title: "hrnumero"},
                 {id: "etunimi", title: "etunimi"},
@@ -45,22 +44,27 @@ module.exports = {
                 {id: "email", title: "email"},
                 {id: "orcid", title: "orcid"},
                 {id: "organisaatio", title: "organisaatio"},
-                {id: "alayksikko1", title: "alayksikko1"}
-
+                {id: "alayksikko1", title: "alayksikko1"},
+                {id: "alayksikko2", title: "alayksikko2"},
+                {id: "alayksikko3", title: "alayksikko3"}
             ],
             fieldDelimiter: ";"
         });
         const records: any = [];
 
-         // TODO: Validation: Required fields: hrnumero, etunimi, sukunimi, alayksikko1 (for specific organizations), validate also alayksikko format
-
         for (let i = 0; i < data.length; i++) {
             await records.push({
-                hrnumero: data[i].hrnumero, etunimi: data[i].etunimi, sukunimi: data[i].sukunimi, email: data[i].email,
-                orcid: data[i].orcid, organisaatio: data[i].organisaatio, alayksikko1: data[i].alayksikko1
+                hrnumero: data[i].hrnumero,
+                etunimi: data[i].etunimi,
+                sukunimi: data[i].sukunimi,
+                email: data[i].email,
+                orcid: data[i].orcid,
+                organisaatio: org,
+                alayksikko1: data[i].alayksikko[0],
+                alayksikko2: data[i].alayksikko[1],
+                alayksikko3: data[i].alayksikko[2],
             });
         }
-
         return await csvWriter.writeRecords(records);
 
     }
