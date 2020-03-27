@@ -1103,30 +1103,24 @@ async function downloadPersons(req: Request, res: Response) {
 
 async function getPersonListaus(req: Request, res: Response) {
 
-    //  TODO: validate organization from headers
-    USER_DATA = req.session.userData;
+    // USER_DATA = req.session.userData;
+    USER_DATA = authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
     if (hasOrganisation && isAdmin) {
+        // const organization = USER_DATA.organisaatio;
+        const organization = "02536";
 
         try {
+            // query persons and organisational units
+            const persons = await queryPersons(organization);
 
-            let query;
-            let personData;
-
-            query = "SELECT p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, p.modified, " +
-                "o.organisaatiotunniste as o_organisaatiotunniste, o.alayksikko as o_alayksikko1, " +
-                "i.id AS i_id, i.tunniste AS i_orcid " +
-                "FROM person p " +
-                "INNER JOIN person_organization o ON p.id = o.personid " +
-                "INNER JOIN person_identifier i ON p.id = i.personid " +
-                "WHERE o.organisaatiotunniste = '02536' " +
-                "AND i.tunnistetyyppi = 'orcid' " +
-                "ORDER BY p.modified DESC;";
-
-            personData = await db.any(query);
-            const persons = oh.ObjectHandlerPersonData(personData);
+            // query orcid
+            for (let i = 0; i < persons.length; i++) {
+                const personid = persons[i].id;
+                persons[i].orcid = await sq.getOrcidData(personid);
+            }
             res.status(200).json({persons});
         }
 
@@ -1153,7 +1147,7 @@ async function queryPersons(organization: string) {
         "INNER JOIN person_organization o ON p.id = o.personid " +
         "WHERE o.organisaatiotunniste = ${organisaatio} " +
         "GROUP BY p.id " +
-        "ORDER BY p.id;";
+        "ORDER BY p.modified DESC;";
 
     persons = await db.any(queryParsonsAndOrganizations, params);
     return persons;
@@ -1194,7 +1188,6 @@ function logout(req: Request, res: Response, next: NextFunction) {
 }
 
 
-
 module.exports = {
     // GET requests
     getJulkaisut: getJulkaisut,
@@ -1202,17 +1195,18 @@ module.exports = {
     getJulkaisutHaku: getJulkaisutHaku,
     getAllPublicationDataById: getAllPublicationDataById,
     getUser: getUser,
+    downloadPersons: downloadPersons,
+    getPersonListaus: getPersonListaus,
+    deleteCount: deleteCount,
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,
     impersonateUser: impersonateUser,
+    logout: logout,
     // PUT requests
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu,
-    updateArchiveTable: updateArchiveTable,
-    getPersonListaus: getPersonListaus,
-    downloadPersons: downloadPersons,
     updatePerson: updatePerson,
-    logout: logout
+
 
 };
