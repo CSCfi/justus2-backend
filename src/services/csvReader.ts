@@ -90,7 +90,8 @@ interface PersonObject  {
                 {id: "alayksikko2", title: "alayksikko2"},
                 {id: "alayksikko3", title: "alayksikko3"}
             ],
-            fieldDelimiter: ";"
+            fieldDelimiter: ";",
+            encoding: "latin1"
         });
         const records: any = [];
 
