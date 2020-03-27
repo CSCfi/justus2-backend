@@ -19,9 +19,35 @@ const api = require("./../queries/apiQueries");
 
 const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
+const csvParser = require("./../services/csvReader");
 
 // File upload dependencies
 const multer  = require("multer");
+
+
+async function uploadPersons(req: Request, res: Response) {
+    const csvUpload = multer({ dest: process.env.CSV_UPLOAD_FOLDER }).single("file");
+
+    csvUpload(req, res, async function () {
+        const file = (<any>req).file;
+
+        // TODO: rename file with organization code included
+        // console.log(file.name);
+
+        const promise = csvParser.readCSV(file.path);
+
+        promise.then((data: any) => {
+            fs.unlinkSync(file.path);
+            res.sendStatus(200);
+        }).catch(function (err: any) {
+            console.log(err);
+            res.status(500).send(err.message);
+        });
+
+    });
+
+}
+
 
 async function uploadJulkaisu(req: Request, res: Response) {
 
@@ -409,6 +435,7 @@ module.exports = {
     isPublicationInTheseus: isPublicationInTheseus,
     deleteJulkaisuFile: deleteJulkaisuFile,
     downloadJulkaisu: downloadJulkaisu,
+    uploadPersons: uploadPersons,
     postDataToQueueTable: postDataToQueueTable,
     isJukuriPublication: isJukuriPublication
 

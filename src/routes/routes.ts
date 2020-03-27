@@ -65,6 +65,8 @@ router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 router.get("/organisaatiotekijat", db.getPersonListaus);
 router.put("/updateperson/:id", db.updatePerson);
 router.get("/download-csv/personlist", db.downloadPersons);
+// router.post("/pre-upload", db.deleteCount);
+router.post("/upload-csv", fu.uploadPersons);
 
 export = router;
 
