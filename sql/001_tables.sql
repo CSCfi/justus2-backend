@@ -317,8 +317,8 @@ CREATE TABLE person
 (
   id bigserial NOT NULL,
   hrnumero character varying NOT NULL,
-  etunimi character varying,
-  sukunimi character varying,
+  etunimi character varying NOT NULL,
+  sukunimi character varying NOT NULL,
   email character varying,
   created timestamp with time zone NOT NULL DEFAULT now(),
   modified timestamp with time zone NOT NULL DEFAULT now(),
