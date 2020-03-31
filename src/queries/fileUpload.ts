@@ -44,12 +44,9 @@ async function uploadPersons(req: Request, res: Response) {
     csvUpload(req, res, async function () {
         const file = (<any>req).file;
 
-        // TODO: rename file with organization code included
-        // console.log(file.name);
+        const promise = csvParser.readCSV(file.path, organization);
 
-        const promise = csvParser.readCSV(file.path);
-
-        promise.then((data: any) => {
+        promise.then(() => {
             fs.unlinkSync(file.path);
             res.sendStatus(200);
         }).catch(function (err: any) {
