@@ -19,14 +19,27 @@ const api = require("./../queries/apiQueries");
 
 const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
-const csvParser = require("./../services/csvReader");
+const csvParser = require("./../services/csvHandler");
 
 // File upload dependencies
 const multer  = require("multer");
 
-
 async function uploadPersons(req: Request, res: Response) {
-    const csvUpload = multer({ dest: process.env.CSV_UPLOAD_FOLDER }).single("file");
+
+    // const organization = req.session.userData.organization;
+    const organization = "02536";
+    // const organization = "02535";
+
+    const storage = multer.diskStorage(
+        {
+            destination: process.env.CSV_UPLOAD_FOLDER,
+            filename: function ( req: any, file: any, cb: any ) {
+                cb(undefined, organization);
+            }
+        }
+    );
+
+    const csvUpload = multer({  storage: storage } ).single("file");
 
     csvUpload(req, res, async function () {
         const file = (<any>req).file;
