@@ -50,10 +50,15 @@ interface PersonObject  {
                     results.push(row);
                 })
                 .on("end", () => {
-                    processCSVData(results, organization).then((res) => {
-                        console.log(res);
-                        console.log("Data inserted to database!");
-                        resolve();
+                    processCSVData(results, organization).then((err: Error) => {
+
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve();
+                            console.log("Data inserted to database!");
+                        }
+
                     }).catch(function (err) {
                         console.log(err);
                         reject(err);
@@ -189,13 +194,11 @@ async function savePersonData(person: PersonObject, organization: string) {
             "modified": new Date()
         };
         const personTable = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
-
         const updatePersonQuery = connection.pgp.helpers.update(updatePersonObj, personTable) + " WHERE id = " + "${personid}" + " RETURNING id;";
-
         await connection.db.one(updatePersonQuery, personIdParams);
 
         // first delete previous records
-        await connection.db.result("DELETE FROM person_organizationN WHERE personid = ${personid}", personIdParams);
+        await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
 
         // insert new data, create separate function of organization insert
         await insertOrganisaatioTekija(personid, person, organization);

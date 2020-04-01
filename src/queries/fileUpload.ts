@@ -51,6 +51,7 @@ async function uploadPersons(req: Request, res: Response) {
             res.sendStatus(200);
         }).catch(function (err: any) {
             console.log(err);
+            fs.unlinkSync(file.path);
             res.status(500).send(err.message);
         });
 
