@@ -20,9 +20,10 @@ interface PersonObject  {
     alayksikko3: string;
 }
 
-    async function readCSV (filePath: any, organization: string) {
+    async function readCSV (filePath: any, organization: string, fetchOnlyIds: boolean) {
 
         const results: any = [];
+        const ids: any = [];
 
         return new Promise((resolve, reject) => {
             fs.createReadStream(filePath)
@@ -48,21 +49,31 @@ interface PersonObject  {
                 ))
                 .on("data", (row: PersonObject) => {
                     results.push(row);
+                    ids.push(row.hrnumero);
                 })
                 .on("end", () => {
-                    processCSVData(results, organization).then((err: Error) => {
-
-                        if (err) {
+                    if (fetchOnlyIds) {
+                        countRowsToBeDeleted(ids).then((data: any) => {
+                            resolve(data);
+                        }).catch((err) => {
                             reject(err);
-                        } else {
-                            resolve();
-                            console.log("Data inserted to database!");
-                        }
+                        });
 
-                    }).catch(function (err) {
-                        console.log(err);
-                        reject(err);
-                    });
+                    } else {
+                        processCSVData(results, organization).then((err: Error) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve();
+                                console.log("Data inserted to database!");
+                            }
+
+                        }).catch((err) => {
+                            console.log(err);
+                            reject(err);
+                        });
+                    }
+
                 })
                 .on("error", (err: Error) => {
                     console.log(err.message);
@@ -130,6 +141,23 @@ async function processCSVData(csvData: any, organization: string) {
     }
 
 }
+
+async function countRowsToBeDeleted(hrNumberList: any) {
+
+    const hrNumberString =  "{ " + hrNumberList.toString() + " }";
+
+    const hrNumbers = { "hrnumero": hrNumberString };
+    const query = "SELECT p.id, p.hrnumero, p.etunimi, p.sukunimi, o.organisaatiotunniste FROM person p " +
+        "INNER JOIN person_organization o on p.id = o.personid WHERE p.hrnumero <> ALL ( ${hrnumero} ) " +
+        "AND o.organisaatiotunniste = '02536' ORDER BY p.id;";
+
+
+    return await connection.db.any(query, hrNumbers);
+
+
+}
+
+// TODO: move to own file
 
 async function savePersonData(person: PersonObject, organization: string) {
 

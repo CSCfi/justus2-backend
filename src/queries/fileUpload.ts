@@ -24,6 +24,39 @@ const csvParser = require("./../services/csvHandler");
 // File upload dependencies
 const multer  = require("multer");
 
+
+async function countRowsToBeDeleted(req: Request, res: Response) {
+    // const organization = req.session.userData.organization;
+    const organization = "02536";
+    // const organization = "02535";
+
+    const storage = multer.diskStorage(
+        {
+            destination: process.env.CSV_UPLOAD_FOLDER,
+            filename: function ( req: any, file: any, cb: any ) {
+                cb(undefined, organization);
+            }
+        }
+    );
+
+    const csvUpload = multer({  storage: storage } ).single("file");
+
+    csvUpload(req, res, async function () {
+
+        const file = (<any>req).file;
+        const promise = csvParser.readCSV(file.path, organization, true);
+
+        promise.then((data: any) => {
+            res.status(200).json( data );
+        }).catch(function (err: any) {
+            console.log(err);
+            res.status(500).send(err.message);
+        });
+
+    });
+}
+
+
 async function uploadPersons(req: Request, res: Response) {
 
     // const organization = req.session.userData.organization;
@@ -44,7 +77,7 @@ async function uploadPersons(req: Request, res: Response) {
     csvUpload(req, res, async function () {
         const file = (<any>req).file;
 
-        const promise = csvParser.readCSV(file.path, organization);
+        const promise = csvParser.readCSV(file.path, organization, false);
 
         promise.then(() => {
             fs.unlinkSync(file.path);
@@ -447,6 +480,7 @@ module.exports = {
     deleteJulkaisuFile: deleteJulkaisuFile,
     downloadJulkaisu: downloadJulkaisu,
     uploadPersons: uploadPersons,
+    countRowsToBeDeleted: countRowsToBeDeleted,
     postDataToQueueTable: postDataToQueueTable,
     isJukuriPublication: isJukuriPublication
 
