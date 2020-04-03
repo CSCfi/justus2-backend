@@ -53,14 +53,14 @@ interface PersonObject  {
                 })
                 .on("end", () => {
                     if (fetchOnlyIds) {
-                        countRowsToBeDeleted(ids).then((data: any) => {
+                        getRowsToBeDeleted(ids, organization, false).then((data: any) => {
                             resolve(data);
                         }).catch((err) => {
                             reject(err);
                         });
 
                     } else {
-                        processCSVData(results, organization).then((err: Error) => {
+                        processCSVData(results, organization, ids).then((err: Error) => {
                             if (err) {
                                 reject(err);
                             } else {
@@ -123,15 +123,23 @@ interface PersonObject  {
     }
 
 
-async function processCSVData(csvData: any, organization: string) {
+async function processCSVData(csvData: any, organization: string, hrNumberList: any) {
 
     // loop through all rows before commit
     await connection.db.any("BEGIN");
     try {
+
         for (let i = 0; i < csvData.length; i++) {
             await savePersonData(csvData[i], organization);
         }
+
+        const listOfIds = await getRowsToBeDeleted(hrNumberList, organization, true);
+
+        if (listOfIds.length !== 0) {
+            await deleteRows(listOfIds);
+        }
         await connection.db.any("COMMIT");
+
     } catch (e) {
         console.log("In process CSV data error block");
         console.log(e);
@@ -142,18 +150,43 @@ async function processCSVData(csvData: any, organization: string) {
 
 }
 
-async function countRowsToBeDeleted(hrNumberList: any) {
+async function deleteRows(idList: any) {
+
+    const idArray: number[] = [];
+
+    for (let i = 0; i < idList.length; i++) {
+        idArray.push(parseInt(idList[i].id));
+    }
+
+    const params = { "idArray": [idArray] };
+
+    await connection.db.any("DELETE FROM person " +
+        "WHERE id = ANY ( ${idArray} )", params );
+
+}
+
+async function getRowsToBeDeleted(hrNumberList: any, organization: string, onlyIds: boolean) {
 
     const hrNumberString =  "{ " + hrNumberList.toString() + " }";
 
-    const hrNumbers = { "hrnumero": hrNumberString };
-    const query = "SELECT p.id, p.hrnumero, p.etunimi, p.sukunimi, o.organisaatiotunniste FROM person p " +
+    const params = { "hrnumero": hrNumberString, "organization": organization };
+    let query;
+
+    const queryAll = "SELECT DISTINCT p.id, p.hrnumero, p.etunimi, p.sukunimi, o.organisaatiotunniste FROM person p " +
         "INNER JOIN person_organization o on p.id = o.personid WHERE p.hrnumero <> ALL ( ${hrnumero} ) " +
         "AND o.organisaatiotunniste = '02536' ORDER BY p.id;";
 
+    const queryIds = "SELECT DISTINCT p.id FROM person p " +
+        "INNER JOIN person_organization o on p.id = o.personid WHERE p.hrnumero <> ALL ( ${hrnumero} ) " +
+        "AND o.organisaatiotunniste = '02536' ORDER BY p.id;";
 
-    return await connection.db.any(query, hrNumbers);
+    if (onlyIds) {
+        query = queryIds;
+    } else {
+        query = queryAll;
+    }
 
+    return await connection.db.any(query, params);
 
 }
 
@@ -178,7 +211,7 @@ async function savePersonData(person: PersonObject, organization: string) {
 
     const personParams = {"hrnumero": hrnumero, "organization": organization};
 
-    const query = "SELECT p.id FROM person p " +
+    const query = "SELECT DISTINCT p.id FROM person p " +
         "INNER JOIN person_organization o " +
         "ON o.personid = p.id " +
         "WHERE o.organisaatiotunniste = ${organization} " +
