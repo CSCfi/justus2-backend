@@ -19,13 +19,13 @@ router.get("/julkaisut/lista/:organisaatiotunnus?", db.getJulkaisutmin);
 router.get("/julkaisut/haku/:organisaatiotunnus?", db.getJulkaisutHaku);
 router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
 router.get("/user", db.getUser);
-router.get("/download/:id", fu.downloadJulkaisu);
+router.get("/julkaisu/download/:id", fu.downloadJulkaisu);
 
 // POST requests
 router.post("/julkaisu", db.postJulkaisu);
 router.post("/language", db.postLanguage);
 router.post("/logout", db.logout);
-router.post("/upload", fu.uploadJulkaisu);
+router.post("/julkaisu/upload", fu.uploadJulkaisu);
 
 // For owners
 router.post("/impersonate", db.impersonateUser);
@@ -36,6 +36,8 @@ router.put("/julkaisuntila/:id", db.putJulkaisuntila);
 
 // DELETE requests
 router.delete("/julkaisu/poista/:id", fu.deleteJulkaisu);
+router.delete("/persons/poista", fu.deleteCsvFile);
+
 
 // Queries for external services
 router.get("/haku/avainsanat", ext.getAvainSanat);
@@ -62,11 +64,11 @@ router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
 router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
 // Person table queries
-router.get("/organisaatiotekijat", db.getPersonListaus);
-router.put("/updateperson/:id", db.updatePerson);
-router.get("/download-csv/personlist", db.downloadPersons);
-router.post("/pre-upload", fu.countRowsToBeDeleted);
-router.post("/upload-csv", fu.uploadPersons);
+router.get("/persons/get", db.getPersonListaus);
+router.put("/persons/update/:id", db.updatePerson);
+router.get("/persons/download", db.downloadPersons);
+router.post("/persons/upload", fu.countRowsToBeDeleted);
+router.post("/persons/save", fu.savePersons);
 
 export = router;
 
