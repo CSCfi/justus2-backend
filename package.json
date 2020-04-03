@@ -54,7 +54,7 @@
     "nowjs-core": "^0.20.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "pg-promise": "^8.4.4",
+    "pg-promise": "^8.7.5",
     "pug": "^2.0.3",
     "redis": "^2.8.0",
     "request": "^2.88.0",
