@@ -56,42 +56,45 @@ async function countRowsToBeDeleted(req: Request, res: Response) {
     });
 }
 
-
-async function uploadPersons(req: Request, res: Response) {
+async function savePersons(req: Request, res: Response) {
 
     // const organization = req.session.userData.organization;
     const organization = "02536";
     // const organization = "02535";
 
-    const storage = multer.diskStorage(
-        {
-            destination: process.env.CSV_UPLOAD_FOLDER,
-            filename: function ( req: any, file: any, cb: any ) {
-                cb(undefined, organization);
-            }
-        }
-    );
+    const filePath = "csv-upload/" + organization;
 
-    const csvUpload = multer({  storage: storage } ).single("file");
-
-    csvUpload(req, res, async function () {
-        const file = (<any>req).file;
-
-        const promise = csvParser.readCSV(file.path, organization, false);
+        const promise = csvParser.readCSV(filePath, organization, false);
 
         promise.then(() => {
-            fs.unlinkSync(file.path);
-            res.sendStatus(200);
+            fs.unlinkSync(filePath);
+            res.status(200).send("OK");
         }).catch(function (err: any) {
             console.log(err);
-            fs.unlinkSync(file.path);
+            fs.unlinkSync(filePath);
             res.status(500).send(err.message);
         });
+
+}
+
+async function deleteCsvFile(req: Request, res: Response) {
+
+    // const organization = req.session.userData.organization;
+    const organization = "02536";
+    const filePath = "csv-upload/" + organization;
+
+    fs.unlink(filePath, (err: Error) => {
+        if (err) {
+            console.log(err.message);
+            res.status(500).send(err.message);
+        } else {
+            console.log("CSV file removed successfully");
+            res.sendStatus(200);
+        }
 
     });
 
 }
-
 
 async function uploadJulkaisu(req: Request, res: Response) {
 
@@ -479,7 +482,8 @@ module.exports = {
     isPublicationInTheseus: isPublicationInTheseus,
     deleteJulkaisuFile: deleteJulkaisuFile,
     downloadJulkaisu: downloadJulkaisu,
-    uploadPersons: uploadPersons,
+    savePersons: savePersons,
+    deleteCsvFile: deleteCsvFile,
     countRowsToBeDeleted: countRowsToBeDeleted,
     postDataToQueueTable: postDataToQueueTable,
     isJukuriPublication: isJukuriPublication
