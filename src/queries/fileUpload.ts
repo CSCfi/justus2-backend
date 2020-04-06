@@ -218,9 +218,9 @@ async function moveFile (file: any, id: any) {
 
 async function validate(fileName: any, filePath: any) {
 
-    // validate that file has no file extension such as: .php, .js and .sh
+    // only pdf files are allowed
     const fileExt = path.extname(fileName).toLowerCase();
-    if (fileExt === ".php" || fileExt === ".js" || fileExt === ".sh" || fileExt === ".exe" ) {
+    if (fileExt !== ".pdf") {
         console.log("Invalid file extension, removing file...");
         fs.unlinkSync(filePath);
         console.log("Done!");
