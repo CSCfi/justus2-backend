@@ -14,7 +14,7 @@ const dbHelpers = require("./../databaseHelpers");
 const authService = require("./../services/authService");
 const fileUpload = require("./../queries/fileUpload");
 
-const csvParser = require("./../services/csvReader");
+const csvParser = require("./../services/csvHandler");
 
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
@@ -1197,7 +1197,6 @@ module.exports = {
     getUser: getUser,
     downloadPersons: downloadPersons,
     getPersonListaus: getPersonListaus,
-    deleteCount: deleteCount,
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,

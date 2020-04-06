@@ -86,8 +86,6 @@ interface PersonObject  {
 
     async function writeCSV(data: any, org: string) {
 
-        // TODO: if no data, return empty CSV with headers
-
         const csvWriter = createCsvWriter({
             path: csvFolder + org + "_file.csv",
             header: [
