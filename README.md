@@ -23,23 +23,11 @@ Clone the repository from https://github.com/CSCfi/justus-backend
 
 - Do the following in one terminal from the same folder
 ```
-$ npm install
-$ npm run build
 § vagrant up
 ```
 - Wait for vagrant up to finish then run these commands
 ```
 $ vagrant ssh
-$ redis-server
+$ bash start.sh
 ```
-
-- Open a new terminal in the same folder and execute the following commands
-```
-$ vagrant ssh
-$ cd ..
-$ cd ..
-$ cd vagrant/
-$ npm start
-```
-
 - The backend should now be up and running
