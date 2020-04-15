@@ -15,6 +15,7 @@ const authService = require("./../services/authService");
 const fileUpload = require("./../queries/fileUpload");
 
 const csvParser = require("./../services/csvHandler");
+const personQueries = require("./../queries/personTableQueries");
 
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
@@ -1156,17 +1157,51 @@ async function queryPersons(organization: string) {
 
 async function updatePerson(req: Request, res: Response) {
 
-    const data = {
+    // const organization = USER_DATA.organisaatio;
+    const organization = "02536";
+
+    const orcid = req.body.orcid;
+    const personid = req.body.id;
+    const personIdParams = {"personid": personid};
+
+    const personData = {
         "etunimi": req.body.etunimi,
         "sukunimi": req.body.sukunimi,
         "email": req.body.email,
         "modified": new Date()
     };
 
+    const organizationData = {
+        "alayksikko1": req.body.alayksikko[0],
+        "alayksikko2": req.body.alayksikko[1],
+        "alayksikko3": req.body.alayksikko[2],
+    };
+
     try {
         const updateColumns = new pgp.helpers.ColumnSet(["etunimi", "sukunimi", "email", "modified"], {table: "person"});
-        const updatePersonData = pgp.helpers.update(data, updateColumns) + "WHERE id = " +  parseInt(req.params.id) + " RETURNING id";
+        const updatePersonData = pgp.helpers.update(personData, updateColumns) + "WHERE id = " +  parseInt(req.params.id) + " RETURNING id";
         await db.one(updatePersonData);
+
+        // first delete previous alayksikko records
+        await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
+
+        await personQueries.insertOrganisaatioTekija(personid, organizationData, organization);
+
+        // first check if user currently has orcid
+        const identifierId = await personQueries.checkIfOrcidExists(personid);
+
+        if (!orcid && identifierId) {
+            console.log("Deleting orcid for person " + personid);
+            await connection.db.result("DELETE FROM person_identifier WHERE tunniste = 'orcid' AND personid = ${personid}", personIdParams);
+        }
+        if (orcid && identifierId) {
+            console.log("Updating orcid for person " + personid);
+            await personQueries.updateOrcid(personid, req.body.orcid);
+        }
+        if (!identifierId && orcid) {
+            console.log("Inserting orcid for person " + personid);
+            await personQueries.insertOrcid(personid, req.body.orcid);
+        }
 
         res.status(200).send( "Update successful!" );
 
