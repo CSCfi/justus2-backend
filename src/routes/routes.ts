@@ -71,6 +71,7 @@ router.post("/persons/upload", fu.countRowsToBeDeleted);
 router.post("/persons/save", fu.savePersons);
 router.get("/persons/publications/:orcid", db.getPublicationListForOnePerson);
 router.delete("/persons/remove/:id", db.removePerson);
+router.post("/person/save/", db.postPerson);
 
 export = router;
 

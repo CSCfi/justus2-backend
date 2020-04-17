@@ -1155,6 +1155,33 @@ async function queryPersons(organization: string) {
 
 }
 
+async function postPerson(req: Request, res: Response) {
+    // USER_DATA = req.session.userData;
+    USER_DATA = authService.getUserData(req.headers);
+    const hasOrganisation = await authService.hasOrganisation(USER_DATA);
+    const isAdmin = await authService.isAdmin(USER_DATA);
+
+    console.log(req.body);
+
+    if (hasOrganisation && isAdmin) {
+
+        try {
+            // const organization = USER_DATA.organisaatio;
+            const organization: string = "02536";
+            const personObj = req.body;
+
+            await personQueries.insertNewPerson(personObj, organization);
+
+            res.status(200).send("OK");
+        } catch (e) {
+            console.log(e);
+            res.status(500).send(e.message);
+        }
+    } else {
+        return res.status(403).send("Permission denied");
+    }
+}
+
 async function updatePerson(req: Request, res: Response) {
 
     // const organization = USER_DATA.organisaatio;
@@ -1296,6 +1323,7 @@ module.exports = {
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,
+    postPerson: postPerson,
     impersonateUser: impersonateUser,
     logout: logout,
     // PUT requests
