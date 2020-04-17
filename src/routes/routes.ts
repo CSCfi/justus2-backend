@@ -70,6 +70,7 @@ router.get("/persons/download", db.downloadPersons);
 router.post("/persons/upload", fu.countRowsToBeDeleted);
 router.post("/persons/save", fu.savePersons);
 router.get("/persons/publications/:orcid", db.getPublicationListForOnePerson);
+router.delete("/persons/remove/:id", db.removePerson);
 
 export = router;
 

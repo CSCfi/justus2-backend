@@ -1241,6 +1241,37 @@ async function getPublicationListForOnePerson(req: Request, res: Response) {
         return res.status(403).send("Permission denied");
     }
 }
+
+async function removePerson(req: Request, res: Response) {
+    console.log(req.params.id);
+
+    // USER_DATA = req.session.userData;
+    USER_DATA = authService.getUserData(req.headers);
+    const hasOrganisation = await authService.hasOrganisation(USER_DATA);
+    const isAdmin = await authService.isAdmin(USER_DATA);
+
+    if (hasOrganisation && isAdmin) {
+
+        try {
+            const personid = req.params.id;
+            const params = { "personid": personid };
+
+            await connection.db.result("DELETE FROM person WHERE id = ${personid}", params);
+
+            res.status(200).send("Person successfully deleted");
+        } catch (e) {
+            console.log(e.message);
+            res.sendStatus(500);
+        }
+
+    } else {
+        return res.status(403).send("Permission denied");
+    }
+
+
+}
+
+
 function logout(req: Request, res: Response, next: NextFunction) {
     req.session.destroy(err => {
         if (err) {
@@ -1271,6 +1302,8 @@ module.exports = {
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu,
     updatePerson: updatePerson,
+    // DELETE  requests
+    removePerson: removePerson
 
 
 };
