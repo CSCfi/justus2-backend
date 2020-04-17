@@ -36,7 +36,7 @@ router.put("/julkaisuntila/:id", db.putJulkaisuntila);
 
 // DELETE requests
 router.delete("/julkaisu/poista/:id", fu.deleteJulkaisu);
-router.delete("/persons/poista", fu.deleteCsvFile);
+
 
 
 // Queries for external services
@@ -65,12 +65,13 @@ router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
 // Person table queries
 router.get("/persons/get", db.getPersonListaus);
-router.put("/persons/update/:id", db.updatePerson);
+router.put("/person/update/:id", db.updatePerson);
 router.get("/persons/download", db.downloadPersons);
 router.post("/persons/upload", fu.countRowsToBeDeleted);
 router.post("/persons/save", fu.savePersons);
 router.get("/persons/publications/:orcid", db.getPublicationListForOnePerson);
 router.delete("/persons/remove/:id", db.removePerson);
+router.delete("/persons/csv-remove", fu.deleteCsvFile);
 router.post("/person/save/", db.postPerson);
 
 export = router;
