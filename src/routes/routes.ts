@@ -69,6 +69,7 @@ router.put("/persons/update/:id", db.updatePerson);
 router.get("/persons/download", db.downloadPersons);
 router.post("/persons/upload", fu.countRowsToBeDeleted);
 router.post("/persons/save", fu.savePersons);
+router.get("/persons/publications/:orcid", db.getPublicationListForOnePerson);
 
 export = router;
 

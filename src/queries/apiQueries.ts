@@ -1212,6 +1212,35 @@ async function updatePerson(req: Request, res: Response) {
 
 }
 
+async function getPublicationListForOnePerson(req: Request, res: Response) {
+
+    // USER_DATA = req.session.userData;
+    USER_DATA = authService.getUserData(req.headers);
+    const hasOrganisation = await authService.hasOrganisation(USER_DATA);
+    const isAdmin = await authService.isAdmin(USER_DATA);
+
+    if (hasOrganisation && isAdmin) {
+
+        try {
+            const orcid = req.params.orcid;
+            const params = { "orcid": orcid };
+
+            const query = "SELECT o.orcid, j.id, j.julkaisunnimi FROM organisaatiotekija o" +
+                " INNER JOIN julkaisu j on o.julkaisuid = j.id" +
+                " WHERE o.orcid = ${orcid};";
+
+            const publications = await db.any(query, params);
+
+            res.status(200).json({ publications });
+        } catch (e) {
+            console.log(e.message);
+            res.sendStatus(500);
+        }
+
+    } else {
+        return res.status(403).send("Permission denied");
+    }
+}
 function logout(req: Request, res: Response, next: NextFunction) {
     req.session.destroy(err => {
         if (err) {
@@ -1232,6 +1261,7 @@ module.exports = {
     getUser: getUser,
     downloadPersons: downloadPersons,
     getPersonListaus: getPersonListaus,
+    getPublicationListForOnePerson: getPublicationListForOnePerson,
     // POST requests
     postJulkaisu: postJulkaisu,
     postLanguage: postLanguage,
