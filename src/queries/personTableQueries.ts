@@ -33,24 +33,8 @@ async function savePersonData(person: PersonObject, organization: string) {
 
     // no data in person table; insert new record
     if (!data) {
-        const personValues = [{"hrnumero": person.hrnumero, "etunimi": person.etunimi,
-            "sukunimi": person.sukunimi, "email": person.email}];
 
-        personColumns.push("hrnumero");
-
-        const savePerson = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
-        const personPromise = connection.pgp.helpers.insert(personValues, savePerson) + " RETURNING id";
-
-        // insert data to person table
-        const personId = await connection.db.one(personPromise);
-
-        // insert data to person_organization table
-        await insertOrganisaatioTekija(personId.id, person, organization);
-
-        // insert data to person_identifier table (save orcid only if data exists)
-        if (person.orcid || person.orcid !== "") {
-            await insertOrcid(personId.id, person.orcid);
-        }
+        await insertNewPerson(person, organization);
 
     } else {
 
@@ -116,6 +100,33 @@ async function updateOrcid(personid: number, orcid: string) {
     await connection.db.one(updateIdentifierQuery, personIdParams);
 }
 
+async function insertNewPerson(person: PersonObject, organization: string) {
+
+    const personColumns = [
+        "etunimi",
+        "sukunimi",
+        "email",
+        "hrnumero"
+    ];
+
+    const personValues = [{"hrnumero": person.hrnumero, "etunimi": person.etunimi,
+        "sukunimi": person.sukunimi, "email": person.email}];
+
+    const savePerson = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
+    const personPromise = connection.pgp.helpers.insert(personValues, savePerson) + " RETURNING id";
+
+    // insert data to person table
+    const personId = await connection.db.one(personPromise);
+
+    // insert data to person_organization table
+    await insertOrganisaatioTekija(personId.id, person, organization);
+
+    // insert data to person_identifier table (save orcid only if data exists)
+    if (person.orcid && person.orcid !== "") {
+        await insertOrcid(personId.id, person.orcid);
+    }
+}
+
 async function insertOrganisaatioTekija(personid: number, person: PersonObject, organization: string) {
 
     console.log("in insert organisaatiotekija");
@@ -162,6 +173,7 @@ async function insertOrcid(personID: number, orcid: string) {
 
 module.exports = {
     savePersonData: savePersonData,
+    insertNewPerson: insertNewPerson,
     insertOrganisaatioTekija: insertOrganisaatioTekija,
     updateOrcid: updateOrcid,
     insertOrcid: insertOrcid,
