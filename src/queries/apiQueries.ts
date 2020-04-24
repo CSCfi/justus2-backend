@@ -1104,8 +1104,8 @@ async function downloadPersons(req: Request, res: Response) {
 
 async function getPersonListaus(req: Request, res: Response) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1156,12 +1156,11 @@ async function queryPersons(organization: string) {
 }
 
 async function postPerson(req: Request, res: Response) {
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+
+    USER_DATA = req.session.userData;
+    // USER_DATA = authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
-
-    console.log(req.body);
 
     if (hasOrganisation && isAdmin) {
 
@@ -1184,6 +1183,11 @@ async function postPerson(req: Request, res: Response) {
 
 async function updatePerson(req: Request, res: Response) {
 
+    USER_DATA = req.session.userData;
+    // USER_DATA = authService.getUserData(req.headers);
+    const hasOrganisation = await authService.hasOrganisation(USER_DATA);
+    const isAdmin = await authService.isAdmin(USER_DATA);
+
     // const organization = USER_DATA.organisaatio;
     const organization = "02536";
 
@@ -1204,45 +1208,50 @@ async function updatePerson(req: Request, res: Response) {
         "alayksikko3": req.body.alayksikko[2],
     };
 
-    try {
-        const updateColumns = new pgp.helpers.ColumnSet(["etunimi", "sukunimi", "email", "modified"], {table: "person"});
-        const updatePersonData = pgp.helpers.update(personData, updateColumns) + "WHERE id = " +  parseInt(req.params.id) + " RETURNING id";
-        await db.one(updatePersonData);
+    if (hasOrganisation && isAdmin) {
 
-        // first delete previous alayksikko records
-        await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
+        try {
+            const updateColumns = new pgp.helpers.ColumnSet(["etunimi", "sukunimi", "email", "modified"], {table: "person"});
+            const updatePersonData = pgp.helpers.update(personData, updateColumns) + "WHERE id = " + parseInt(req.params.id) + " RETURNING id";
+            await db.one(updatePersonData);
 
-        await personQueries.insertOrganisaatioTekija(personid, organizationData, organization);
+            // first delete previous alayksikko records
+            await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
 
-        // first check if user currently has orcid
-        const identifierId = await personQueries.checkIfOrcidExists(personid);
+            await personQueries.insertOrganisaatioTekija(personid, organizationData, organization);
 
-        if (!orcid && identifierId) {
-            console.log("Deleting orcid for person " + personid);
-            await connection.db.result("DELETE FROM person_identifier WHERE tunniste = 'orcid' AND personid = ${personid}", personIdParams);
+            // first check if user currently has orcid
+            const identifierId = await personQueries.checkIfOrcidExists(personid);
+
+            if (!orcid && identifierId) {
+                console.log("Deleting orcid for person " + personid);
+                await connection.db.result("DELETE FROM person_identifier WHERE tunniste = 'orcid' AND personid = ${personid}", personIdParams);
+            }
+            if (orcid && identifierId) {
+                console.log("Updating orcid for person " + personid);
+                await personQueries.updateOrcid(personid, req.body.orcid);
+            }
+            if (!identifierId && orcid) {
+                console.log("Inserting orcid for person " + personid);
+                await personQueries.insertOrcid(personid, req.body.orcid);
+            }
+
+            res.status(200).send("Update successful!");
+
+        } catch (e) {
+            console.log(e);
+            res.status(500).send(e.message);
         }
-        if (orcid && identifierId) {
-            console.log("Updating orcid for person " + personid);
-            await personQueries.updateOrcid(personid, req.body.orcid);
-        }
-        if (!identifierId && orcid) {
-            console.log("Inserting orcid for person " + personid);
-            await personQueries.insertOrcid(personid, req.body.orcid);
-        }
-
-        res.status(200).send( "Update successful!" );
-
-    } catch (e) {
-        console.log(e);
-        res.status(500).send(  e.message );
+    } else {
+        return res.status(403).send("Permission denied");
     }
 
 }
 
 async function getPublicationListForOnePerson(req: Request, res: Response) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1270,10 +1279,9 @@ async function getPublicationListForOnePerson(req: Request, res: Response) {
 }
 
 async function removePerson(req: Request, res: Response) {
-    console.log(req.params.id);
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 

@@ -26,9 +26,9 @@ const getUserData = function (headers: any) {
             "nimi": name,
             "showPublicationInput": <boolean> undefined,
             "jukuriUser": <boolean> undefined,
-            "owner": <boolean> undefined,
             // TODO: showHrData if organization have data in person table
-            "showHrData":  <boolean> true
+            "showHrData":  <boolean> false,
+            "owner": <boolean> undefined
         };
 
         const role = getRole(headers["shib-group"]);
