@@ -1,6 +1,7 @@
 FROM node:8 as node_builder
 WORKDIR /app
 COPY package.json /app/
+COPY package-lock.json /app/
 RUN npm install
 COPY ./ /app
 ARG env=prod
