@@ -134,7 +134,7 @@ async function getJulkaisutmin(req: Request, res: Response, next: NextFunction) 
         let query;
         let queryCount;
 
-        const currentPage = parseInt(req.query.currentPage);
+        const currentPage = parseInt(req.query.currentPage.toString());
         const odottavat = req.query.odottavat;
         let showOnlyPublicationsWaitingForApprove;
 
@@ -301,7 +301,7 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     const julkaisuTableFields = dbHelpers.getListFields("j");
 
     const pageSize = 30;
-    const currentPage = parseInt(req.query.currentPage);
+    const currentPage = parseInt(req.query.currentPage.toString());
     const offset = currentPage * pageSize - pageSize;
 
     let nimiTekijaHaku: boolean = false;
@@ -313,7 +313,7 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     let julkaisuvuosi;
 
     if (req.query.nimiTekija && req.query.nimiTekija != "") {
-        nimiTekija = req.query.nimiTekija.toLowerCase();
+        nimiTekija = req.query.nimiTekija.toString().toLowerCase();
         nimiTekijaHaku = true;
     }
     if (req.query.julkaisunTila && req.query.julkaisunTila != "") {

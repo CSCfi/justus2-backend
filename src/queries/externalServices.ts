@@ -17,7 +17,7 @@ const utf8 = require("utf8");
 
 import  * as kp  from "./../koodistopalvelu";
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
-    if (req.query.lang.toLowerCase() === "fi" || req.query.lang.toLowerCase() === "sv") {
+    if (req.query.lang.toString().toLowerCase() === "fi" || req.query.lang.toString().toLowerCase() === "sv") {
         const url: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
         const secondurl: string = BASEURLFINTO + "EN" + "&query=" + req.query.q + "*";
         kp.HTTPGETshow(utf8.encode(url), res, oh.ObjectHandlerAvainsanat, utf8.encode(secondurl));
@@ -29,14 +29,14 @@ function getAvainSanat(req: Request, res: Response, next: NextFunction) {
     }
 }
 function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = jufoSearchUrl + "tyyppi=1&nimi=" + req.query.q;
+    const apiurl: string = jufoSearchUrl + "tyyppi=1&nimi=" + req.query.q.toString();
     console.log("This is the apiurl for julkaisusarja GET: " + apiurl);
 
     // The jufo rest api is kinda weird, if the query word is <5 or over 50
     // it returns nothing, which breaks the code, hence the odd looking error handling
 
     if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat, undefined, req.query.q);
+        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat, undefined, req.query.q.toString());
     }
     else {
         res.send("");
@@ -103,8 +103,8 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
 }
  function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextFunction) {
 
-    const julkaisu = req.query.julkaisu;
-    const tekija = req.query.tekija;
+    const julkaisu = req.query.julkaisu.toString();
+    const tekija = req.query.tekija.toString();
 
     if (req.query.julkaisu.length < 5) {
         return;
@@ -167,10 +167,12 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
     console.log(req.query.lahde);
     console.log(req.query.id);
 
-    if (req.query.lahde.toLowerCase() === "crossref") {
+    const lahde: string = req.query.lahde.toString();
+
+    if (lahde.toLowerCase() === "crossref") {
         url = crossRefUrl + "/http://dx.doi.org" + req.query.id;
     }
-    if (req.query.lahde.toLowerCase() === "virta") {
+    if (lahde.toLowerCase() === "virta") {
         url =  virtaUrl + "/" + req.query.id;
     }
 
@@ -183,10 +185,10 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
         if (response.statusCode === 404) {
             res.sendStatus(404);
         } else {
-            if (req.query.lahde.toLowerCase() === "crossref") {
+            if (lahde.toLowerCase() === "crossref") {
                 ret = parseCrossRefData(data["message"]);
             }
-            if (req.query.lahde.toLowerCase() === "virta") {
+            if (lahde.toLowerCase() === "virta") {
                 ret = parseVirtaData(data);
             }
             res.status(200).json( ret );

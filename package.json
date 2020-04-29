@@ -43,7 +43,6 @@
     "express-flash": "0.0.2",
     "express-session": "^1.15.6",
     "express-validator": "^4.3.0",
-    "hoek": "^5.0.3",
     "ini": "^1.3.5",
     "lodash": "^4.17.10",
     "lusca": "^1.6.0",
@@ -54,7 +53,7 @@
     "nowjs-core": "^0.20.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "pg-promise": "^8.7.5",
+    "pg-promise": "^10.5.2",
     "pug": "^2.0.3",
     "redis": "^2.8.0",
     "request": "^2.88.0",
@@ -85,7 +84,6 @@
     "@types/request": "^2.47.1",
     "@types/shelljs": "^0.7.9",
     "@types/supertest": "^2.0.4",
-    "@types/winston": "^2.3.9",
     "chai": "^4.1.2",
     "concurrently": "^3.5.1",
     "connect-pg-pool": "^4.0.0",
@@ -97,7 +95,7 @@
     "supertest": "^3.1.0",
     "ts-jest": "^22.4.6",
     "ts-node": "^5.0.1",
-    "tslint": "^5.10.0",
+    "tslint": "^5.20.1",
     "typescript": "^3.3.3333"
   }
 }
