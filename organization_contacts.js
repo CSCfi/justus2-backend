@@ -20,7 +20,7 @@ const contactList = [
 		}
     },
     {
-        // Arcada - Nylands svenska yrkeshögskola  #arcada-admins
+        // Arcada - Nylands svenska yrkeshögskola
         "domain": "@arcada.fi",
         "code": "02535",
         "email": "",
@@ -30,7 +30,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Centria-ammattikorkeakoulu  #centria-admins
+        // Centria-ammattikorkeakoulu
         "domain": "@centria.fi",
         "code": "02536",
         "email": "",
@@ -40,7 +40,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Diakonia-ammattikorkeakoulu  #diak-admins
+        // Diakonia-ammattikorkeakoulu
         "domain": "@diak.fi",
         "code": "02623",
         "email": "",
@@ -50,7 +50,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Haaga-Helia ammattikorkeakoulu  #haaga-helia-admins
+        // Haaga-Helia ammattikorkeakoulu
         "domain": "@haaga-helia.fi",
         "code": "10056",
         "email": "",
@@ -60,7 +60,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Humanistinen ammattikorkeakoulu  #humak-admins
+        // Humanistinen ammattikorkeakoulu
         "domain": "@humak.fi",
         "code": "02631",
         "email": "",
@@ -80,7 +80,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Jyväskylän ammattikorkeakoulu  #jamk-admins
+        // Jyväskylän ammattikorkeakoulu
         "domain": "@jamk.fi",
         "code": "02504",
         "email": "",
@@ -90,7 +90,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Kajaanin ammattikorkeakoulu  #kamk-admins
+        // Kajaanin ammattikorkeakoulu
         "domain": "@kamk.fi",
         "code": "02473",
         "email": "",
@@ -100,7 +100,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Karelia-ammattikorkeakoulu  #karelia-admins
+        // Karelia-ammattikorkeakoulu 
         "domain": "@karelia.fi",
         "code": "02469",
         "email": "",
@@ -111,7 +111,7 @@ const contactList = [
     },
     {
         // nb! xamk may have 3 domains (mahd. kyamk.fi ja mamk.fi)
-        // Kaakkois-Suomen ammattikorkeakoulu  #xamk-admins
+        // Kaakkois-Suomen ammattikorkeakoulu 
         "domain": "@xamk.fi",
         "code": "10118",
         "email": "",
@@ -121,7 +121,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Kaakkois-Suomen ammattikorkeakoulu  #xamk-admins
+        // Kaakkois-Suomen ammattikorkeakoulu
         "domain": "@kyamk.fi",
         "code": "10118",
         "email": "",
@@ -131,7 +131,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Kaakkois-Suomen ammattikorkeakoulu  #xamk-admins
+        // Kaakkois-Suomen ammattikorkeakoulu
         "domain": "@mamk.fi",
         "code": "10118",
         "email": "",
@@ -141,7 +141,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Lahden ammattikorkeakoulu  #lamk-admins
+        // Lahden ammattikorkeakoulu
         "domain": "@lamk.fi",
         "code": "02470",
         "email": "",
@@ -151,7 +151,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Laurea-ammattikorkeakoulu  #laurea-admins
+        // Laurea-ammattikorkeakoulu
         "domain": "@laurea.fi",
         "code": "02629",
         "email": "",
@@ -161,7 +161,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Metropolia ammattikorkeakoulu  #metropolia-admins
+        // Metropolia ammattikorkeakoulu
         "domain": "@metropolia.fi",
         "code": "10065",
         "email": "",
@@ -171,7 +171,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Satakunnan ammattikorkeakoulu  #samk-admins
+        // Satakunnan ammattikorkeakoulu
         "domain": "@samk.fi",
         "code": "02507",
         "email": "",
@@ -181,7 +181,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Seinäjoen ammattikorkeakoulu  #seamk-admins
+        // Seinäjoen ammattikorkeakoulu
         "domain": "@seamk.fi",
         "code": "02472",
         "email": "",
@@ -191,7 +191,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Tampereen ammattikorkeakoulu  #tamk-admins
+        // Tampereen ammattikorkeakoulu
         "domain": "@tamk.fi",
         "code": "02630",
         "email": "",
@@ -201,7 +201,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Tampereen ammattikorkeakoulu  #tamk-admins
+        // Tampereen ammattikorkeakoulu
         "domain": "@tuni.fi",
         "code": "02630",
         "email": "",
@@ -211,7 +211,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Yrkeshögskolan Novia  #novia-admins
+        // Yrkeshögskolan Novia
         "domain": "@novia.fi",
         "code": "10066",
         "email": "",
@@ -242,7 +242,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Oulun ammattikorkeakoulu #oamk-admins
+        // Oulun ammattikorkeakoulu
         "domain": "@oamk.fi",
         "code": "02471",
         "email": "",
@@ -252,7 +252,7 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Poliisiammattikorkeakoulu  #polamk-admins
+        // Poliisiammattikorkeakoulu
         "domain": "@polamk.fi",
         "code": "02557",
         "email": "",
@@ -270,7 +270,7 @@ const contactList = [
 		}
     },
 	{
-        // LAB ammattikorkeakoulu #lab-admins
+        // LAB ammattikorkeakoulu
 		// nb! lab has two domains
         "domain": "@lab.fi",
         "code": "10126",
@@ -294,20 +294,20 @@ const contactList = [
     },
     {
         // tutkimusorganisaatio
-        // Ilmatieteen laitos  #fmi-admins
+        // Ilmatieteen laitos
         "domain": "@fmi.fi",
         "code": "4940015",
         "email": ""
     },
     {
         // nb! mml has 2 domains
-        // Maanmittauslaitos  #mml-admins
+        // Maanmittauslaitos
         "domain": "@nls.fi",
         "code": "4020217",
         "email": ""
     },
     {
-        // Maanmittauslaitos  #mml-admins
+        // Maanmittauslaitos
         "domain": "@maanmittauslaitos.fi",
         "code": "4020217",
         "email": ""
@@ -340,23 +340,33 @@ const contactList = [
 		"visibleFields": ["hrnumero", "projektinumero"],
     },
     {
-        // 	Geologian tutkimuskeskus #gtk-admins
+        // 	Geologian tutkimuskeskus
         "domain": "@gtk.fi",
         "code": "5040011",
         "email": "",
 		"requiredFields": ["alayksikko"]
     },
     {
-        // 	Terveyden ja hyvinvoinnin laitos #thl-admins
+        // 	Terveyden ja hyvinvoinnin laitos
         "domain": "@thl.fi",
         "code": "5610017",
         "email": ""
     },
 	{
-        // 	Ruokavirasto #ruoka-admins
+        // 	Ruokavirasto
         "domain": "@ruokavirasto.fi",
         "code": "4080015",
         "email": ""
+    },
+	{
+        // 	Työterveyslaitos
+        "domain": "@ttl.fi",
+        "code": "02202669",
+        "email": "",
+		"theseusData": {
+			"theseusCollectionId": "",
+			"theseusCode": ""
+		},
     }
 ];
 
