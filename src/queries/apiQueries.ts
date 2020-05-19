@@ -542,13 +542,13 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
     if (hasAccess) {
         const method = "POST";
 
-        const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-        const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + " RETURNING id";
-
         // begin transaction
         await db.any("BEGIN");
 
         try {
+
+            const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+            const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + " RETURNING id";
 
             // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
             const julkaisuId = await db.one(saveJulkaisu);
@@ -599,7 +599,7 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             console.log(err);
             console.log("Error in posting new publication with error code: " + err);
             await db.any("ROLLBACK");
-            res.sendStatus(500);
+            res.status(500).send(err.message);
         }
     } else {
         return res.status(403).send("Permission denied");
