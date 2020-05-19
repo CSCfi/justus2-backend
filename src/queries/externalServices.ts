@@ -101,7 +101,7 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
         res.send("");
     }
 }
- function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextFunction) {
+function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextFunction) {
 
     const julkaisu = req.query.julkaisu.toString();
     const tekija = req.query.tekija.toString();
@@ -110,13 +110,13 @@ function getJufotISSN(req: Request, res: Response, next: NextFunction) {
         return;
     }
 
-     let apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
-     let apiUrlVirta: string = virtaUrl + "/haku?julkaisunNimi=" + encodeURIComponent(julkaisu);
+    let apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
+    let apiUrlVirta: string = virtaUrl + "/haku?julkaisunNimi=" + encodeURIComponent(julkaisu);
 
-     if (tekija && tekija !== "undefined" && tekija !== "") {
-         apiUrlCrossRef = apiUrlCrossRef + "&query.author=" + encodeURIComponent(tekija);
-         apiUrlVirta = apiUrlVirta + "&henkiloHaku=" + encodeURIComponent(tekija);
-     }
+    if (tekija && tekija !== "undefined" && tekija !== "") {
+        apiUrlCrossRef = apiUrlCrossRef + "&query.author=" + encodeURIComponent(tekija);
+        apiUrlVirta = apiUrlVirta + "&henkiloHaku=" + encodeURIComponent(tekija);
+    }
 
     const virtaPromise = requestPromise({
         uri: apiUrlVirta,
