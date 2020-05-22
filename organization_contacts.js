@@ -366,7 +366,17 @@ const contactList = [
 		"theseusData": {
 			"theseusCollectionId": "",
 			"theseusCode": ""
-		},
+		}
+    },
+	{
+        // 	Suomen ympäristökeskus
+        "domain": "@syke.fi",
+        "code": "7020017",
+        "email": "",
+		"theseusData": {
+			"theseusCollectionId": "",
+			"theseusCode": ""
+		}
     }
 ];
 
