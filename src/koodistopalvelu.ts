@@ -197,7 +197,11 @@ function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?
             const proms: object [] = [];
             for (const i in orgid) {
                 if (orgid[i].length > 5) {
-                    proms.push(HTTPSUBGET("/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + orgid[i]));
+                    if (orgid[i] === "02202669") {
+                        proms.push(HTTPSUBGET("/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + "2202669"));
+                    } else {
+                        proms.push(HTTPSUBGET("/tutkimusorganisaatio/koodi/tutkimusorganisaatio_" + orgid[i]));
+                    }
                 }
                 else {
                     proms.push(HTTPSUBGET("/oppilaitosnumero/koodi/oppilaitosnumero_" + orgid[i]));
