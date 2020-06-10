@@ -1,6 +1,6 @@
 # JUSTUS Backend
 
-Clone the repository from https://github.com/CSCfi/justus-backend
+Clone the repository from https://github.com/CSCfi/justus2-backend
 
 ----
 
