@@ -299,28 +299,36 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     const currentPage = parseInt(req.query.currentPage.toString());
     const offset = currentPage * pageSize - pageSize;
 
+    let idHaku: boolean = false;
     let nimiTekijaHaku: boolean = false;
     let vuosiHaku: boolean = false;
     let tilaHaku: boolean = false;
 
+    let julkaisuId;
     let julkaisuntila;
     let nimiTekija;
     let julkaisuvuosi;
 
-    if (req.query.nimiTekija && req.query.nimiTekija != "") {
-        nimiTekija = req.query.nimiTekija.toString().toLowerCase();
-        nimiTekijaHaku = true;
-    }
-    if (req.query.julkaisunTila && req.query.julkaisunTila != "") {
-        julkaisuntila = req.query.julkaisunTila;
-        tilaHaku = true;
-    }
-    if (req.query.julkaisuVuosi && req.query.julkaisuVuosi != "") {
-        julkaisuvuosi = req.query.julkaisuVuosi;
-        vuosiHaku = true;
-    }
-    if (!vuosiHaku && !tilaHaku && !nimiTekijaHaku) {
-        return res.status(500).send("Empty search");
+    // if search string is numeric, search is id search
+    if (!isNaN(Number(req.query.nimiTekija))) {
+        julkaisuId = req.query.nimiTekija;
+        idHaku = true;
+    } else {
+        if (req.query.nimiTekija && req.query.nimiTekija != "") {
+            nimiTekija = req.query.nimiTekija.toString().toLowerCase();
+            nimiTekijaHaku = true;
+        }
+        if (req.query.julkaisunTila && req.query.julkaisunTila != "") {
+            julkaisuntila = req.query.julkaisunTila;
+            tilaHaku = true;
+        }
+        if (req.query.julkaisuVuosi && req.query.julkaisuVuosi != "") {
+            julkaisuvuosi = req.query.julkaisuVuosi;
+            vuosiHaku = true;
+        }
+        if (!vuosiHaku && !tilaHaku && !nimiTekijaHaku && !idHaku) {
+            return res.status(500).send("Empty search");
+        }
     }
 
     // Fetch only fields which are needed in publication list, fetch also publication file related data
@@ -328,6 +336,10 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
         "SELECT j.id, " + julkaisuTableFields + ", a.handle, a.id AS aid" +
         " FROM julkaisu AS j" +
         " LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid";
+
+    const idQuery = baseQuery +
+        " WHERE j.id = ${id}";
+    const idCount = "SELECT COUNT(*) FROM julkaisu WHERE id = ${id}";
 
     const nimiTekijaHakuQuery = baseQuery +
         " WHERE (LOWER(j.julkaisunnimi) LIKE '%" + nimiTekija + "%' OR LOWER(j.tekijat) LIKE '%" + nimiTekija + "%')";
@@ -349,6 +361,7 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     let organisaatioHaku: boolean = true;
 
     params = {
+        "id": julkaisuId,
         "tila": julkaisuntila,
         "nimiTekija": nimiTekija,
         "vuosi": julkaisuvuosi,
@@ -368,6 +381,15 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     let count: any;
     let countQuery;
     let hakuQuery;
+
+    if (idHaku) {
+        hakuQuery = idQuery + ";";
+        countQuery =  idCount + ";";
+        if (organisaatioHaku) {
+            hakuQuery = idQuery + " AND organisaatiotunnus = ${code};";
+            countQuery = idCount +  " AND organisaatiotunnus = ${code};";
+        }
+    }
 
     if (nimiTekijaHaku && !vuosiHaku && !tilaHaku) {
         hakuQuery = nimiTekijaHakuQuery + approved + " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
