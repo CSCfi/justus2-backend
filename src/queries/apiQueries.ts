@@ -383,11 +383,11 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     let hakuQuery;
 
     if (idHaku) {
-        hakuQuery = idQuery + ";";
-        countQuery =  idCount + ";";
+        hakuQuery = idQuery + approved + ";";
+        countQuery =  idCount + approved + ";";
         if (organisaatioHaku) {
-            hakuQuery = idQuery + " AND organisaatiotunnus = ${code};";
-            countQuery = idCount +  " AND organisaatiotunnus = ${code};";
+            hakuQuery = idQuery + approved + " AND organisaatiotunnus = ${code};";
+            countQuery = idCount + approved + " AND organisaatiotunnus = ${code};";
         }
     }
 
