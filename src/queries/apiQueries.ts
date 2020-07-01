@@ -310,7 +310,7 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     let julkaisuvuosi;
 
     // if search string is numeric, search is id search
-    if (!isNaN(Number(req.query.nimiTekija))) {
+    if (!isNaN(Number(req.query.nimiTekija)) && req.query.nimiTekija !== "") {
         julkaisuId = req.query.nimiTekija;
         idHaku = true;
     } else {
