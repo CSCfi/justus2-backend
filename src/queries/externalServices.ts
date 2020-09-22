@@ -183,8 +183,12 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
             res.sendStatus(500);
         }
 
-        if (response.statusCode === 404 || response.statusCode === 400) {
-            res.sendStatus(404);
+        if (response.statusCode !== 200) {
+            if (response.statusCode === 404 || response.statusCode === 400) {
+                res.sendStatus(404);
+            } else {
+                res.sendStatus(500);
+            }
         } else {
             if (lahde.toLowerCase() === "crossref") {
                 ret = parseCrossRefData(data["message"]);
