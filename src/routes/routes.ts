@@ -19,13 +19,13 @@ router.get("/julkaisut/lista/:organisaatiotunnus?", db.getJulkaisutmin);
 router.get("/julkaisut/haku/:organisaatiotunnus?", db.getJulkaisutHaku);
 router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
 router.get("/user", db.getUser);
-router.get("/download/:id", fu.downloadJulkaisu);
+router.get("/julkaisu/download/:id", fu.downloadJulkaisu);
 
 // POST requests
 router.post("/julkaisu", db.postJulkaisu);
 router.post("/language", db.postLanguage);
 router.post("/logout", db.logout);
-router.post("/upload", fu.uploadJulkaisu);
+router.post("/julkaisu/upload", fu.uploadJulkaisu);
 
 // For owners
 router.post("/impersonate", db.impersonateUser);
