@@ -177,12 +177,13 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
     }
 
     request(utf8.encode(url), { json: true }, (error: any, response: any, data: any) => {
+
         if (error) {
             console.log(error);
             res.sendStatus(500);
         }
 
-        if (response.statusCode === 404) {
+        if (response.statusCode === 404 || response.statusCode === 400) {
             res.sendStatus(404);
         } else {
             if (lahde.toLowerCase() === "crossref") {
@@ -309,7 +310,7 @@ function parseCrossRefData(data: any) {
     if (data.issued) {
         if (data.issued["date-parts"]) {
             vuosi = "" + data.issued["date-parts"];
-            obj["julkaisuvuosi"] = vuosi.split(",")[0];
+            obj["julkaisuvuosi"] = parseInt(vuosi.split(",")[0]);
         }
     }
 
@@ -321,7 +322,7 @@ function parseVirtaData(data: any) {
     const obj: any = {"julkaisu": { "issn": [], "isbn": []}, "avainsanat": [], "tieteenala": [] };
 
     obj["julkaisu"]["julkaisutyyppi"] = data["JulkaisutyyppiKoodi"];
-    if (data["JulkaisuVuosi"])obj["julkaisu"]["julkaisuvuosi"] = data["JulkaisuVuosi"];
+    if (data["JulkaisuVuosi"])obj["julkaisu"]["julkaisuvuosi"] = parseInt(data["JulkaisuVuosi"]);
     if (data["JulkaisunNimi"])obj["julkaisu"]["julkaisunnimi"] = data["JulkaisunNimi"];
     if (data["TekijatiedotTeksti"])obj["julkaisu"]["tekijat"] = data["TekijatiedotTeksti"];
     if (data["TekijoidenLkm"])obj["julkaisu"]["julkaisuntekijoidenlukumaara"] = data["TekijoidenLkm"];
