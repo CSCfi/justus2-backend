@@ -110,8 +110,11 @@ function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextF
         return;
     }
 
-    let apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
+    let apiUrlCrossRef: string = crossRefUrl + "?query.bibliographic=" + encodeURIComponent(julkaisu);
     let apiUrlVirta: string = virtaUrl + "/haku?julkaisunNimi=" + encodeURIComponent(julkaisu);
+
+    console.log("This is the api url for CrossRef: " + apiUrlCrossRef);
+    console.log("This is the api url for VIRTA: " + apiUrlVirta);
 
     if (tekija && tekija !== "undefined" && tekija !== "") {
         apiUrlCrossRef = apiUrlCrossRef + "&query.author=" + encodeURIComponent(tekija);
@@ -120,13 +123,13 @@ function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextF
 
     const virtaPromise = requestPromise({
         uri: apiUrlVirta,
-        timeout: 8000,
+        timeout: 1000000,
         json: true
     });
 
     const crossRefPromise = requestPromise({
         uri: apiUrlCrossRef,
-        timeout: 8000,
+        timeout: 1000000,
         json: true
     });
 
