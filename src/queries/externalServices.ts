@@ -173,7 +173,7 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
     const lahde: string = req.query.lahde.toString();
 
     if (lahde.toLowerCase() === "crossref") {
-        url = crossRefUrl + "/http://dx.doi.org" + req.query.id;
+        url = crossRefUrl + "/" + req.query.id;
     }
     if (lahde.toLowerCase() === "virta") {
         url =  virtaUrl + "/" + req.query.id;
