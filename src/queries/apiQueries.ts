@@ -1072,11 +1072,13 @@ async function updateArchiveTable(data: any, headers: any, id: any) {
 }
 
 function logout(req: Request, res: Response, next: NextFunction) {
+    console.log(req.session);
     req.session.destroy(err => {
         if (err) {
             console.log(err);
             return next(err);
         }
+        console.log(req.session);
         res.status(200).send("Logout successful");
     });
 }
