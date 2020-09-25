@@ -1079,7 +1079,8 @@ function logout(req: Request, res: Response, next: NextFunction) {
             return next(err);
         }
         console.log(req.session);
-        res.status(200).send("Logout successful");
+        res.clearCookie('connect.sid', { path: '/' }).status(200).send('Logout successful and cookie deleted.');
+        // res.status(200).send("Logout successful");
     });
 }
 
