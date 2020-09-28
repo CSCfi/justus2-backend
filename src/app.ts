@@ -31,11 +31,10 @@ app.use(cookieParser());
 app.use(session({
     store: new RedisStore(),
     secret: sessionSecret,
-    cookie: { maxAge: 60 * 1000, secure: false, httpOnly: false }, // 8 hours,
+    cookie: { maxAge: 8 * 60 * 60 * 1000, secure: false, httpOnly: false }, // 8 hours,
     resave: true,
     autoreconnect: true,
-    saveUninitialized: false,
-    rolling: true
+    saveUninitialized: false
 }));
 
 // CONNECT TO PSQL INSIDE VAGRANT "psql -h 10.10.10.10 -U appaccount -d justus"
