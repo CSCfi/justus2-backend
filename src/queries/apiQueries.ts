@@ -1333,12 +1333,15 @@ async function removePerson(req: Request, res: Response) {
 
 
 function logout(req: Request, res: Response, next: NextFunction) {
+    console.log(req.session);
     req.session.destroy(err => {
         if (err) {
             console.log(err);
             return next(err);
         }
-        res.status(200).send("Logout successful");
+        console.log(req.session);
+        res.clearCookie("connect.sid", { path: "/" }).status(200).send("Logout successful and cookie deleted.");
+        // res.status(200).send("Logout successful");
     });
 }
 

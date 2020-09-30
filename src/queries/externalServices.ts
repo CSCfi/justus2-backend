@@ -110,8 +110,11 @@ function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextF
         return;
     }
 
-    let apiUrlCrossRef: string = crossRefUrl + "?sort=published&order=desc&rows=50&query.title=" + encodeURIComponent(julkaisu);
+    let apiUrlCrossRef: string = crossRefUrl + "?query.bibliographic=" + encodeURIComponent(julkaisu);
     let apiUrlVirta: string = virtaUrl + "/haku?julkaisunNimi=" + encodeURIComponent(julkaisu);
+
+    console.log("This is the api url for CrossRef: " + apiUrlCrossRef);
+    console.log("This is the api url for VIRTA: " + apiUrlVirta);
 
     if (tekija && tekija !== "undefined" && tekija !== "") {
         apiUrlCrossRef = apiUrlCrossRef + "&query.author=" + encodeURIComponent(tekija);
@@ -120,13 +123,13 @@ function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextF
 
     const virtaPromise = requestPromise({
         uri: apiUrlVirta,
-        timeout: 8000,
+        timeout: 1000000,
         json: true
     });
 
     const crossRefPromise = requestPromise({
         uri: apiUrlCrossRef,
-        timeout: 8000,
+        timeout: 1000000,
         json: true
     });
 
@@ -170,20 +173,25 @@ function getJulkaisuVirtaCrossrefEsitaytto(req: Request, res: Response, next: Ne
     const lahde: string = req.query.lahde.toString();
 
     if (lahde.toLowerCase() === "crossref") {
-        url = crossRefUrl + "/http://dx.doi.org" + req.query.id;
+        url = crossRefUrl + "/" + req.query.id;
     }
     if (lahde.toLowerCase() === "virta") {
         url =  virtaUrl + "/" + req.query.id;
     }
 
     request(utf8.encode(url), { json: true }, (error: any, response: any, data: any) => {
+
         if (error) {
             console.log(error);
             res.sendStatus(500);
         }
 
-        if (response.statusCode === 404) {
-            res.sendStatus(404);
+        if (response.statusCode !== 200) {
+            if (response.statusCode === 404 || response.statusCode === 400) {
+                res.sendStatus(404);
+            } else {
+                res.sendStatus(500);
+            }
         } else {
             if (lahde.toLowerCase() === "crossref") {
                 ret = parseCrossRefData(data["message"]);
@@ -309,7 +317,7 @@ function parseCrossRefData(data: any) {
     if (data.issued) {
         if (data.issued["date-parts"]) {
             vuosi = "" + data.issued["date-parts"];
-            obj["julkaisuvuosi"] = vuosi.split(",")[0];
+            obj["julkaisuvuosi"] = parseInt(vuosi.split(",")[0]);
         }
     }
 
@@ -321,7 +329,7 @@ function parseVirtaData(data: any) {
     const obj: any = {"julkaisu": { "issn": [], "isbn": []}, "avainsanat": [], "tieteenala": [] };
 
     obj["julkaisu"]["julkaisutyyppi"] = data["JulkaisutyyppiKoodi"];
-    if (data["JulkaisuVuosi"])obj["julkaisu"]["julkaisuvuosi"] = data["JulkaisuVuosi"];
+    if (data["JulkaisuVuosi"])obj["julkaisu"]["julkaisuvuosi"] = parseInt(data["JulkaisuVuosi"]);
     if (data["JulkaisunNimi"])obj["julkaisu"]["julkaisunnimi"] = data["JulkaisunNimi"];
     if (data["TekijatiedotTeksti"])obj["julkaisu"]["tekijat"] = data["TekijatiedotTeksti"];
     if (data["TekijoidenLkm"])obj["julkaisu"]["julkaisuntekijoidenlukumaara"] = data["TekijoidenLkm"];
