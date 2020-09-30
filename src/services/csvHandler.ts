@@ -174,11 +174,11 @@ async function getRowsToBeDeleted(hrNumberList: any, organization: string, onlyI
 
     const queryAll = "SELECT DISTINCT p.id, p.hrnumero, p.etunimi, p.sukunimi, o.organisaatiotunniste FROM person p " +
         "INNER JOIN person_organization o on p.id = o.personid WHERE p.hrnumero <> ALL ( ${hrnumero} ) " +
-        "AND o.organisaatiotunniste = '02536' ORDER BY p.id;";
+        "AND o.organisaatiotunniste = ${organization} ORDER BY p.id;";
 
     const queryIds = "SELECT DISTINCT p.id FROM person p " +
         "INNER JOIN person_organization o on p.id = o.personid WHERE p.hrnumero <> ALL ( ${hrnumero} ) " +
-        "AND o.organisaatiotunniste = '02536' ORDER BY p.id;";
+        "AND o.organisaatiotunniste = ${organization} ORDER BY p.id;";
 
     if (onlyIds) {
         query = queryIds;
