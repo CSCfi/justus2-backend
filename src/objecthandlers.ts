@@ -824,7 +824,7 @@ function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
                 alayksikot.push(reply);
                 parsealayksikot(alayksikot, org, callback);
 
-}
+    }
     function parsealayksikot(obj: any, orgid: any, callbacker: any) {
         const yarray: object [] = [];
         const y2017: object [] = [];

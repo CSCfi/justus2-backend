@@ -34,7 +34,7 @@ let USER_DATA: any = {};
 // Add Query functions here and define them in the module.exports at the end
 // All GET requests first
 
-function getUser(req: Request, res: Response, next: NextFunction) {
+async function getUser(req: Request, res: Response, next: NextFunction) {
 
     let userData;
 
@@ -44,7 +44,7 @@ function getUser(req: Request, res: Response, next: NextFunction) {
         userData["jukuriUser"] = <boolean> undefined;
     } else {
 
-        userData = authService.getUserData(req.headers);
+        userData = await authService.getUserData(req.headers);
 
         if (!userData || !userData.domain) {
             return res.status(401).send("Unauthorized");
@@ -60,12 +60,13 @@ function getUser(req: Request, res: Response, next: NextFunction) {
         req.session["userData"].owner = userData.owner;
         req.session["userData"].ip = req.headers["x-forwarded-for"] || (req.connection && req.connection.remoteAddress) || "";
         req.session["userData"].uid = req.headers["shib-uid"];
-
     }
 
     if (!req.session.language) {
         req.session.language = "FI";
     }
+
+    console.log(USER_DATA);
 
     userData.kieli = req.session.language;
     oh.ObjectHandlerUser(userData, req.session.language, function(result: any) {

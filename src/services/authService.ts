@@ -4,7 +4,7 @@ const domainMapping = organisationConfig.domainMappings;
 const conn = require("./../db");
 const utf8 = require("utf8");
 
-const getUserData = function (headers: any) {
+const getUserData = async function (headers: any) {
 
 
     if (!headers["shib-group"]) {
@@ -45,6 +45,9 @@ const getUserData = function (headers: any) {
                 return false;
             }
         });
+
+        // True if person tables contain data for this organization
+        userData.showHrData  = await queryHrData(userData.organisaatio);
 
         if (userData.organisaatio === "00000") {
             userData["owner"] = true;
@@ -166,6 +169,21 @@ async function isAdmin(user: any) {
     }
 }
 
+async function queryHrData(organizationCode: string) {
+    console.log(organizationCode);
+
+    const params = {"organisaatiotunniste": organizationCode};
+    const query = "SELECT 1 FROM person_organization WHERE organisaatiotunniste = " +
+        "${organisaatiotunniste} FETCH FIRST 1 ROW ONLY;";
+    const data = await conn.db.oneOrNone(query, params);
+    console.log(data);
+    if (data) {
+        return true;
+    } else {
+        return false;
+    }
+
+}
 
 
 module.exports = {
