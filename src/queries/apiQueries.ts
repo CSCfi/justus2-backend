@@ -1102,8 +1102,8 @@ async function updateArchiveTable(data: any, headers: any, id: any) {
 
 async function downloadPersons(req: Request, res: Response) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1152,8 +1152,8 @@ async function downloadPersons(req: Request, res: Response) {
 
 async function getPersonListaus(req: Request, res: Response) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1205,8 +1205,8 @@ async function queryPersons(organization: string) {
 
 async function postPerson(req: Request, res: Response) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1231,8 +1231,8 @@ async function postPerson(req: Request, res: Response) {
 
 async function updatePerson(req: Request, res: Response) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1298,8 +1298,8 @@ async function updatePerson(req: Request, res: Response) {
 
 async function getPublicationListForOnePerson(req: Request, res: Response) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1329,7 +1329,7 @@ async function getPublicationListForOnePerson(req: Request, res: Response) {
 async function removePerson(req: Request, res: Response) {
 
     USER_DATA = req.session.userData;
-    // USER_DATA = authService.getUserData(req.headers);
+    // USER_DATA = await authService.getUserData(req.headers);
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1350,8 +1350,6 @@ async function removePerson(req: Request, res: Response) {
     } else {
         return res.status(403).send("Permission denied");
     }
-
-
 }
 
 
