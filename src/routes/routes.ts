@@ -2,8 +2,8 @@ import { Router } from "express";
 // Defining our router
 const router: Router = Router();
 
-// Importing db const from apiQueries.ts
-const db = require("../queries/apiQueries");
+import { queries as api } from "./../queries/apiQueries";
+
 // Koodistopalvelu file
 const koodistopalvelu = require("./../queries/koodispalveluQueries");
 // External services (jufo, virta, crossref etc)
@@ -14,29 +14,28 @@ const ts = require("../services/TheseusSender");
 
 // Define the routes here, all will have the prexix /api/ as per the proxypass in the apache settings
 // GET requests here
-router.get("/julkaisut/lista/all", db.getJulkaisut);
-router.get("/julkaisut/lista/:organisaatiotunnus?", db.getJulkaisutmin);
-router.get("/julkaisut/haku/:organisaatiotunnus?", db.getJulkaisutHaku);
-router.get("/julkaisut/tiedot/:id", db.getAllPublicationDataById);
-router.get("/user", db.getUser);
+router.get("/julkaisut/lista/all", api.getJulkaisut.bind(api));
+router.get("/julkaisut/lista/:organisaatiotunnus?", api.getJulkaisutmin);
+router.get("/julkaisut/haku/:organisaatiotunnus?", api.getJulkaisutHaku);
+router.get("/julkaisut/tiedot/:id", api.getAllPublicationDataById);
+router.get("/user", api.getUser);
 router.get("/julkaisu/download/:id", fu.downloadJulkaisu);
 
 // POST requests
-router.post("/julkaisu", db.postJulkaisu);
-router.post("/language", db.postLanguage);
-router.post("/logout", db.logout);
+router.post("/julkaisu", api.postJulkaisu.bind(api));
+router.post("/language", api.postLanguage);
+router.post("/logout", api.logout);
 router.post("/julkaisu/upload", fu.uploadJulkaisu);
 
 // For owners
-router.post("/impersonate", db.impersonateUser);
+router.post("/impersonate", api.impersonateUser);
 
 // PUT requests
-router.put("/julkaisu/:id", db.updateJulkaisu);
-router.put("/julkaisuntila/:id", db.putJulkaisuntila);
+router.put("/julkaisu/:id", api.updateJulkaisu.bind(api));
+router.put("/julkaisuntila/:id", api.putJulkaisuntila);
 
 // DELETE requests
 router.delete("/julkaisu/poista/:id", fu.deleteJulkaisu);
-
 
 
 // Queries for external services
@@ -64,15 +63,15 @@ router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
 router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
 // Person table queries
-router.get("/persons/get", db.getPersonListaus);
-router.put("/person/update/:id", db.updatePerson);
-router.get("/persons/download", db.downloadPersons);
+router.get("/persons/get", api.getPersonListaus.bind(api));
+router.put("/person/update/:id", api.updatePerson);
+router.get("/persons/download", api.downloadPersons.bind(api));
 router.post("/persons/upload", fu.countRowsToBeDeleted);
 router.post("/persons/save", fu.savePersons);
-router.get("/persons/publications/:orcid", db.getPublicationListForOnePerson);
-router.delete("/persons/remove/:id", db.removePerson);
+router.get("/persons/publications/:orcid", api.getPublicationListForOnePerson);
+router.delete("/persons/remove/:id", api.removePerson);
 router.delete("/persons/csv-remove", fu.deleteCsvFile);
-router.post("/person/save/", db.postPerson);
+router.post("/person/save/", api.postPerson);
 
 export = router;
 

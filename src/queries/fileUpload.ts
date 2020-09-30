@@ -15,7 +15,6 @@ import { auditLog as auditLog } from "./../services/auditLogService";
 const connection = require("./../db");
 const dbHelpers = require("./../databaseHelpers");
 const external = require("./../queries/externalServices");
-const api = require("./../queries/apiQueries");
 
 const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
@@ -26,8 +25,9 @@ const multer  = require("multer");
 
 
 async function countRowsToBeDeleted(req: Request, res: Response) {
-    // const organization = req.session.userData.organization;
-    const organization = "02536";
+
+
+    const organization = req.session.userData.organization;
     // const organization = "02535";
 
     const storage = multer.diskStorage(
@@ -58,8 +58,7 @@ async function countRowsToBeDeleted(req: Request, res: Response) {
 
 async function savePersons(req: Request, res: Response) {
 
-    // const organization = req.session.userData.organization;
-    const organization = "02536";
+    const organization = req.session.userData.organization;
     // const organization = "02535";
 
     const filePath = "csv-upload/" + organization;
@@ -79,8 +78,8 @@ async function savePersons(req: Request, res: Response) {
 
 async function deleteCsvFile(req: Request, res: Response) {
 
-    // const organization = req.session.userData.organization;
-    const organization = "02536";
+    const organization = req.session.userData.organization;
+    // const organization = "02536";
     const filePath = "csv-upload/" + organization;
 
     fs.unlink(filePath, (err: Error) => {

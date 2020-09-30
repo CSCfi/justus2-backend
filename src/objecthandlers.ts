@@ -10,6 +10,8 @@ const client = redis.createClient();
 const organisationConfig = require("./organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
+import { queries as api } from "./queries/apiQueries";
+
 const koodistoUrl = process.env.KOODISTO_URL;
 const callerId = process.env.KOODISTO_CALLER_ID;
 
@@ -807,8 +809,9 @@ function ObjectHandlerPersonData(obj: any) {
         return ret;
     }
 
-function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
+async function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
     const org = perustiedot.organisaatio;
+    perustiedot.showHrData = await api.queryHrData(org);
     getrediscallback("organizationCodes" + lang, addorgname);
     function addorgname(reply: any) {
         reply.forEach((s: any) =>  {
