@@ -90,7 +90,7 @@ async function queryHrData(organizationCode: string) {
     const params = {"organisaatiotunniste": organizationCode};
     const query = "SELECT 1 FROM person_organization WHERE organisaatiotunniste = " +
         "${organisaatiotunniste} FETCH FIRST 1 ROW ONLY;";
-    const data = await conn.db.oneOrNone(query, params);
+    const data = await db.oneOrNone(query, params);
     console.log(data);
     if (data) {
         return true;
