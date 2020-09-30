@@ -66,7 +66,13 @@ async function getUser(req: Request, res: Response, next: NextFunction) {
         req.session.language = "FI";
     }
 
-    console.log(USER_DATA);
+    console.log(userData);
+    console.log(req.session.userData);
+
+    // True if person tables contain data for this organization
+    userData.showHrData  = await queryHrData(userData.organisaatio);
+
+    console.log(userData);
 
     userData.kieli = req.session.language;
     oh.ObjectHandlerUser(userData, req.session.language, function(result: any) {
@@ -74,6 +80,23 @@ async function getUser(req: Request, res: Response, next: NextFunction) {
             result
         );
     });
+
+}
+
+
+async function queryHrData(organizationCode: string) {
+    console.log(organizationCode);
+
+    const params = {"organisaatiotunniste": organizationCode};
+    const query = "SELECT 1 FROM person_organization WHERE organisaatiotunniste = " +
+        "${organisaatiotunniste} FETCH FIRST 1 ROW ONLY;";
+    const data = await conn.db.oneOrNone(query, params);
+    console.log(data);
+    if (data) {
+        return true;
+    } else {
+        return false;
+    }
 
 }
 
