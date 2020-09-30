@@ -27,8 +27,9 @@ const multer  = require("multer");
 async function countRowsToBeDeleted(req: Request, res: Response) {
 
 
-    const organization = req.session.userData.organization;
+    const organization = req.session.userData.organisaatio;
     // const organization = "02535";
+    console.log(organization);
 
     const storage = multer.diskStorage(
         {
@@ -58,8 +59,9 @@ async function countRowsToBeDeleted(req: Request, res: Response) {
 
 async function savePersons(req: Request, res: Response) {
 
-    const organization = req.session.userData.organization;
+    const organization = req.session.userData.organisaatio;
     // const organization = "02535";
+    console.log(organization);
 
     const filePath = "csv-upload/" + organization;
 
@@ -78,7 +80,7 @@ async function savePersons(req: Request, res: Response) {
 
 async function deleteCsvFile(req: Request, res: Response) {
 
-    const organization = req.session.userData.organization;
+    const organization = req.session.userData.organisaatio;
     // const organization = "02536";
     const filePath = "csv-upload/" + organization;
 
