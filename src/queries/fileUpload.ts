@@ -20,6 +20,8 @@ const publicationFolder = process.env.FILE_FOLDER;
 const savedFileName = "file.blob";
 const csvParser = require("./../services/csvHandler");
 
+const csvUploadFolder = process.env.CSV_UPLOAD_FOLDER;
+
 // File upload dependencies
 const multer  = require("multer");
 
@@ -33,7 +35,7 @@ async function countRowsToBeDeleted(req: Request, res: Response) {
 
     const storage = multer.diskStorage(
         {
-            destination: process.env.CSV_UPLOAD_FOLDER,
+            destination: csvUploadFolder,
             filename: function ( req: any, file: any, cb: any ) {
                 cb(undefined, organization);
             }
@@ -63,7 +65,7 @@ async function savePersons(req: Request, res: Response) {
     // const organization = "02535";
     console.log(organization);
 
-    const filePath = "csv-upload/" + organization;
+    const filePath = csvUploadFolder + organization;
 
         const promise = csvParser.readCSV(filePath, organization, false);
 
@@ -82,7 +84,7 @@ async function deleteCsvFile(req: Request, res: Response) {
 
     const organization = req.session.userData.organisaatio;
     // const organization = "02536";
-    const filePath = "csv-upload/" + organization;
+    const filePath = csvUploadFolder + organization;
 
     fs.unlink(filePath, (err: Error) => {
         if (err) {
