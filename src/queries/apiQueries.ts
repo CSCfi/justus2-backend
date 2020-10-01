@@ -1234,6 +1234,13 @@ class ApiQueries {
                 // const organization: string = "02536";
                 const personObj = req.body;
 
+                personObj.alayksikko1 = personObj.alayksikko[0];
+                personObj.alayksikko2 = personObj.alayksikko[1];
+                personObj.alayksikko3 = personObj.alayksikko[2];
+                delete personObj.alayksikko;
+
+                console.log(personObj);
+
                 await personQueries.insertNewPerson(personObj, organization);
 
                 res.status(200).send("OK");
@@ -1267,7 +1274,7 @@ class ApiQueries {
             "modified": new Date()
         };
 
-        const organizationData = {
+        const alayksikkoData = {
             "alayksikko1": req.body.alayksikko[0],
             "alayksikko2": req.body.alayksikko[1],
             "alayksikko3": req.body.alayksikko[2],
@@ -1283,7 +1290,7 @@ class ApiQueries {
                 // first delete previous alayksikko records
                 await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
 
-                await personQueries.insertOrganisaatioTekija(personid, organizationData, organization);
+                await personQueries.insertOrganisaatioTekija(personid, alayksikkoData, organization);
 
                 // first check if user currently has orcid
                 const identifierId = await personQueries.checkIfOrcidExists(personid);

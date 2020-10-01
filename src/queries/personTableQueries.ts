@@ -1,4 +1,5 @@
 export {};
+import { PersonObject } from "../models/Person";
 // Database connection from db.ts
 const connection = require("./../db");
 
@@ -100,7 +101,7 @@ async function updateOrcid(personid: number, orcid: string) {
     await connection.db.one(updateIdentifierQuery, personIdParams);
 }
 
-async function insertNewPerson(person: PersonObject, organization: string) {
+async function insertNewPerson(person: any, organization: string) {
 
     const personColumns = [
         "etunimi",
@@ -127,7 +128,7 @@ async function insertNewPerson(person: PersonObject, organization: string) {
     }
 }
 
-async function insertOrganisaatioTekija(personid: number, person: PersonObject, organization: string) {
+async function insertOrganisaatioTekija(personid: number, alayksikkoData: any, organization: string) {
 
     console.log("in insert organisaatiotekija");
 
@@ -137,20 +138,20 @@ async function insertOrganisaatioTekija(personid: number, person: PersonObject, 
         "alayksikko"
     ];
 
-    const organizationValues = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": person.alayksikko1}];
+    const organizationValues = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko1}];
     const saveOrganization = new connection.pgp.helpers.ColumnSet(organizationColumns, {table: "person_organization"});
     const organizationPromise = connection.pgp.helpers.insert(organizationValues, saveOrganization) + " RETURNING id";
 
     await connection.db.one(organizationPromise);
 
-    if (person.alayksikko2) {
-        const organizationValues2 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": person.alayksikko2}];
+    if (alayksikkoData.alayksikko2) {
+        const organizationValues2 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko2}];
         const organizationPromise2 = connection.pgp.helpers.insert(organizationValues2, saveOrganization) + " RETURNING id";
         await connection.db.one(organizationPromise2);
     }
 
-    if (person.alayksikko3) {
-        const organizationValues3 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": person.alayksikko3}];
+    if (alayksikkoData.alayksikko3) {
+        const organizationValues3 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko3}];
         const organizationPromise3 = connection.pgp.helpers.insert(organizationValues3, saveOrganization) + " RETURNING id";
         await connection.db.one(organizationPromise3);
     }

@@ -9,18 +9,8 @@ const connection = require("./../db");
 const iconv = require("iconv-lite");
 
 const personQueries = require("./../queries/personTableQueries");
+import { PersonObject } from "../models/Person";
 
-interface PersonObject  {
-    hrnumero: string;
-    etunimi: string;
-    sukunimi: string;
-    email: string;
-    orcid: string;
-    organisaatio: string;
-    alayksikko1: string;
-    alayksikko2: string;
-    alayksikko3: string;
-}
 
     async function readCSV (filePath: any, organization: string, fetchOnlyIds: boolean) {
 
