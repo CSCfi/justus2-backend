@@ -63,7 +63,7 @@ async function savePersonData(person: PersonObject, organization: string) {
             return;
         } else {
             //    update or insert
-            const identifierId = checkIfOrcidExists(personid);
+            const identifierId = await checkIfOrcidExists(personid);
 
             if (identifierId) {
                 // update orcid
