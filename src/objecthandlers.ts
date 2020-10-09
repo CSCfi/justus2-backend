@@ -717,7 +717,7 @@ function ObjectHandlerPersonData(obj: any) {
 
         personData = {
             "id": row.id,
-            "hrnumero": row.hrnumero,
+            "tunniste": row.tunniste,
             "etunimi": row.etunimi,
             "sukunimi": row.sukunimi,
             "organisaatio": row.o_organisaatiotunniste,

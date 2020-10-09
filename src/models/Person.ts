@@ -1,5 +1,5 @@
 export interface PersonObject  {
-    hrnumero: string;
+    tunniste: string;
     etunimi: string;
     sukunimi: string;
     email: string;

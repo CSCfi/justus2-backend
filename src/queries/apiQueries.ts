@@ -1207,7 +1207,7 @@ class ApiQueries {
         let queryParsonsAndOrganizations;
         let persons;
 
-        queryParsonsAndOrganizations = "SELECT p.id, p.hrnumero, p.etunimi, p.sukunimi, p.email, p.modified " +
+        queryParsonsAndOrganizations = "SELECT p.id, p.tunniste, p.etunimi, p.sukunimi, p.email, p.modified " +
             ", json_agg(o.alayksikko) AS alayksikko " +
             "FROM person p " +
             "INNER JOIN person_organization o ON p.id = o.personid " +

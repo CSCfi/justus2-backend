@@ -90,7 +90,7 @@ const theseusJulkaisuFields = [
     "pysyvaverkkoosoite"
 ];
 
-const personFields = ["hrnumero", "sukunimi", "etunimi", "email"];
+const personFields = ["tunniste", "sukunimi", "etunimi", "email"];
 
 
 const organisasaatiotekija = ["julkaisuid", "etunimet", "sukunimi", "orcid", "hrnumero", "rooli"];

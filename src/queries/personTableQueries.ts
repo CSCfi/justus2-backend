@@ -13,24 +13,24 @@ async function savePersonData(person: PersonObject, organization: string) {
         "email"
     ];
 
-    // first check if hrnumero in guestion exists on database
-    const hrnumero = person.hrnumero;
+    // first check if tunniste / id in guestion exists on database
+    const tunniste = person.tunniste;
 
-    if (!hrnumero || hrnumero === "") {
+    if (!tunniste || tunniste === "") {
         return;
     }
 
-    const personParams = {"hrnumero": hrnumero, "organization": organization};
+    const personParams = {"tunniste": tunniste, "organization": organization};
 
     const query = "SELECT DISTINCT p.id FROM person p " +
         "INNER JOIN person_organization o " +
         "ON o.personid = p.id " +
         "WHERE o.organisaatiotunniste = ${organization} " +
-        "AND p.hrnumero = ${hrnumero};";
+        "AND p.tunniste = ${tunniste};";
 
     const data = await connection.db.oneOrNone(query, personParams);
 
-    // TODO: Validation: Required fields: hrnumero, etunimi, sukunimi, alayksikko1 (for specific organizations), validate also alayksikko format
+    // TODO: Validation: Required fields: tunniste, etunimi, sukunimi, alayksikko1 (for specific organizations), validate also alayksikko format
 
     // no data in person table; insert new record
     if (!data) {
@@ -107,10 +107,10 @@ async function insertNewPerson(person: any, organization: string) {
         "etunimi",
         "sukunimi",
         "email",
-        "hrnumero"
+        "tunniste"
     ];
 
-    const personValues = [{"hrnumero": person.hrnumero, "etunimi": person.etunimi,
+    const personValues = [{"tunniste": person.tunniste, "etunimi": person.etunimi,
         "sukunimi": person.sukunimi, "email": person.email}];
 
     const savePerson = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});

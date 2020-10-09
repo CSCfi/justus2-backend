@@ -23,12 +23,11 @@ import { PersonObject } from "../models/Person";
                 .pipe(csv(
                     {
                         headers: [
-                            "hrnumero",
+                            "tunniste",
                             "etunimi",
                             "sukunimi",
                             "email",
                             "orcid",
-                            "organisaatio",
                             "alayksikko1",
                             "alayksikko2",
                             "alayksikko3"
@@ -41,7 +40,7 @@ import { PersonObject } from "../models/Person";
                 ))
                 .on("data", (row: PersonObject) => {
                     results.push(row);
-                    ids.push(row.hrnumero);
+                    ids.push(row.tunniste);
                 })
                 .on("end", () => {
                     if (fetchOnlyIds) {
@@ -81,12 +80,11 @@ import { PersonObject } from "../models/Person";
         const csvWriter = createCsvWriter({
             path: csvFolder + org + "_file.csv",
             header: [
-                {id: "hrnumero", title: "hrnumero"},
+                {id: "tunniste", title: "tunniste"},
                 {id: "etunimi", title: "etunimi"},
                 {id: "sukunimi", title: "sukunimi"},
                 {id: "email", title: "email"},
                 {id: "orcid", title: "orcid"},
-                {id: "organisaatio", title: "organisaatio"},
                 {id: "alayksikko1", title: "alayksikko1"},
                 {id: "alayksikko2", title: "alayksikko2"},
                 {id: "alayksikko3", title: "alayksikko3"}
@@ -98,12 +96,11 @@ import { PersonObject } from "../models/Person";
 
         for (let i = 0; i < data.length; i++) {
             await records.push({
-                hrnumero: data[i].hrnumero,
+                tunniste: data[i].tunniste,
                 etunimi: data[i].etunimi,
                 sukunimi: data[i].sukunimi,
                 email: data[i].email,
                 orcid: data[i].orcid,
-                organisaatio: org,
                 alayksikko1: data[i].alayksikko[0],
                 alayksikko2: data[i].alayksikko[1],
                 alayksikko3: data[i].alayksikko[2],
@@ -113,7 +110,7 @@ import { PersonObject } from "../models/Person";
     }
 
 
-async function processCSVData(csvData: any, organization: string, hrNumberList: any) {
+async function processCSVData(csvData: any, organization: string, tunnisteList: any) {
 
     // loop through all rows before commit
     await connection.db.any("BEGIN");
@@ -123,7 +120,7 @@ async function processCSVData(csvData: any, organization: string, hrNumberList: 
             await personQueries.savePersonData(csvData[i], organization);
         }
 
-        const listOfIds = await getRowsToBeDeleted(hrNumberList, organization, true);
+        const listOfIds = await getRowsToBeDeleted(tunnisteList, organization, true);
 
         if (listOfIds.length !== 0) {
             await deleteRows(listOfIds);
@@ -155,19 +152,19 @@ async function deleteRows(idList: any) {
 
 }
 
-async function getRowsToBeDeleted(hrNumberList: any, organization: string, onlyIds: boolean) {
+async function getRowsToBeDeleted(tunnisteList: any, organization: string, onlyIds: boolean) {
 
-    const hrNumberString =  "{ " + hrNumberList.toString() + " }";
+    const tunnisteString =  "{ " + tunnisteList.toString() + " }";
 
-    const params = { "hrnumero": hrNumberString, "organization": organization };
+    const params = { "tunniste": tunnisteString, "organization": organization };
     let query;
 
-    const queryAll = "SELECT DISTINCT p.id, p.hrnumero, p.etunimi, p.sukunimi, o.organisaatiotunniste FROM person p " +
-        "INNER JOIN person_organization o on p.id = o.personid WHERE p.hrnumero <> ALL ( ${hrnumero} ) " +
+    const queryAll = "SELECT DISTINCT p.id, p.tunniste, p.etunimi, p.sukunimi, o.organisaatiotunniste FROM person p " +
+        "INNER JOIN person_organization o on p.id = o.personid WHERE p.tunniste <> ALL ( ${tunniste} ) " +
         "AND o.organisaatiotunniste = ${organization} ORDER BY p.id;";
 
     const queryIds = "SELECT DISTINCT p.id FROM person p " +
-        "INNER JOIN person_organization o on p.id = o.personid WHERE p.hrnumero <> ALL ( ${hrnumero} ) " +
+        "INNER JOIN person_organization o on p.id = o.personid WHERE p.tunniste <> ALL ( ${tunniste} ) " +
         "AND o.organisaatiotunniste = ${organization} ORDER BY p.id;";
 
     if (onlyIds) {
