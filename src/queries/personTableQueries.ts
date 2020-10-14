@@ -172,11 +172,22 @@ async function insertOrcid(personID: number, orcid: string) {
     await connection.db.one(identifierPromise);
 }
 
+async function checkIfPersonExists(organization: string, tunniste: string) {
+    const params = {"organization": organization, "tunniste": tunniste};
+
+    const tunnisteQuery = "SELECT p.id, p.tunniste FROM person p INNER JOIN person_organization o ON p.id = o.personid" +
+        " WHERE p.tunniste = ${tunniste} AND o.organisaatiotunniste = ${organization};";
+
+    return await connection.db.oneOrNone(tunnisteQuery, params);
+}
+
+
 module.exports = {
     savePersonData: savePersonData,
     insertNewPerson: insertNewPerson,
     insertOrganisaatioTekija: insertOrganisaatioTekija,
     updateOrcid: updateOrcid,
     insertOrcid: insertOrcid,
-    checkIfOrcidExists: checkIfOrcidExists
+    checkIfOrcidExists: checkIfOrcidExists,
+    checkIfPersonExists: checkIfPersonExists
 };

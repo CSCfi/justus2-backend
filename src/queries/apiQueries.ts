@@ -1232,7 +1232,15 @@ class ApiQueries {
             try {
                 const organization = USER_DATA.organisaatio;
                 // const organization: string = "02536";
+
                 const personObj = req.body;
+
+                // First verify that user with this tunniste and organization combination does not exist in database
+                const tunniste = req.body.tunniste;
+                const tunnisteData = await personQueries.checkIfPersonExists(organization, tunniste);
+                if (tunnisteData) {
+                    return res.status(400).send("This user already exists in database");
+                }
 
                 personObj.alayksikko1 = personObj.alayksikko[0];
                 personObj.alayksikko2 = personObj.alayksikko[1];
