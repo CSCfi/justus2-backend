@@ -63,7 +63,7 @@ async function savePersonData(person: PersonObject, organization: string) {
             return;
         } else {
             //    update or insert
-            const identifierId = await checkIfOrcidExists(personid);
+            const identifierId = await checkIfPersonHasOrcid(personid);
 
             if (identifierId) {
                 // update orcid
@@ -80,9 +80,8 @@ async function savePersonData(person: PersonObject, organization: string) {
 
 }
 
-async function checkIfOrcidExists(personid: number) {
+async function checkIfPersonHasOrcid(personid: number) {
     const personIdParams = {"personid": personid};
-
 
     const orcidQuery = "SELECT id FROM person_identifier WHERE personid = " +
         "${personid} AND tunnistetyyppi = 'orcid';";
@@ -181,6 +180,26 @@ async function checkIfPersonExists(organization: string, tunniste: string) {
     return await connection.db.oneOrNone(tunnisteQuery, params);
 }
 
+async function checkIfOrcidExists(organization: string, orcid: string, personid?: string) {
+    let params;
+
+    const baseQuery =
+        "SELECT DISTINCT 1 FROM person_identifier i INNER JOIN person_organization o ON i.personid = o.personid" +
+        " WHERE i.tunnistetyyppi = ${tunnistetyyppi} AND i.tunniste = ${tunniste} AND o.organisaatiotunniste = ${organization}";
+
+    let orcidQuery;
+
+    if (personid) {
+        params = { "tunnistetyyppi": "orcid", "tunniste": orcid, "organization": organization, "personid": personid };
+        orcidQuery = baseQuery +  " AND i.personid != ${personid};";
+
+    } else {
+        params = { "tunnistetyyppi": "orcid", "tunniste": orcid, "organization": organization };
+        orcidQuery = baseQuery + ";";
+    }
+
+    return await connection.db.oneOrNone(orcidQuery, params);
+}
 
 module.exports = {
     savePersonData: savePersonData,
@@ -188,6 +207,7 @@ module.exports = {
     insertOrganisaatioTekija: insertOrganisaatioTekija,
     updateOrcid: updateOrcid,
     insertOrcid: insertOrcid,
-    checkIfOrcidExists: checkIfOrcidExists,
-    checkIfPersonExists: checkIfPersonExists
+    checkIfPersonHasOrcid: checkIfPersonHasOrcid,
+    checkIfPersonExists: checkIfPersonExists,
+    checkIfOrcidExists: checkIfOrcidExists
 };

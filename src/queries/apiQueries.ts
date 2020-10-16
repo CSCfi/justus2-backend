@@ -1237,17 +1237,23 @@ class ApiQueries {
 
                 // First verify that user with this tunniste and organization combination does not exist in database
                 const tunniste = req.body.tunniste;
-                const tunnisteData = await personQueries.checkIfPersonExists(organization, tunniste);
+                const tunnisteData = await personQueries.checkIfPersonExists(organization, tunniste, undefined);
                 if (tunnisteData) {
                     return res.status(400).send("This user already exists in database");
+                }
+
+                // Then verify that ORCID is not in use in this organization
+                const orcid = req.body.orcid;
+                const orcidData = await personQueries.checkIfOrcidExists(organization, orcid);
+
+                if (orcidData) {
+                    return res.status(400).send("This orcid is already in use in this organization");
                 }
 
                 personObj.alayksikko1 = personObj.alayksikko[0];
                 personObj.alayksikko2 = personObj.alayksikko[1];
                 personObj.alayksikko3 = personObj.alayksikko[2];
                 delete personObj.alayksikko;
-
-                console.log(personObj);
 
                 await personQueries.insertNewPerson(personObj, organization);
 
@@ -1290,7 +1296,10 @@ class ApiQueries {
 
         if (hasOrganisation && isAdmin) {
 
+            await db.any("BEGIN");
+
             try {
+
                 const updateColumns = new pgp.helpers.ColumnSet(["etunimi", "sukunimi", "email", "modified"], {table: "person"});
                 const updatePersonData = pgp.helpers.update(personData, updateColumns) + "WHERE id = " + parseInt(req.params.id) + " RETURNING id";
                 await db.one(updatePersonData);
@@ -1301,26 +1310,42 @@ class ApiQueries {
                 await personQueries.insertOrganisaatioTekija(personid, alayksikkoData, organization);
 
                 // first check if user currently has orcid
-                const identifierId = await personQueries.checkIfOrcidExists(personid);
+                const identifierId = await personQueries.checkIfPersonHasOrcid(personid);
 
                 if (!orcid && identifierId) {
                     console.log("Deleting orcid for person " + personid);
-                    await connection.db.result("DELETE FROM person_identifier WHERE tunniste = 'orcid' AND personid = ${personid}", personIdParams);
+                    const orcidParams = { "tunnistetyyppi": "orcid", "personid": personid };
+                    await connection.db.result("DELETE FROM person_identifier WHERE tunnistetyyppi = ${tunnistetyyppi} AND personid = ${personid}", orcidParams);
                 }
+
                 if (orcid && identifierId) {
                     console.log("Updating orcid for person " + personid);
-                    await personQueries.updateOrcid(personid, req.body.orcid);
+
+                    // Verify that ORCID is not in use in this organization
+                    const orcidData = await personQueries.checkIfOrcidExists(organization, orcid, personid);
+                    if (orcidData) {
+                        return res.status(400).send("This orcid is already in use in this organization");
+                    }
+                    await personQueries.updateOrcid(personid, orcid);
                 }
                 if (!identifierId && orcid) {
                     console.log("Inserting orcid for person " + personid);
-                    await personQueries.insertOrcid(personid, req.body.orcid);
+
+                    // Verify that ORCID is not in use in this organization
+                    const orcidData = await personQueries.checkIfOrcidExists(organization, orcid, undefined);
+                    if (orcidData) {
+                        return res.status(400).send("This orcid is already in use in this organization");
+                    }
+                    await personQueries.insertOrcid(personid, orcid);
                 }
 
+                await db.any("COMMIT");
                 res.status(200).send("Update successful!");
 
-            } catch (e) {
-                console.log(e);
-                res.status(500).send(e.message);
+            } catch (err) {
+                console.log(err);
+                await db.any("ROLLBACK");
+                res.status(500).send(err.message);
             }
         } else {
             return res.status(403).send("Permission denied");
