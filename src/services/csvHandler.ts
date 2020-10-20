@@ -169,6 +169,11 @@ async function validateCSVFields(csv: any, org: string) {
         errorObject.reason = "duplicate";
         return errorObject;
     }
+    if (await hasInvalidPatternOrcid(csv)) {
+        errorObject.field = "orcid";
+        errorObject.reason = "format";
+        return errorObject;
+    }
     if (await isFieldEmpty(csv, "tunniste")) {
         errorObject.field = "tunniste";
         errorObject.reason = "missing";
@@ -264,6 +269,22 @@ async function hasDuplicates(csv: any, field: string) {
 async function isFieldEmpty(csv: any, field: string) {
     const empty = (csv.some((e: any) => e[field] === "" || e[field] == undefined));
     return empty;
+}
+
+async function hasInvalidPatternOrcid(csv: any) {
+
+    // first filter empty values
+    const filteredArray = await filterEmptyValues(csv, "orcid");
+    const regex = new RegExp( /^(|[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X])$/g);
+
+    const invalidOrcids = filteredArray.filter(function(obj: any) {
+        return (!obj.orcid.match(regex));
+    });
+
+    if (invalidOrcids.length) {
+        return true;
+    }
+    return false;
 }
 
 async function isAlayksikkoInvalid(csv: any, org: string) {
