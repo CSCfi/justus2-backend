@@ -1178,7 +1178,6 @@ class ApiQueries {
 
         if (hasOrganisation && isAdmin) {
             const organization = USER_DATA.organisaatio;
-            // const organization = "02536";
 
             try {
                 // query persons and organisational units
