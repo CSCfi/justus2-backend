@@ -58,7 +58,6 @@ import { PersonObject } from "../models/Person";
                                 resolve();
                                 console.log("Data inserted to database!");
                             }
-
                         }).catch((err) => {
                             console.log(err);
                             reject(err);
@@ -112,28 +111,86 @@ import { PersonObject } from "../models/Person";
 
 async function processCSVData(csvData: any, organization: string, tunnisteList: any) {
 
-    // loop through all rows before commit
-    await connection.db.any("BEGIN");
-    try {
+        // first validate
+        const invalid = await validateCSVFields(csvData, organization);
 
-        for (let i = 0; i < csvData.length; i++) {
-            await personQueries.savePersonData(csvData[i], organization);
-        }
+      if (invalid) {
+          let errorText;
+          if (invalid.reason === "duplicate") {
+              console.log(invalid.reason);
+              errorText = "CSV contains duplicate value in field " + invalid.field;
+          }
+          if (invalid.reason === "missing") {
+              console.log(invalid.reason);
+              errorText = "CSV has missing value in field " + invalid.field;
+          }
+          if (invalid.reason === "format") {
+              console.log(invalid.reason);
+              errorText = "Invalid format in field " + invalid.field;
+          }
+          return new Error(errorText);
+      } else {
+          await connection.db.any("BEGIN");
+          try {
 
-        const listOfIds = await getRowsToBeDeleted(tunnisteList, organization, true);
+              // loop through all rows before commit
+              for (let i = 0; i < csvData.length; i++) {
+                  await personQueries.savePersonData(csvData[i], organization);
+              }
 
-        if (listOfIds.length !== 0) {
-            await deleteRows(listOfIds);
-        }
-        await connection.db.any("COMMIT");
+              const listOfIds = await getRowsToBeDeleted(tunnisteList, organization, true);
 
-    } catch (e) {
-        console.log("In process CSV data error block");
-        console.log(e);
-        // if error exists in any row, rollback and return error to client
-        await connection.db.any("ROLLBACK");
-        return e;
+              if (listOfIds.length !== 0) {
+                  await deleteRows(listOfIds);
+              }
+              await connection.db.any("COMMIT");
+
+          } catch (e) {
+              console.log("In process CSV data error block");
+              console.log(e);
+              // if error exists in any row, rollback and return error to client
+              await connection.db.any("ROLLBACK");
+              return e;
+          }
+      }
+}
+
+async function validateCSVFields(csv: any, org: string) {
+
+    const errorObject = { field: "", reason: "" };
+
+    if (await hasDuplicates(csv, "tunniste")) {
+        errorObject.field = "tunniste";
+        errorObject.reason = "duplicate";
+        return errorObject;
     }
+    if (await hasDuplicates(csv, "orcid")) {
+        errorObject.field = "orcid";
+        errorObject.reason = "duplicate";
+        return errorObject;
+    }
+    if (await isFieldEmpty(csv, "tunniste")) {
+        errorObject.field = "tunniste";
+        errorObject.reason = "missing";
+        return errorObject;
+    }
+    if (await isFieldEmpty(csv, "etunimi")) {
+        errorObject.field = "etunimi";
+        errorObject.reason = "missing";
+        return errorObject;
+    }
+    if (await isFieldEmpty(csv, "sukunimi")) {
+        errorObject.field = "sukunimi";
+        errorObject.reason = "missing";
+        return errorObject;
+    }
+    if (await isAlayksikkoInvalid(csv, org)) {
+        errorObject.field = "alayksikko";
+        errorObject.reason = "format";
+        return errorObject;
+    }
+     // no errors, return undefined
+     return undefined;
 
 }
 
@@ -174,6 +231,74 @@ async function getRowsToBeDeleted(tunnisteList: any, organization: string, onlyI
     }
     return await connection.db.any(query, params);
 
+}
+
+async function filterEmptyValues(csv: any, field: string) {
+
+    const filterednames = csv.filter(function(obj: any) {
+        return (obj[field] !== "") && (obj[field] !== undefined);
+    });
+
+    return filterednames;
+
+}
+
+async function hasDuplicates(csv: any, field: string) {
+
+    let filteredArray;
+
+    if (field === "orcid") {
+        filteredArray = await filterEmptyValues(csv, "orcid");
+    } else {
+        filteredArray = csv;
+    }
+
+    const seen = new Set();
+    const duplicate = filteredArray.some(function(currentObject: any) {
+        return seen.size === seen.add(currentObject[field]).size;
+    });
+
+    return duplicate;
+}
+
+async function isFieldEmpty(csv: any, field: string) {
+    const empty = (csv.some((e: any) => e[field] === "" || e[field] == undefined));
+    return empty;
+}
+
+async function isAlayksikkoInvalid(csv: any, org: string) {
+
+    // format: <organization code>-<year>- for example: 02356-2020-
+    const regex = new RegExp(`^${org}-\\d{4}-`);
+
+    const unitOne = await filterEmptyValues(csv, "alayksikko1");
+    const invalidUnits1 = unitOne.filter(function(obj: any) {
+        return (!obj.alayksikko1.match(regex));
+    });
+    console.log(invalidUnits1);
+    if (invalidUnits1.length) {
+        return true;
+    }
+
+    const unitTwo = await filterEmptyValues(csv, "alayksikko2");
+    const invalidUnits2 = unitTwo.filter(function(obj: any) {
+        return (!obj.alayksikko2.match(regex));
+    });
+    console.log(invalidUnits2);
+    if (invalidUnits2.length) {
+        return true;
+    }
+
+    const unitThree = await filterEmptyValues(csv, "alayksikko3");
+    const invalidUnits3 = unitThree.filter(function(obj: any) {
+        return (!obj.alayksikko3.match(regex));
+    });
+    console.log(invalidUnits3);
+    if (invalidUnits3.length) {
+        return true;
+    }
+
+    return false;
 }
 
 module.exports = {

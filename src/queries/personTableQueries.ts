@@ -5,20 +5,13 @@ const connection = require("./../db");
 
 async function savePersonData(person: PersonObject, organization: string) {
 
-    // TODO: return error if organization does not match current user's organization
-
     const personColumns = [
         "etunimi",
         "sukunimi",
         "email"
     ];
 
-    // first check if tunniste / id in guestion exists on database
     const tunniste = person.tunniste;
-
-    if (!tunniste || tunniste === "") {
-        return;
-    }
 
     const personParams = {"tunniste": tunniste, "organization": organization};
 
@@ -29,8 +22,6 @@ async function savePersonData(person: PersonObject, organization: string) {
         "AND p.tunniste = ${tunniste};";
 
     const data = await connection.db.oneOrNone(query, personParams);
-
-    // TODO: Validation: Required fields: tunniste, etunimi, sukunimi, alayksikko1 (for specific organizations), validate also alayksikko format
 
     // no data in person table; insert new record
     if (!data) {
@@ -62,14 +53,23 @@ async function savePersonData(person: PersonObject, organization: string) {
         if (!person.orcid || person.orcid === "") {
             return;
         } else {
+
             //    update or insert
             const identifierId = await checkIfPersonHasOrcid(personid);
 
             if (identifierId) {
-                // update orcid
+                // if identifier id exists, update orcid
+                const orcidData = await checkIfOrcidExists(organization, person.orcid, personid);
+                if (orcidData) {
+                    throw new Error("Error in orcid field, orcid is already in use in this organization.");
+                }
                 await updateOrcid(personid, person.orcid);
             } else {
-                // insert new record
+                // otherwise insert new record
+                const orcidData = await checkIfOrcidExists(organization, person.orcid);
+                if (orcidData) {
+                    throw new Error("Error in orcid field, orcid is already in use in this organization.");
+                }
                 await insertOrcid(personid, person.orcid);
 
             }
@@ -123,13 +123,16 @@ async function insertNewPerson(person: any, organization: string) {
 
     // insert data to person_identifier table (save orcid only if data exists)
     if (person.orcid && person.orcid !== "") {
+        const orcidData = await checkIfOrcidExists(organization, person.orcid);
+        if (orcidData) {
+            throw new Error("Error in orcid field, orcid is already in use in this organization.");
+        }
+
         await insertOrcid(personId.id, person.orcid);
     }
 }
 
 async function insertOrganisaatioTekija(personid: number, alayksikkoData: any, organization: string) {
-
-    console.log("in insert organisaatiotekija");
 
     const organizationColumns = [
         "personid",
