@@ -10,7 +10,7 @@ dotenv.config({ path: ".env.variables" });
 const sessionSecret = process.env.SESSION_SECRET;
 
 const redis = require("redis");
-const client = redis.createClient();
+
 
 // Create express server
 const app = express();
@@ -26,10 +26,11 @@ const apiRouter = require("./routes/routes");
 const session = require ("express-session");
 const cookieParser = require("cookie-parser");
 const RedisStore = require("connect-redis")(session);
+const redisClient = redis.createClient();
 
 app.use(cookieParser());
 app.use(session({
-    store: new RedisStore(),
+    store: new RedisStore( {client: redisClient} ),
     secret: sessionSecret,
     cookie: { maxAge: 8 * 60 * 60 * 1000, secure: false, httpOnly: false }, // 8 hours,
     resave: true,
@@ -38,11 +39,6 @@ app.use(session({
 }));
 
 
-// csvParser.readCSV();
-// csvParser.writeCSV();
-
-// CONNECT TO PSQL INSIDE VAGRANT "psql -h 10.10.10.10 -U appaccount -d justus"
-// psql -h 10.10.10.10 -U appaccount -d justus < node_modules/connect-pg-simple/table.sql
 app.use(morgan("dev"));
 app.use(compression());
 app.use(bodyParser.json());
@@ -50,8 +46,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("port", 3000);
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
-// app.use(require("./services/populateUserData"));
-// app.use(require("./services/csvReader"));
 app.get("/", homeController.index);
 app.use("/", apiRouter);
 app.use(expressValidator);
