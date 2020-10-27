@@ -107,24 +107,15 @@
     state: link
     force: yes
 
-- name: Create bind mount between folders
-  mount:
-    path: "{{ sources.path }}/node_modules"
-    src: /opt/dependencies/node_modules
-    state: mounted
-    fstype: none
-    opts: bind
-
 - name: Get NPM dependencies
-  shell: /usr/bin/npm install
+  shell: /usr/bin/npm install --no-bin-links
   args:
     chdir: "/opt/dependencies"
   become_user: vagrant
-
-- name: Create the session table for the database
-  shell: psql -h 10.10.10.10 -U appaccount -d justus {{ "<" }} node_modules/connect-pg-simple/table.sql
-  args:
-    chdir: "{{ sources.path }}"
+  
+- name: Get NPM dependencies
+  shell: /usr/bin/npm install --global typescript tslint
+  become: true
 
 - name: Build sources
   shell: /usr/bin/npm run build

@@ -44,6 +44,7 @@ coverage
 # Publication files
 publications/*
 temp/*
+csv-download/*
 csv-upload/*
 
 *~
