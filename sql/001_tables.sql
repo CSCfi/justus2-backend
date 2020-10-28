@@ -316,7 +316,7 @@ OWNER TO appaccount;
 CREATE TABLE person
 (
   id bigserial NOT NULL,
-  hrnumero character varying NOT NULL,
+  tunniste character varying NOT NULL,
   etunimi character varying NOT NULL,
   sukunimi character varying NOT NULL,
   email character varying,
