@@ -49,6 +49,7 @@ setInterval(() =>  ts.checkQueue(), 30000);
 
 async function UpdateKoodistopalveluRedis() {
     console.log("Updating koodisto data to redis");
+    console.log(process.env.NODE_ENV);
     setAlaYksikot().then(() => {
         return setKielet();
     }).then(() => {
@@ -94,7 +95,7 @@ function HTTPGETcombiner (URL: String, objecthandler: Function, lang: any ) {
         resp.on("end", () => {
             const newdata = JSON.parse(data);
             objecthandler(newdata, lang);
-            if (process.env.NODE_ENV !== "prod" && process.env.NODE_ENV === "dev")  { 
+            if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
                 console.log("Set info for " + objecthandler.name + " to redis successfully!");
            }         
         });
@@ -229,7 +230,7 @@ function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?
             HTTPSUBGET(URL).then((data) => {
                 const newdata = JSON.parse(String(data));
                 client.set(redisInfo, JSON.stringify(objecthandler(newdata, lang)));
-                if (process.env.NODE_ENV !== "prod" && process.env.NODE_ENV === "dev")  { 
+                if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
                      console.log("Set info for " + redisInfo + " from Objecthandlers to redis successfully!");
                 }        
                 resolve();
