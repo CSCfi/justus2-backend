@@ -814,16 +814,16 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                     metadataObject.push(tieteenalaObject);
                 });
             }
-            // uncomment in production
-            if (!this.arrayIsEmpty(projektinumeroData)) {
-                projektinumeroData.forEach((value: any) => {
-                    const pnobject = {"key": "dc.teh", "value": value};
-                    metadataObject.push(pnobject);
-                });
+            // Jukuri does not want to have this field in test environment
+            if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
+                if (!this.arrayIsEmpty(projektinumeroData)) {
+                    projektinumeroData.forEach((value: any) => {
+                        const pnobject = {"key": "dc.teh", "value": value};
+                        metadataObject.push(pnobject);
+                    });
+                }
             }
         }
-
-
 
         const tekijatStr = julkaisuData["tekijat"];
         const oneTekija = tekijatStr.split("; ");
