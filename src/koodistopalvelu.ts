@@ -34,7 +34,9 @@ schedule.scheduleJob("0 0 0 * * *", function() {
 });
 
 // Interval timer for checking julkaisujono
-setInterval(() =>  ts.checkQueue(), 30000);
+if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
+    setInterval(() =>  ts.checkQueue(), 30000);
+}
 
 
  async function SetKoodistoDataToRedis() {
@@ -43,7 +45,6 @@ setInterval(() =>  ts.checkQueue(), 30000);
          await UpdateKoodistopalveluRedis().then(() => {
              console.log("Koodisto data to redis updated");
          });
-
     });
 }
 
