@@ -3,13 +3,13 @@ import { Request, Response, NextFunction } from "express";
 const fs = require("fs");
 const path = require("path");
 
-
-
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
 
 // Import audit log class
 import { auditLog as auditLog } from "./../services/auditLogService";
+
+const authService = require("./../services/authService");
 
 // Database connection
 const connection = require("./../db");
@@ -372,7 +372,6 @@ async function fetchJulkaisuIdFromArchiveTable(id: any) {
     }
 
 }
-
 
 async function downloadJulkaisu(req: Request, res: Response) {
 

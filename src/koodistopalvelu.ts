@@ -237,7 +237,9 @@ function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?
                 reject();
             });
         }
-    });
+    }).catch((err: any) => {
+       console.log(err);
+     });
 }
 
 function setAlaYksikot() {
