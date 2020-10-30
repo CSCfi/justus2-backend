@@ -1,5 +1,6 @@
 const organisationConfig = require("./../organization_config");
 const domainMapping = organisationConfig.domainMappings;
+import { UserObject } from "../models/User";
 
 const conn = require("./../db");
 const utf8 = require("utf8");
@@ -18,17 +19,18 @@ const getUserData = async function (headers: any) {
         }
 
         const name = utf8.decode(headers["shib-sn"]) + " " + utf8.decode(headers["shib-givenname"]);
-        const userData = {
+        const userData: UserObject["perustiedot"] = {
             "domain": "",
             "organisaatio": "",
             "email": "",
             "rooli": "",
             "nimi": name,
-            "showPublicationInput": <boolean> undefined,
-            "jukuriUser": <boolean> undefined,
-            // TODO: showHrData if organization have data in person table
-            "showHrData":  <boolean> false,
-            "owner": <boolean> undefined
+            "kieli": "",
+            "showHrData": undefined,
+            "showPublicationInput": undefined,
+            "jukuriUser": undefined,
+            "owner": undefined
+
         };
 
         const role = getRole(headers["shib-group"]);

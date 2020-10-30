@@ -4,6 +4,8 @@
 */
 
 import { Request, Response, NextFunction } from "express";
+import { UserObject } from "./models/User";
+
 const https = require("https");
 const redis = require("redis");
 const client = redis.createClient();
@@ -940,7 +942,7 @@ async function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
 
         if (y2016.length || y2017.length || y2018.length || y2019.length || y2020.length) {
                   visibleFields.push("alayksikko");
-              const orgall =  {
+              const orgall: UserObject =  {
                 perustiedot,
                 alayksikot: yarray,
                 visibleFields,
@@ -950,7 +952,7 @@ async function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
 
             }
             else {
-                const orgallx = {
+                const orgallx: UserObject = {
                     perustiedot,
                     alayksikot: yarray,
                     visibleFields,

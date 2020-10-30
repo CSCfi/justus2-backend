@@ -100,10 +100,11 @@ class ApiQueries {
 // Get all julkaisut
     public async getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
-        USER_DATA = req.session.userData;
-        // USER_DATA = await authService.getUserData(req.headers);
-        const hasOrganisation = await authService.hasOrganisation(USER_DATA);
-        const isAdmin = await authService.isAdmin(USER_DATA);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
+
+    const hasOrganisation = await authService.hasOrganisation(USER_DATA);
+    const isAdmin = await authService.isAdmin(USER_DATA);
 
         if (hasOrganisation && isAdmin) {
             const organisationCode = USER_DATA.organisaatio;
@@ -315,6 +316,7 @@ class ApiQueries {
 
         USER_DATA = req.session.userData;
         // USER_DATA = await authService.getUserData(req.headers);
+        
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
 
         if (!USER_DATA || !hasOrganisation) {
@@ -514,6 +516,7 @@ class ApiQueries {
 
         USER_DATA = req.session.userData;
         // USER_DATA = await authService.getUserData(req.headers);
+
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
 
@@ -589,6 +592,7 @@ class ApiQueries {
 
         USER_DATA = req.session.userData;
         // USER_DATA = await authService.getUserData(req.headers);
+
         const hasAccess = await authService.hasOrganisation(USER_DATA);
 
         if (hasAccess) {
