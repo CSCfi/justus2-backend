@@ -28,8 +28,12 @@ const multer  = require("multer");
 
 async function countRowsToBeDeleted(req: Request, res: Response) {
 
+    // TODO: Add try catch block to all functions
 
     const organization = req.session.userData.organisaatio;
+
+    // const user = await authService.getUserData(req.headers);
+    // const organization = user.organisaatio;
 
     const storage = multer.diskStorage(
         {
@@ -60,10 +64,13 @@ async function countRowsToBeDeleted(req: Request, res: Response) {
 async function savePersons(req: Request, res: Response) {
 
     const organization = req.session.userData.organisaatio;
+    
+    // const user = await authService.getUserData(req.headers);
+    // const organization = user.organisaatio;
 
     const filePath = csvUploadFolder + organization;
 
-        const promise = csvParser.readCSV(filePath, organization, false);
+    const promise = csvParser.readCSV(filePath, organization, false);
 
         promise.then(() => {
             fs.unlinkSync(filePath);
@@ -79,6 +86,10 @@ async function savePersons(req: Request, res: Response) {
 async function deleteCsvFile(req: Request, res: Response) {
 
     const organization = req.session.userData.organisaatio;
+    
+    // const user = await authService.getUserData(req.headers);
+    // const organization = user.organisaatio;
+
     const filePath = csvUploadFolder + organization;
 
     fs.unlink(filePath, (err: Error) => {
