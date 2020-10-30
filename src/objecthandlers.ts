@@ -328,7 +328,9 @@ function ObjectHandlerJulkaisunluokat(obj: any, lang: any) {
 
 function settoRedis(rediskey: string, obj: object[]) {
     client.set(rediskey, JSON.stringify(obj));
-    console.log("Set info for " + rediskey + " from ObjectHandlers to redis successfully!");
+    if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
+        console.log("Set info for " + rediskey + " from ObjectHandlers to redis successfully!");
+    }
 }
 
 // Objecthandler for Avainsanat from FINTO

@@ -34,21 +34,23 @@ schedule.scheduleJob("0 0 0 * * *", function() {
 });
 
 // Interval timer for checking julkaisujono
-setInterval(() =>  ts.checkQueue(), 30000);
+if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
+    setInterval(() =>  ts.checkQueue(), 30000);
+}
 
 
- function SetKoodistoDataToRedis() {
-    client.on("connect", function () {
+ async function SetKoodistoDataToRedis() {
+    client.on("connect", async function () {
         console.log("Connected to redis");
-         UpdateKoodistopalveluRedis().then(() => {
+         await UpdateKoodistopalveluRedis().then(() => {
              console.log("Koodisto data to redis updated");
          });
-
     });
 }
 
 async function UpdateKoodistopalveluRedis() {
     console.log("Updating koodisto data to redis");
+    console.log(process.env.NODE_ENV);
     setAlaYksikot().then(() => {
         return setKielet();
     }).then(() => {
@@ -94,7 +96,9 @@ function HTTPGETcombiner (URL: String, objecthandler: Function, lang: any ) {
         resp.on("end", () => {
             const newdata = JSON.parse(data);
             objecthandler(newdata, lang);
-            console.log("Set info for " + objecthandler.name + " to redis successfully!");
+            if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
+                console.log("Set info for " + objecthandler.name + " to redis successfully!");
+           }         
         });
     })
     .on("error", (err: Error) => {
@@ -105,7 +109,6 @@ function HTTPGETcombiner (URL: String, objecthandler: Function, lang: any ) {
 
 // Only finto and jufo services use this function, so no caller-id is needed
 export function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
-
     if (secondURL) {
         const urls = [URL, secondURL];
         const first: object []  = [
@@ -127,10 +130,8 @@ export function HTTPGETshow (URL: String, res: Response, objecthandler: Function
                     first.push(JSON.parse(data));
                 }
                 if (requests === 2) {
-                // console.log("combined data as string" + data);
                 second.push(JSON.parse(data));
                     combined.push(JSON.parse(JSON.stringify(first)), JSON.parse(JSON.stringify(second)));
-                        // console.log("This is the data : " + combined);
                         res.send(objecthandler(JSON.parse(JSON.stringify(combined))));
                 }
             });
@@ -163,7 +164,6 @@ export function HTTPGETshow (URL: String, res: Response, objecthandler: Function
 }
 
 function HTTPSUBGET (URL: String) {
-
     return new Promise((resolve, reject) => {
         const options = {
             host: koodistoUrl,
@@ -174,7 +174,6 @@ function HTTPSUBGET (URL: String) {
                 "Caller-Id": callerId
             }
         };
-
         https.get(options, (resp: any) =>  {
             let data = "";
             resp.on("data", (chunk: any) => {
@@ -188,11 +187,13 @@ function HTTPSUBGET (URL: String) {
             console.log("Error: " + err.message);
             reject();
         });
+    }).catch((err: Error) => {
+      console.log(err);
     });
 }
 
 function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?: any, orgid?: any) {
-    return new Promise((resolve, reject) => {
+     return new Promise((resolve, reject) => {
         if (objecthandler.name === "ObjectHandlerOrgNames") {
             const proms: object [] = [];
             for (const i in orgid) {
@@ -226,18 +227,22 @@ function HTTPGET (URL: String, redisInfo: String, objecthandler: Function, lang?
             });
         }
         else {
+
             HTTPSUBGET(URL).then((data) => {
                 const newdata = JSON.parse(String(data));
-
                 client.set(redisInfo, JSON.stringify(objecthandler(newdata, lang)));
-                console.log("Set info for " + redisInfo + " from Objecthandlers to redis successfully!");
+                if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
+                     console.log("Set info for " + redisInfo + " from Objecthandlers to redis successfully!");
+                }        
                 resolve();
             }).catch((err: any) => {
                 console.log("Error: " + err);
                 reject();
             });
         }
-    });
+    }).catch((err: any) => {
+       console.log(err);
+     });
 }
 
 function setAlaYksikot() {

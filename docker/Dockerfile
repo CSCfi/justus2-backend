@@ -1,4 +1,4 @@
-FROM node:8 as node_builder
+FROM node:12 as node_builder
 WORKDIR /app
 COPY package.json /app/
 COPY package-lock.json /app/
