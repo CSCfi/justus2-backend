@@ -120,7 +120,7 @@ async function getJulkaisutmin(req: Request, res: Response, next: NextFunction) 
     USER_DATA = req.session.userData;
     // USER_DATA = await authService.getUserData(req.headers);
 
-    if (!req.session.userData) {
+    if (!USER_DATA) {
         return res.status(403).send("Permission denied");
     }
 
@@ -294,7 +294,7 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
 
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
 
-    if (!req.session.userData || !hasOrganisation) {
+    if (!USER_DATA || !hasOrganisation) {
         return res.status(403).send("Permission denied");
     }
 
