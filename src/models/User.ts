@@ -6,6 +6,7 @@ export interface UserObject {
         nimi: string;
         organisaatio: string;
         rooli: string;
+        uid: string,
         showHrData: boolean;
         showPublicationInput: boolean;
         jukuriUser: boolean;

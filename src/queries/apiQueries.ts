@@ -387,87 +387,97 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
     let countQuery;
     let hakuQuery;
 
-    if (idHaku) {
-        hakuQuery = idQuery + approved + ";";
-        countQuery =  idCount + approved + ";";
-        if (organisaatioHaku) {
-            hakuQuery = idQuery + approved + " AND organisaatiotunnus = ${code};";
-            countQuery = idCount + approved + " AND organisaatiotunnus = ${code};";
-        }
-    }
+    // member can only search for rejected publications
+    if (USER_DATA.rooli === "member") {
+        hakuQuery = "SELECT j.id, j.organisaatiotunnus,j.julkaisuvuosi,j.julkaisunnimi,j.tekijat,j.julkaisuntila,j.username,j.modified, a.handle, a.id AS aid" +
+                    " FROM julkaisu AS j INNER JOIN kaytto_loki AS kl on j.accessid = kl.id LEFT JOIN julkaisuarkisto AS a on j.id = a.julkaisuid" +
+                    " WHERE organisaatiotunnus = ${code} AND kl.uid = ${uid} AND j.julkaisuntila = '-1' ORDER BY j.modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";       
+        countQuery = "SELECT count(*) FROM julkaisu INNER JOIN kaytto_loki AS kl on accessid = kl.id WHERE organisaatiotunnus = ${code} AND julkaisuntila = '-1' AND kl.uid = ${uid};";
+        params["uid"] = USER_DATA.uid;
+    } else {   
 
-    if (nimiTekijaHaku && !vuosiHaku && !tilaHaku) {
-        hakuQuery = nimiTekijaHakuQuery + approved + " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = nimiTekijaHakuCount + approved + ";";
-        if (organisaatioHaku) {
-            hakuQuery = nimiTekijaHakuQuery + approved + " AND organisaatiotunnus = ${code}" +
-                " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = nimiTekijaHakuCount + approved + " AND organisaatiotunnus = ${code};";
+        if (idHaku) {
+            hakuQuery = idQuery + approved + ";";
+            countQuery =  idCount + approved + ";";
+            if (organisaatioHaku) {
+                hakuQuery = idQuery + approved + " AND organisaatiotunnus = ${code};";
+                countQuery = idCount + approved + " AND organisaatiotunnus = ${code};";
+            }
         }
-    }
 
-    if (vuosiHaku && !nimiTekijaHaku && !tilaHaku) {
-        hakuQuery = vuosiHakuQuery + approved + " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = vuosiHakuCount + approved + ";";
-        if (organisaatioHaku) {
-            hakuQuery = vuosiHakuQuery + approved + " AND organisaatiotunnus = ${code}" +
-                " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = vuosiHakuCount + approved + " AND organisaatiotunnus = ${code};";
+        if (nimiTekijaHaku && !vuosiHaku && !tilaHaku) {
+            hakuQuery = nimiTekijaHakuQuery + approved + " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+            countQuery = nimiTekijaHakuCount + approved + ";";
+            if (organisaatioHaku) {
+                hakuQuery = nimiTekijaHakuQuery + approved + " AND organisaatiotunnus = ${code}" +
+                    " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+                countQuery = nimiTekijaHakuCount + approved + " AND organisaatiotunnus = ${code};";
+            }
         }
-    }
 
-    if (tilaHaku && !nimiTekijaHaku && !vuosiHaku) {
-        hakuQuery = tilaHakuQuery +  " ORDER BY modified DESC" +
-            " LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = tilaHakuCount + ";";
-        if (organisaatioHaku) {
-            hakuQuery = tilaHakuQuery + " AND organisaatiotunnus = ${code}" +
-                " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = tilaHakuCount + " AND organisaatiotunnus = ${code};";
+        if (vuosiHaku && !nimiTekijaHaku && !tilaHaku) {
+            hakuQuery = vuosiHakuQuery + approved + " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+            countQuery = vuosiHakuCount + approved + ";";
+            if (organisaatioHaku) {
+                hakuQuery = vuosiHakuQuery + approved + " AND organisaatiotunnus = ${code}" +
+                    " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+                countQuery = vuosiHakuCount + approved + " AND organisaatiotunnus = ${code};";
+            }
         }
-    }
 
-    if (nimiTekijaHaku && vuosiHaku && !tilaHaku) {
-        hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + approved + " ORDER BY modified DESC" +
-            " LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = nimiTekijaHakuCount + vuosiAndQuery + approved + ";";
-        if (organisaatioHaku) {
-            hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + approved + " AND organisaatiotunnus = ${code}" +
-                " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = nimiTekijaHakuCount + vuosiAndQuery + approved + " AND organisaatiotunnus = ${code};";
+        if (tilaHaku && !nimiTekijaHaku && !vuosiHaku) {
+            hakuQuery = tilaHakuQuery +  " ORDER BY modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+            countQuery = tilaHakuCount + ";";
+            if (organisaatioHaku) {
+                hakuQuery = tilaHakuQuery + " AND organisaatiotunnus = ${code}" +
+                    " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+                countQuery = tilaHakuCount + " AND organisaatiotunnus = ${code};";
+            }
         }
-    }
 
-    if (nimiTekijaHaku && !vuosiHaku && tilaHaku) {
-        hakuQuery = nimiTekijaHakuQuery + tilaAndQuery + " ORDER BY modified DESC" +
-            " LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = nimiTekijaHakuCount + tilaAndQuery + ";";
-        if (organisaatioHaku) {
-            hakuQuery = nimiTekijaHakuQuery + tilaAndQuery + " AND organisaatiotunnus = ${code} " +
-                " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = nimiTekijaHakuCount + tilaAndQuery + " AND organisaatiotunnus = ${code};";
+        if (nimiTekijaHaku && vuosiHaku && !tilaHaku) {
+            hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + approved + " ORDER BY modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+            countQuery = nimiTekijaHakuCount + vuosiAndQuery + approved + ";";
+            if (organisaatioHaku) {
+                hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + approved + " AND organisaatiotunnus = ${code}" +
+                    " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+                countQuery = nimiTekijaHakuCount + vuosiAndQuery + approved + " AND organisaatiotunnus = ${code};";
+            }
         }
-    }
 
-    if (!nimiTekijaHaku && vuosiHaku && tilaHaku) {
-        hakuQuery = tilaHakuQuery + vuosiAndQuery + " ORDER BY modified DESC" +
-            " LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = tilaHakuCount + vuosiAndQuery + ";";
-        if (organisaatioHaku) {
-            hakuQuery = tilaHakuQuery + vuosiAndQuery + " AND organisaatiotunnus = ${code}" +
-                " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = tilaHakuCount + vuosiAndQuery + " AND organisaatiotunnus = ${code};";
+        if (nimiTekijaHaku && !vuosiHaku && tilaHaku) {
+            hakuQuery = nimiTekijaHakuQuery + tilaAndQuery + " ORDER BY modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+            countQuery = nimiTekijaHakuCount + tilaAndQuery + ";";
+            if (organisaatioHaku) {
+                hakuQuery = nimiTekijaHakuQuery + tilaAndQuery + " AND organisaatiotunnus = ${code} " +
+                    " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+                countQuery = nimiTekijaHakuCount + tilaAndQuery + " AND organisaatiotunnus = ${code};";
+            }
         }
-    }
 
-    if (nimiTekijaHaku && vuosiHaku && tilaHaku) {
-        hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + tilaAndQuery + " ORDER BY modified DESC" +
-            " LIMIT " + pageSize + " OFFSET " + offset + ";";
-        countQuery = nimiTekijaHakuCount + vuosiAndQuery + tilaAndQuery + ";";
-        if (organisaatioHaku) {
-            hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + tilaAndQuery + " AND organisaatiotunnus = ${code}" +
-                " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
-            countQuery = nimiTekijaHakuCount + vuosiAndQuery + tilaAndQuery + " AND organisaatiotunnus = ${code};";
+        if (!nimiTekijaHaku && vuosiHaku && tilaHaku) {
+            hakuQuery = tilaHakuQuery + vuosiAndQuery + " ORDER BY modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+            countQuery = tilaHakuCount + vuosiAndQuery + ";";
+            if (organisaatioHaku) {
+                hakuQuery = tilaHakuQuery + vuosiAndQuery + " AND organisaatiotunnus = ${code}" +
+                    " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+                countQuery = tilaHakuCount + vuosiAndQuery + " AND organisaatiotunnus = ${code};";
+            }
+        }
+
+        if (nimiTekijaHaku && vuosiHaku && tilaHaku) {
+            hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + tilaAndQuery + " ORDER BY modified DESC" +
+                " LIMIT " + pageSize + " OFFSET " + offset + ";";
+            countQuery = nimiTekijaHakuCount + vuosiAndQuery + tilaAndQuery + ";";
+            if (organisaatioHaku) {
+                hakuQuery = nimiTekijaHakuQuery + vuosiAndQuery + tilaAndQuery + " AND organisaatiotunnus = ${code}" +
+                    " ORDER BY modified DESC LIMIT " + pageSize + " OFFSET " + offset + ";";
+                countQuery = nimiTekijaHakuCount + vuosiAndQuery + tilaAndQuery + " AND organisaatiotunnus = ${code};";
+            }
         }
     }
 

@@ -25,6 +25,7 @@ const getUserData = function (headers: any) {
             "email": "",
             "rooli": "",
             "nimi": name,
+            "uid": headers["shib-uid"],
             "kieli": "",
             "showHrData": undefined,
             "showPublicationInput": undefined,
