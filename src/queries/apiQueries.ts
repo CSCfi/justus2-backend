@@ -76,6 +76,8 @@ function getUser(req: Request, res: Response, next: NextFunction) {
 async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
+
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -116,6 +118,7 @@ async function getJulkaisut(req: Request, res: Response, next: NextFunction) {
 async function getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
 
     if (!req.session.userData) {
         return res.status(403).send("Permission denied");
@@ -287,6 +290,8 @@ async function getJulkaisutmin(req: Request, res: Response, next: NextFunction) 
 async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
+
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
 
     if (!req.session.userData || !hasOrganisation) {
@@ -485,6 +490,8 @@ async function getJulkaisutHaku(req: Request, res: Response, next: NextFunction)
 async function getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
+
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
 
@@ -559,6 +566,8 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
 async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
+
     const hasAccess = await authService.hasOrganisation(USER_DATA);
 
     if (hasAccess) {
@@ -665,6 +674,8 @@ function impersonateUser(req: Request, res: Response) {
 async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
+
     const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
 
     if (hasAccessToPublication) {
@@ -811,6 +822,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 async function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
 
     const isAdmin = await authService.isAdmin(USER_DATA);
     const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
