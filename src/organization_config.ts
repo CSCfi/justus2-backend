@@ -11,6 +11,7 @@ const commonVisibleFields = [
     "tekijat",
     "julkaisuntekijoidenlukumaara",
     "organisaatiotekija",
+    "orcid",
     "konferenssinvakiintunutnimi",
     "isbn",
     "issn",
