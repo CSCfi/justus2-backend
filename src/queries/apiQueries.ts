@@ -100,8 +100,8 @@ class ApiQueries {
 // Get all julkaisut
     public async getJulkaisut(req: Request, res: Response, next: NextFunction) {
 
-    // USER_DATA = req.session.userData;
-    USER_DATA = await authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
 
     const hasOrganisation = await authService.hasOrganisation(USER_DATA);
     const isAdmin = await authService.isAdmin(USER_DATA);
@@ -142,8 +142,8 @@ class ApiQueries {
 
     public async getJulkaisutmin(req: Request, res: Response, next: NextFunction) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
 
         if (!USER_DATA) {
             return res.status(403).send("Permission denied");
@@ -314,8 +314,8 @@ class ApiQueries {
 
     public async getJulkaisutHaku(req: Request, res: Response, next: NextFunction) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
 
@@ -523,8 +523,8 @@ class ApiQueries {
 // Get data from all tables by julkaisuid
     public async getAllPublicationDataById(req: Request, res: Response, next: NextFunction) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
 
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
@@ -599,8 +599,8 @@ class ApiQueries {
 // Catch the JSON body and parse it so that we can insert the values into postgres
     public async postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
 
         const hasAccess = await authService.hasOrganisation(USER_DATA);
 
@@ -713,8 +713,8 @@ class ApiQueries {
 // PUT requests
     public async updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         console.log(USER_DATA);
         const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
 
@@ -860,8 +860,8 @@ class ApiQueries {
 
     public async putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
 
         const isAdmin = await authService.isAdmin(USER_DATA);
         const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
@@ -1135,8 +1135,8 @@ class ApiQueries {
 
     public async downloadPersons(req: Request, res: Response) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1185,8 +1185,8 @@ class ApiQueries {
 
     public async getPersonListaus(req: Request, res: Response) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1235,8 +1235,8 @@ class ApiQueries {
 
     public async postPerson(req: Request, res: Response) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1282,8 +1282,8 @@ class ApiQueries {
 
     public async updatePerson(req: Request, res: Response) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1368,8 +1368,8 @@ class ApiQueries {
 
     public async getPublicationListForOnePerson(req: Request, res: Response) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const isAdmin = await authService.isAdmin(USER_DATA);
 
@@ -1398,8 +1398,8 @@ class ApiQueries {
 
     public async removePerson(req: Request, res: Response) {
 
-        // USER_DATA = req.session.userData;
-        USER_DATA = await authService.getUserData(req.headers);
+        USER_DATA = req.session.userData;
+        // USER_DATA = await authService.getUserData(req.headers);
         const hasOrganisation = await authService.hasOrganisation(USER_DATA);
         const isAdmin = await authService.isAdmin(USER_DATA);
 
