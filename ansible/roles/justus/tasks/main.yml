@@ -106,19 +106,8 @@
     src: "{{ sources.path }}/package-lock.json"
     state: link
     force: yes
-
-- name: Get NPM dependencies
-  shell: /usr/bin/npm install --no-bin-links
-  args:
-    chdir: "/opt/dependencies"
-  become_user: vagrant
-  
-- name: Get NPM dependencies
+     
+- name: Install typescript and tslint globally
   shell: /usr/bin/npm install --global typescript tslint
   become: true
 
-- name: Build sources
-  shell: /usr/bin/npm run build
-  args:
-    chdir: "{{ sources.path }}"
-  become_user: vagrant
