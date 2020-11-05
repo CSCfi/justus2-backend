@@ -1,12 +1,8 @@
 # JUSTUS Backend
 
-Clone the repository from https://github.com/CSCfi/justus2-backend
-
-----
-
 #### Prerequisites
-- Virtualbox ( Tested with v5.1+, latest tested and confirmed working version is 5.2.12 ) - https://www.virtualbox.org/wiki/Downloads
-- Vagrant ( Tested with v1.9+, latest tested and confirmed working version is 2.1.1 ) - https://www.vagrantup.com/downloads.html or via package manager
+- Virtualbox ( Confirmed working version is 5.2.44 ) - https://www.virtualbox.org/wiki/Downloads
+- Vagrant (Confirmed working version is 2.1.2 ) - https://www.vagrantup.com/downloads.html or via package manager
 ```
 // Example
 § apt install vagrant
@@ -19,13 +15,26 @@ Clone the repository from https://github.com/CSCfi/justus2-backend
 
 ----
 
-#### Build and run
+#### Clone the repository
+- https://github.com/CSCfi/justus2-backend
+- Add your public key to project root (id_rsa.pub)
+- Create four directiories to project root:
+   - csv-download
+   - csv-upload
+   - publications
+   - temp
+ - Fill missing values to env.variables file
 
-- Do the following in one terminal from the same folder
+
+#### Initialize development environment
+
+- Navigate to project root and run command
 ```
 § vagrant up
 ```
-- Wait for vagrant up to finish then run these commands
+#### Build and run
+
+- After Virtual Box is created and running run these commands
 ```
 $ vagrant ssh
 $ bash start.sh
