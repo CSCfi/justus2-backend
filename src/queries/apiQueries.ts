@@ -612,13 +612,19 @@ class ApiQueries {
 
             try {
 
+                const julkaisuObject = req.body.julkaisu;
                 const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-                const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + " RETURNING id";
+
+                // Validate julkaisumaksu field first
+                if (julkaisuObject.julkaisumaksu) {
+                    julkaisuObject["julkaisumaksu"] = await this.validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+                }
 
                 // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
+                const saveJulkaisu = pgp.helpers.insert(julkaisuObject, julkaisuColumns) + " RETURNING id";
                 const julkaisuId = await db.one(saveJulkaisu);
 
-                const kayttoLokiObject = JSON.parse(JSON.stringify(req.body.julkaisu));
+                const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
                 delete kayttoLokiObject["issn"];
                 delete kayttoLokiObject["isbn"];
 
@@ -626,19 +632,19 @@ class ApiQueries {
                     method, "julkaisu", julkaisuId.id, kayttoLokiObject);
 
                 const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
-                const insertAccessId = pgp.helpers.update({"accessid": kayttoLokiId.id}, idColumn) + "WHERE id = " + parseInt(julkaisuId.id) + " RETURNING accessid";
+                const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + " RETURNING accessid";
 
                 await db.one(insertAccessId);
 
-                await this.insertIssnAndIsbn(req.body.julkaisu, julkaisuId.id, req.headers, "issn");
-                await this.insertIssnAndIsbn(req.body.julkaisu, julkaisuId.id, req.headers, "isbn");
+                await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "issn");
+                await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "isbn");
                 await this.insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
                 await this.insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
                 await this.insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
                 await this.insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
                 await this.insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
                 await this.insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
-                await this.insertProjektinumero(req.body.julkaisu, julkaisuId.id, req.headers);
+                await this.insertProjektinumero(julkaisuObject, julkaisuId.id, req.headers);
 
                 await db.any("COMMIT");
 
@@ -725,11 +731,17 @@ class ApiQueries {
             try {
 
                 const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-                const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + " WHERE id = " + parseInt(req.params.id);
+                const julkaisuObject = req.body.julkaisu;
 
-                const julkaisu = await db.none(updateJulkaisu);
+                // Validate julkaisumaksu field first
+                if (julkaisuObject.julkaisumaksu) {
+                    julkaisuObject["julkaisumaksu"] = await this.validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+                }
 
-                const kayttoLokiObject = JSON.parse(JSON.stringify(req.body.julkaisu));
+                const updateJulkaisu = pgp.helpers.update(julkaisuObject, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
+                await db.none(updateJulkaisu);
+
+                const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
                 delete kayttoLokiObject["issn"];
                 delete kayttoLokiObject["isbn"];
 
@@ -743,7 +755,7 @@ class ApiQueries {
                     await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_issn", req.params.id, [undefined]);
                 }
 
-                await this.insertIssnAndIsbn(req.body.julkaisu, req.params.id, req.headers, "issn");
+                await this.insertIssnAndIsbn(julkaisuObject, req.params.id, req.headers, "issn");
 
                 const deletedIsbnRows = await db.result("DELETE FROM julkaisu_isbn WHERE julkaisuid = ${id}", {
                     id: req.params.id
@@ -753,7 +765,7 @@ class ApiQueries {
                     await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_isbn", req.params.id, [undefined]);
                 }
 
-                await this.insertIssnAndIsbn(req.body.julkaisu, req.params.id, req.headers, "isbn");
+                await this.insertIssnAndIsbn(julkaisuObject, req.params.id, req.headers, "isbn");
 
                 const deletedProjektinumeroRows = await db.result("DELETE FROM julkaisu_projektinumero WHERE julkaisuid = ${id}", {
                     id: req.params.id
@@ -761,7 +773,7 @@ class ApiQueries {
                 if (deletedProjektinumeroRows.rowCount > 0) {
                     await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_projektinumero", req.params.id, [undefined]);
                 }
-                await this.insertProjektinumero(req.body.julkaisu, req.params.id, req.headers);
+                await this.insertProjektinumero(julkaisuObject, req.params.id, req.headers);
 
                 const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
                     id: req.params.id
@@ -1422,6 +1434,11 @@ class ApiQueries {
         }
     }
 
+    public async validateJulkaisumaksu(julkaisumaksu: any) {
+        // first replace , with .
+        const replaced = julkaisumaksu.replace(",", ".");
+        return parseFloat(replaced);
+    }
 
     public logout(req: Request, res: Response, next: NextFunction) {
         console.log(req.session);

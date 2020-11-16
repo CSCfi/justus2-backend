@@ -30,6 +30,8 @@ const julkaisu = [
     "jufotunnus",
     "jufoluokitus",
     "julkaisuntila",
+    "julkaisumaksu",
+    "julkaisumaksuvuosi",
     "username",
     "modified"
 ];
