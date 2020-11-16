@@ -10,7 +10,7 @@ class AuditLog {
 
         if (!inputData) { return; }
 
-        const user = authService.getUserData(headers);
+        const user = await authService.getUserData(headers);
         const uid = headers["shib-uid"];
 
         const kayttoLokiData = {
