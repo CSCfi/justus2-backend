@@ -39,6 +39,8 @@ const commonVisibleFields = [
     "doitunniste",
     "muutunniste",
     "pysyvaverkkoosoite",
+    "julkaisumaksu",
+    "julkaisumaksuvuosi",
     "tekijanrooli",
     "lisatieto"
 ];

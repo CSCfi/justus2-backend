@@ -35,6 +35,8 @@ CREATE TABLE julkaisu
   rinnakkaistallennetunversionverkkoosoite text,
   jufotunnus text,
   jufoluokitus text,
+  julkaisumaksu: decimal,
+  julkaisumaksuvuosi: integer,
   julkaisuntila character varying(5),
   username character varying(100),
   modified timestamp with time zone NOT NULL DEFAULT now(),

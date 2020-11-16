@@ -588,13 +588,19 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
         try {
 
+            const julkaisuObject = req.body.julkaisu;
             const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-            const saveJulkaisu = pgp.helpers.insert(req.body.julkaisu, julkaisuColumns) + " RETURNING id";
+
+            // Validate julkaisumaksu field first
+            if (julkaisuObject.julkaisumaksu) {
+                julkaisuObject["julkaisumaksu"] = await validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+            }
 
             // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
+            const saveJulkaisu = pgp.helpers.insert(julkaisuObject, julkaisuColumns) + " RETURNING id";
             const julkaisuId = await db.one(saveJulkaisu);
 
-            const kayttoLokiObject = JSON.parse(JSON.stringify(req.body.julkaisu));
+            const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
             delete kayttoLokiObject["issn"];
             delete kayttoLokiObject["isbn"];
 
@@ -606,15 +612,15 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             await db.one(insertAccessId);
 
-            await insertIssnAndIsbn(req.body.julkaisu, julkaisuId.id, req.headers, "issn");
-            await insertIssnAndIsbn(req.body.julkaisu, julkaisuId.id, req.headers, "isbn");
+            await insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "issn");
+            await insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "isbn");
             await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
             await insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
             await insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
             await insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
             await insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
             await insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
-            await insertProjektinumero(req.body.julkaisu, julkaisuId.id, req.headers);
+            await insertProjektinumero(julkaisuObject, julkaisuId.id, req.headers);
 
             await db.any("COMMIT");
 
@@ -696,11 +702,18 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
         try {
 
             const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-            const updateJulkaisu = pgp.helpers.update(req.body.julkaisu, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
+            const julkaisuObject = req.body.julkaisu;
+
+            // Validate julkaisumaksu field first
+            if (julkaisuObject.julkaisumaksu) {
+                julkaisuObject["julkaisumaksu"] = await validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+            }
+
+            const updateJulkaisu = pgp.helpers.update(julkaisuObject, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
 
             const julkaisu = await db.none(updateJulkaisu);
 
-            const kayttoLokiObject = JSON.parse(JSON.stringify(req.body.julkaisu));
+            const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
             delete kayttoLokiObject["issn"];
             delete kayttoLokiObject["isbn"];
 
@@ -714,7 +727,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
                 await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_issn", req.params.id, [undefined]);
             }
 
-            await insertIssnAndIsbn(req.body.julkaisu, req.params.id, req.headers, "issn");
+            await insertIssnAndIsbn(julkaisuObject, req.params.id, req.headers, "issn");
 
             const deletedIsbnRows = await db.result("DELETE FROM julkaisu_isbn WHERE julkaisuid = ${id}", {
                 id: req.params.id
@@ -724,7 +737,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
                 await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_isbn", req.params.id, [undefined]);
             }
 
-            await insertIssnAndIsbn(req.body.julkaisu, req.params.id, req.headers, "isbn");
+            await insertIssnAndIsbn(julkaisuObject, req.params.id, req.headers, "isbn");
 
             const deletedProjektinumeroRows = await db.result("DELETE FROM julkaisu_projektinumero WHERE julkaisuid = ${id}", {
                 id: req.params.id
@@ -732,7 +745,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             if (deletedProjektinumeroRows.rowCount > 0) {
                 await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_projektinumero", req.params.id, [undefined]);
             }
-            await insertProjektinumero(req.body.julkaisu, req.params.id, req.headers);
+            await insertProjektinumero(julkaisuObject, req.params.id, req.headers);
 
             const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
                 id: req.params.id
@@ -1106,6 +1119,11 @@ function logout(req: Request, res: Response, next: NextFunction) {
     });
 }
 
+async function validateJulkaisumaksu(julkaisumaksu: any) {
+    // first replace , with .
+    const replaced = julkaisumaksu.replace(",", ".");
+    return parseFloat(replaced);
+}
 
 
 module.exports = {
