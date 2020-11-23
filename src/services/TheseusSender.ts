@@ -86,8 +86,12 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
        const julkaisuIDt = await connection.db.query(
            "SELECT julkaisujono.julkaisuid, julkaisu.organisaatiotunnus FROM julkaisujono, julkaisu WHERE julkaisu.id = julkaisujono.julkaisuID " + 
            "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING *");
-           console.log("The initial token: " + token + " for version " + version);
+           // console.log("The initial token: " + token + " for version " + version);
            // console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
+            if (julkaisuIDt.length) {
+                console.log("The initial token: " + token + " for version " + version);
+                console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
+            }
            julkaisuIDt.forEach(async function (e: any) {
                const jukuriPublication: boolean = self.isJukuriPublication(e.organisaatiotunnus);
                if (jukuriPublication && version === "jukuri") {
