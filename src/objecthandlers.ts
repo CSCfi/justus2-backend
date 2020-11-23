@@ -156,9 +156,8 @@ function ObjectHandlerJulkaisuntilat(obj: any, lang: any): object[] {
     const julkaisuntilat: object[] = [
     ];
     obj.forEach((e: any) => {
-        if ( (e.koodiArvo === "1" || e.koodiArvo === "-1" || e.koodiArvo === "2" || e.koodiArvo === "0")) {
+        if ( (e.koodiArvo === "1" || e.koodiArvo === "-1" || e.koodiArvo === "2" || e.koodiArvo === "0" || e.koodiArvo === "3")) {
             const metadata = e.metadata.find(( e: any ) => e.kieli === lang);
-            const namecheck = metadata;
             const keyvalues = {
                 arvo: e.koodiArvo,
                 selite: namechecker(metadata),

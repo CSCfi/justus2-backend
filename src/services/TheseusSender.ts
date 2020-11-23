@@ -86,17 +86,20 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
        const julkaisuIDt = await connection.db.query(
            "SELECT julkaisujono.julkaisuid, julkaisu.organisaatiotunnus FROM julkaisujono, julkaisu WHERE julkaisu.id = julkaisujono.julkaisuID " + 
            "AND julkaisu.julkaisuntila <> '' AND CAST(julkaisu.julkaisuntila AS INT) > 0", "RETURNING *");
-           console.log("The initial token: " + token + " for version " + version);
-           // console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
+            if (julkaisuIDt.length) {
+                console.log("**** Julkaisujono table contains data ****");
+                console.log("The julkaisuIDt object " + JSON.stringify(julkaisuIDt));
+                console.log("The initial token: " + token + " for version " + version);
+            }
            julkaisuIDt.forEach(async function (e: any) {
                const jukuriPublication: boolean = self.isJukuriPublication(e.organisaatiotunnus);
                if (jukuriPublication && version === "jukuri") {
-                   console.log("The whole julkaisuIDt object for jukuri " + JSON.stringify(e));
+                   console.log("The whole julkaisuid object for jukuri " + JSON.stringify(e));
                    // The jukuri string we are sending is purely for testing purposes, to confirm that the right one is being sent through
                    await self.postJulkaisuTheseus(e.julkaisuid, "jukuri");
                }
                else if (!jukuriPublication && version === "theseus") {
-                   console.log("The whole julkaisuIDt object for theseus " + JSON.stringify(e));
+                   console.log("The whole julkaisuid object for theseus " + JSON.stringify(e));
                    await self.postJulkaisuTheseus(e.julkaisuid);
                }
            });
