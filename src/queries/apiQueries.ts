@@ -704,9 +704,14 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
             const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
             const julkaisuObject = req.body.julkaisu;
 
+            console.log(julkaisuObject);
+
             // Validate julkaisumaksu field first
             if (julkaisuObject.julkaisumaksu) {
                 julkaisuObject["julkaisumaksu"] = await validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+            } else {
+                julkaisuObject["julkaisumaksu"] = undefined;
+                julkaisuObject["julkaisumaksuvuosi"] = undefined;
             }
 
             const updateJulkaisu = pgp.helpers.update(julkaisuObject, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
