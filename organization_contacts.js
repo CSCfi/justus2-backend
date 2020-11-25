@@ -370,13 +370,9 @@ const contactList = [
     },
 	{
         // 	Suomen ympäristökeskus
-        "domain": "@ymparisto.fi",
+        "domain": "@syke.fi",
         "code": "7020017",
-        "email": "",
-		"theseusData": {
-			"theseusCollectionId": "",
-			"theseusCode": ""
-		}
+        "email": ""
     }
 ];
 
