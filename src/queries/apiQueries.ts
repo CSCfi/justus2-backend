@@ -594,6 +594,9 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             // Validate julkaisumaksu field first
             if (julkaisuObject.julkaisumaksu) {
                 julkaisuObject["julkaisumaksu"] = await validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+            } else {
+                julkaisuObject["julkaisumaksu"] = undefined;
+                julkaisuObject["julkaisumaksuvuosi"] = undefined;
             }
 
             // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
