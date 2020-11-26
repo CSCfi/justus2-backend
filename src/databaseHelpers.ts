@@ -32,6 +32,7 @@ const julkaisu = [
     "julkaisuntila",
     "julkaisumaksu",
     "julkaisumaksuvuosi",
+    "ensimmainenkirjoittaja",
     "username",
     "modified"
 ];

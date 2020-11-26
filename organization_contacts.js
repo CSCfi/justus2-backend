@@ -372,7 +372,8 @@ const contactList = [
         // 	Suomen ympäristökeskus
         "domain": "@syke.fi",
         "code": "7020017",
-        "email": ""
+        "email": "",
+		"visibleFields": ["ensimmainenkirjoittaja"]
     }
 ];
 
