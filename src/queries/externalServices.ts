@@ -18,13 +18,12 @@ const utf8 = require("utf8");
 import  * as kp  from "./../koodistopalvelu";
 function getAvainSanat(req: Request, res: Response, next: NextFunction) {
     if (req.query.lang.toString().toLowerCase() === "fi" || req.query.lang.toString().toLowerCase() === "sv") {
-        const url: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
-        const secondurl: string = BASEURLFINTO + "EN" + "&query=" + req.query.q + "*";
+        const url: string = BASEURLFINTO + req.query.lang.toString().toLowerCase() + "&query=" + req.query.q + "*";
+        const secondurl: string = BASEURLFINTO + "en" + "&query=" + req.query.q + "*";
         kp.HTTPGETshow(utf8.encode(url), res, oh.ObjectHandlerAvainsanat, utf8.encode(secondurl));
     }
     else {
-        const apiurl: string = BASEURLFINTO + req.query.lang + "&query=" + req.query.q + "*";
-        console.log("This is the apiurl: " + apiurl);
+        const apiurl: string = BASEURLFINTO + req.query.lang.toString().toLowerCase() + "&query=" + req.query.q + "*";
         kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerAvainsanat);
     }
 }
