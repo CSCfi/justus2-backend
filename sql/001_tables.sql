@@ -37,6 +37,7 @@ CREATE TABLE julkaisu
   jufoluokitus text,
   julkaisumaksu: decimal,
   julkaisumaksuvuosi: integer,
+  ensimmainenkirjoittaja: text,
   julkaisuntila character varying(5),
   username character varying(100),
   modified timestamp with time zone NOT NULL DEFAULT now(),

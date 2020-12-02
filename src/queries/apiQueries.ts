@@ -618,71 +618,80 @@ class ApiQueries {
                 // Validate julkaisumaksu field first
                 if (julkaisuObject.julkaisumaksu) {
                     julkaisuObject["julkaisumaksu"] = await this.validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+                } else {
+                    julkaisuObject["julkaisumaksu"] = undefined;
+                    julkaisuObject["julkaisumaksuvuosi"] = undefined;
                 }
 
-                // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
-                const saveJulkaisu = pgp.helpers.insert(julkaisuObject, julkaisuColumns) + " RETURNING id";
-                const julkaisuId = await db.one(saveJulkaisu);
+                if (!julkaisuObject.ensimmainenkirjoittaja) {
+                    julkaisuObject["ensimmainenkirjoittaja"] = undefined;
 
-                const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
-                delete kayttoLokiObject["issn"];
-                delete kayttoLokiObject["isbn"];
+                    // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
+                    const saveJulkaisu = pgp.helpers.insert(julkaisuObject, julkaisuColumns) + " RETURNING id";
+                    const julkaisuId = await db.one(saveJulkaisu);
 
-                const kayttoLokiId = await auditLog.postAuditData(req.headers,
-                    method, "julkaisu", julkaisuId.id, kayttoLokiObject);
+                    const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
+                    delete kayttoLokiObject["issn"];
+                    delete kayttoLokiObject["isbn"];
 
-                const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
-                const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + " RETURNING accessid";
+                    const kayttoLokiId = await auditLog.postAuditData(req.headers,
+                        method, "julkaisu", julkaisuId.id, kayttoLokiObject);
 
-                await db.one(insertAccessId);
+                    const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
+                    const insertAccessId = pgp.helpers.update({"accessid": kayttoLokiId.id}, idColumn) + "WHERE id = " + parseInt(julkaisuId.id) + " RETURNING accessid";
 
-                await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "issn");
-                await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "isbn");
-                await this.insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
-                await this.insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
-                await this.insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
-                await this.insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
-                await this.insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
-                await this.insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
-                await this.insertProjektinumero(julkaisuObject, julkaisuId.id, req.headers);
+                    await db.one(insertAccessId);
 
-                await db.any("COMMIT");
+                    await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "issn");
+                    await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "isbn");
+                    await this.insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
+                    await this.insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
+                    await this.insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
+                    await this.insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
+                    await this.insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
+                    await this.insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
+                    await this.insertProjektinumero(julkaisuObject, julkaisuId.id, req.headers);
 
-                // For Luonnonvarakeskus metadata is always sent to Jukuri
-                const isJukuriPublication: boolean = oh.isJukuriPublication(req.body.julkaisu.organisaatiotunnus);
+                    await db.any("COMMIT");
 
-                if (isJukuriPublication) {
-                    await fileUpload.postDataToQueueTable(julkaisuId.id);
+                    // For Luonnonvarakeskus metadata is always sent to Jukuri
+                    const isJukuriPublication: boolean = oh.isJukuriPublication(req.body.julkaisu.organisaatiotunnus);
 
-                    const table = new connection.pgp.helpers.ColumnSet(["julkaisuid", "destination"], {table: "julkaisuarkisto"});
-                    const query = pgp.helpers.insert({
-                        "julkaisuid": julkaisuId.id,
-                        "destination": "jukuri"
-                    }, table) + " RETURNING id";
+                    if (isJukuriPublication) {
+                        await fileUpload.postDataToQueueTable(julkaisuId.id);
 
-                    await connection.db.one(query);
+                        const table = new connection.pgp.helpers.ColumnSet(["julkaisuid", "destination"], {table: "julkaisuarkisto"});
+                        const query = pgp.helpers.insert({
+                            "julkaisuid": julkaisuId.id,
+                            "destination": "jukuri"
+                        }, table) + " RETURNING id";
 
-                    // update kaytto_loki table
-                    await auditLog.postAuditData(req.headers, "POST", "julkaisuarkisto", julkaisuId.id, {
-                        "julkaisuid": julkaisuId.id,
-                        "destination": "jukuri"
-                    });
+                        await connection.db.one(query);
+
+                        // update kaytto_loki table
+                        await auditLog.postAuditData(req.headers, "POST", "julkaisuarkisto", julkaisuId.id, {
+                            "julkaisuid": julkaisuId.id,
+                            "destination": "jukuri"
+                        });
+                    }
+
+                    res.status(200).json({"id": julkaisuId.id});
+                    console.log("Succesfully saved julkaisu with id: " + julkaisuId.id);
+
                 }
-
-                res.status(200).json({"id": julkaisuId.id});
-                console.log("Succesfully saved julkaisu with id: " + julkaisuId.id);
-
-            } catch (err) {
-                console.log(err);
-                console.log("Error in posting new publication with error code: " + err);
-                await db.any("ROLLBACK");
-                res.status(500).send(err.message);
+                }
+            catch (err) {
+                    console.log(err);
+                    console.log("Error in posting new publication with error code: " + err);
+                    await db.any("ROLLBACK");
+                    res.status(500).send(err.message);
+                }
             }
-        } else {
-            return res.status(403).send("Permission denied");
-        }
-
+        else {
+                return res.status(403).send("Permission denied");
+            }
     }
+
 
     postLanguage = (req: Request, res: Response) => {
 
@@ -736,6 +745,13 @@ class ApiQueries {
                 // Validate julkaisumaksu field first
                 if (julkaisuObject.julkaisumaksu) {
                     julkaisuObject["julkaisumaksu"] = await this.validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
+                } else {
+                    julkaisuObject["julkaisumaksu"] = undefined;
+                    julkaisuObject["julkaisumaksuvuosi"] = undefined;
+                }
+
+                if (!julkaisuObject.ensimmainenkirjoittaja) {
+                    julkaisuObject["ensimmainenkirjoittaja"] = undefined;
                 }
 
                 const updateJulkaisu = pgp.helpers.update(julkaisuObject, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
