@@ -599,9 +599,9 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
                 julkaisuObject["julkaisumaksuvuosi"] = undefined;
             }
 
-            if (!julkaisuObject.ensimmainenkirjoittaja) {
-                julkaisuObject["ensimmainenkirjoittaja"] = undefined;
-            }
+            // if (!julkaisuObject.ensimmainenkirjoittaja) {
+            //     julkaisuObject["ensimmainenkirjoittaja"] = undefined;
+            // }
 
             // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
             const saveJulkaisu = pgp.helpers.insert(julkaisuObject, julkaisuColumns) + " RETURNING id";
@@ -721,9 +721,9 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
                 julkaisuObject["julkaisumaksuvuosi"] = undefined;
             }
 
-            if (!julkaisuObject.ensimmainenkirjoittaja) {
-                julkaisuObject["ensimmainenkirjoittaja"] = undefined;
-            }
+            // if (!julkaisuObject.ensimmainenkirjoittaja) {
+            //     julkaisuObject["ensimmainenkirjoittaja"] = undefined;
+            // }
 
             const updateJulkaisu = pgp.helpers.update(julkaisuObject, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
 

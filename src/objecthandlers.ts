@@ -685,8 +685,8 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
                 julkaisuntila: x.julkaisuntila,
                 username: x.username,
                 modified: x.modified,
-                lisatieto: x.lisatieto,
-                ensimmainenkirjoittaja: x.ensimmainenkirjoittaja
+                lisatieto: x.lisatieto
+                // ensimmainenkirjoittaja: x.ensimmainenkirjoittaja
             };
         }
 
