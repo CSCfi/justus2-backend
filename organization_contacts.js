@@ -83,7 +83,7 @@ const contactList = [
     },
     {
         // Kajaanin ammattikorkeakoulu
-        "domain": "@kamk.fi",
+        "domain": ["@kamk.fi"],
         "code": "02473",
         "email": "",
 		"theseusData": {
@@ -102,7 +102,6 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // nb! xamk may have 3 domains (mahd. kyamk.fi ja mamk.fi)
         // Kaakkois-Suomen ammattikorkeakoulu 
         "domain": ["@xamk.fi", "@kyamk.fi", "@mamk.fi"],
         "code": "10118",
@@ -164,7 +163,6 @@ const contactList = [
     },
     {
         // Tampereen ammattikorkeakoulu
-		// nb! Tamk have 2 domains
         "domain": ["@tamk.fi", "@tuni.fi"],
         "code": "02630",
         "email": "",
@@ -217,7 +215,6 @@ const contactList = [
     },
     {
         // Poliisiammattikorkeakoulu
-		// nb! Polamk has two domains
         "domain": ["@polamk.fi", "@poliisi.fi"],
         "code": "02557",
         "email": "",
@@ -227,7 +224,6 @@ const contactList = [
     },
 	{
         // LAB ammattikorkeakoulu
-		// nb! lab has two domains
         "domain": ["@lab.fi", "@lut.fi"],
         "code": "10126",
         "email": "",
@@ -244,7 +240,6 @@ const contactList = [
         "email": ""
     },
     {
-        // nb! mml has 2 domains
         // Maanmittauslaitos
         "domain": ["@nls.fi", "@maanmittauslaitos.fi"],
         "code": "4020217",
@@ -269,7 +264,6 @@ const contactList = [
     },
 	{
         // 	Suomen ympäristökeskus
-		// nb! syke has two domains
         "domain": ["@syke.fi", "@ymparisto.fi"],
         "code": "7020017",
         "email": "",
@@ -294,8 +288,7 @@ const contactList = [
         "email": ""
     },
 	{
-        // 	Lapin ammattikorkeakoulu #lapinamk-admins
-		// nb! lapinamk has two domains
+        // 	Lapin ammattikorkeakoulu
         "domain": ["@ulapland.fi", "@lapinamk.fi"],
         "code": "10108",
         "email": "",
