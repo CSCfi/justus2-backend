@@ -7,6 +7,7 @@ const utf8 = require("utf8");
 
 const getUserData = function (headers: any) {
 
+    console.log("in get user data");
 
     if (!headers["shib-group"]) {
         return false;
@@ -44,7 +45,6 @@ const getUserData = function (headers: any) {
                 userData.email = domainMapping[key].email;
                 userData.rooli = role;
                 domainMapped = true;
-                console.log(userData);
             } else {
                 return false;
             }

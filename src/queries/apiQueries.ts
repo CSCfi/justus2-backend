@@ -119,6 +119,7 @@ async function getJulkaisutmin(req: Request, res: Response, next: NextFunction) 
 
     USER_DATA = req.session.userData;
     // USER_DATA = await authService.getUserData(req.headers);
+    console.log(req.session.userData);
 
     if (!USER_DATA) {
         return res.status(403).send("Permission denied");
@@ -710,8 +711,6 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
             const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
             const julkaisuObject = req.body.julkaisu;
-
-            console.log(julkaisuObject);
 
             // Validate julkaisumaksu field first
             if (julkaisuObject.julkaisumaksu) {
