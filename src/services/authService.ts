@@ -36,12 +36,9 @@ const getUserData = function (headers: any) {
         const role = getRole(headers["shib-group"]);
         let domainMapped = false;
 
-        console.log(domain);
-
         Object.keys(domainMapping).forEach(function (val, key) {
 
             if (domainMapping[key].domain.includes(domain)) {
-                console.log(domainMapping[key].domain);
                 userData.domain = domain;
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
