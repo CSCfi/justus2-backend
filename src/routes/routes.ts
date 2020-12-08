@@ -61,5 +61,8 @@ router.get("/haku/taiteenalat", koodistopalvelu.getTaiteenalat);
 router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
 router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
+// Database connection test
+router.get("/public/db-health", db.dbHealthCheck);
+
 export = router;
 

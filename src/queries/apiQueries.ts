@@ -1135,6 +1135,25 @@ function logout(req: Request, res: Response, next: NextFunction) {
     });
 }
 
+async function dbHealthCheck(req: Request, res: Response, next: NextFunction) {
+
+    const testQuery = "SELECT 1;";
+
+    try {
+        const response = await db.one(testQuery);
+        console.log(response);
+        if (response) {
+            return res.status(200).send("DB connection OK!");
+        } else {
+            return res.status(503).send("Database seems to be up but no data is returned.");
+        }
+    } catch (e) {
+        console.log(e);
+        return res.status(503).send("ERROR!");
+    }
+
+}
+
 async function validateJulkaisumaksu(julkaisumaksu: any) {
     // first replace , with .
     const replaced = julkaisumaksu.replace(",", ".");
@@ -1157,6 +1176,7 @@ module.exports = {
     putJulkaisuntila: putJulkaisuntila,
     updateJulkaisu: updateJulkaisu,
     updateArchiveTable: updateArchiveTable,
+    dbHealthCheck: dbHealthCheck,
     logout: logout
 
 };
