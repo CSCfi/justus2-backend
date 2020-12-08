@@ -62,7 +62,7 @@ router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
 router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
 // Database connection test
-router.get("/public/db-health", db.dbHealthCheck);
+router.get("/db-health", db.dbHealthCheck);
 
 export = router;
 
