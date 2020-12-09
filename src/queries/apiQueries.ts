@@ -1435,7 +1435,7 @@ class ApiQueries {
                 const personid = req.params.id;
                 const params = {"personid": personid};
 
-                await connection.db.result("DELETE FROM person WHERE id = ${personid}", params);
+                await db.result("DELETE FROM person WHERE id = ${personid}", params);
 
                 res.status(200).send("Person successfully deleted");
             } catch (e) {
@@ -1470,7 +1470,7 @@ class ApiQueries {
         const testQuery = "SELECT 1;";
 
         try {
-            const response = await connection.db.one(testQuery);
+            const response = await db.one(testQuery);
             console.log(response);
             if (response) {
                 return res.status(200).send("DB connection OK!");
