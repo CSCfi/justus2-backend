@@ -294,6 +294,13 @@ const contactList = [
         "email": "",
 		"requiredFields": ["alayksikko"]
     },
+	{
+        // 	Vaasan ammattikorkeakoulu
+        "domain": ["@vamk.fi", "@tritonia.fi"],
+        "code": "02627",
+        "email": "",
+		"requiredFields": ["alayksikko"]
+    },
 
 	// Testikäytössä
 	{
