@@ -69,8 +69,6 @@ class ApiQueries {
             req.session.language = "FI";
         }
 
-        console.log(userData);
-
         userData.kieli = req.session.language;
         oh.ObjectHandlerUser(userData, req.session.language, function (result: any) {
             res.status(200).json(
@@ -1457,18 +1455,35 @@ class ApiQueries {
     }
 
     public logout(req: Request, res: Response, next: NextFunction) {
-        console.log(req.session);
         req.session.destroy(err => {
             if (err) {
                 console.log(err);
                 return next(err);
             }
-            console.log(req.session);
             res.clearCookie("connect.sid", {path: "/"}).status(200).send("Logout successful and cookie deleted.");
             // res.status(200).send("Logout successful");
         });
     }
 
+    public async dbHealthCheck(req: Request, res: Response, next: NextFunction) {
+
+        const testQuery = "SELECT 1;";
+
+        try {
+            const response = await connection.db.one(testQuery);
+            console.log(response);
+            if (response) {
+                return res.status(200).send("DB connection OK!");
+            } else {
+                return res.status(503).send("Database seems to be up but no data is returned.");
+            }
+        } catch (e) {
+            console.log(e);
+            return res.status(503).send("ERROR!");
+        }
+
+    }
 }
+
 
 export const queries = new ApiQueries();

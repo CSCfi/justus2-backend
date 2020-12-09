@@ -7,7 +7,6 @@ const utf8 = require("utf8");
 
 const getUserData = async function (headers: any) {
 
-
     if (!headers["shib-group"]) {
         return false;
     }
@@ -38,7 +37,8 @@ const getUserData = async function (headers: any) {
         let domainMapped = false;
 
         Object.keys(domainMapping).forEach(function (val, key) {
-            if (domainMapping[key].domain === domain) {
+
+            if (domainMapping[key].domain.includes(domain)) {
                 userData.domain = domain;
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
@@ -59,25 +59,6 @@ const getUserData = async function (headers: any) {
         } else {
             return userData;
         }
-};
-
-
-const getOrganisationId = function(params: any) {
-
-    const domain =  parseDomainFromHeadersData(params);
-    let organisationCode = "";
-
-    if (!domain) {
-        return false;
-    }
-
-    Object.keys(domainMapping).forEach(function (val, key) {
-        if (domainMapping[key].domain === domain) {
-            organisationCode = domainMapping[key].code;
-        }
-    });
-
-    return organisationCode;
 };
 
 
@@ -173,7 +154,6 @@ async function isAdmin(user: any) {
 
 
 module.exports = {
-    getOrganisationId: getOrganisationId,
     getUserData: getUserData,
     getRole: getRole,
     parseDomainFromHeadersData: parseDomainFromHeadersData,

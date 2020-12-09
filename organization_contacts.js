@@ -3,7 +3,7 @@
 
 const contactList = [
     {
-        "domain": "@csc.fi",
+        "domain": ["@csc.fi", "@digia.com"],
         "code": "00000",
         "email": "notvalid@csc.fi",
 		"theseusData": {
@@ -12,16 +12,8 @@ const contactList = [
 		}
     },
     {
-        "domain": "@digia.com",
-        "code": "00000",
-        "email": "notvalid@digia.com",
-		"theseusData": {
-			"theseusCode": "00000"	
-		}
-    },
-    {
         // Arcada - Nylands svenska yrkeshögskola
-        "domain": "@arcada.fi",
+        "domain": ["@arcada.fi"],
         "code": "02535",
         "email": "",
 		"theseusData": {
@@ -31,7 +23,7 @@ const contactList = [
     },
     {
         // Centria-ammattikorkeakoulu
-        "domain": "@centria.fi",
+        "domain": ["@centria.fi"],
         "code": "02536",
         "email": "",
 		"theseusData": {
@@ -41,7 +33,7 @@ const contactList = [
     },
     {
         // Diakonia-ammattikorkeakoulu
-        "domain": "@diak.fi",
+        "domain": ["@diak.fi"],
         "code": "02623",
         "email": "",
 		"theseusData": {
@@ -51,7 +43,7 @@ const contactList = [
     },
     {
         // Haaga-Helia ammattikorkeakoulu
-        "domain": "@haaga-helia.fi",
+        "domain": ["@haaga-helia.fi"],
         "code": "10056",
         "email": "",
 		"theseusData": {
@@ -61,7 +53,7 @@ const contactList = [
     },
     {
         // Humanistinen ammattikorkeakoulu
-        "domain": "@humak.fi",
+        "domain": ["@humak.fi"],
         "code": "02631",
         "email": "",
 		"theseusData": {
@@ -71,7 +63,7 @@ const contactList = [
     },
     {
         // Hämeen ammattikorkeakoulu
-        "domain": "@hamk.fi",
+        "domain": ["@hamk.fi"],
         "code": "02467",
         "email": "",
 		"theseusData": {
@@ -81,7 +73,7 @@ const contactList = [
     },
     {
         // Jyväskylän ammattikorkeakoulu
-        "domain": "@jamk.fi",
+        "domain": ["@jamk.fi"],
         "code": "02504",
         "email": "",
 		"theseusData": {
@@ -91,7 +83,7 @@ const contactList = [
     },
     {
         // Kajaanin ammattikorkeakoulu
-        "domain": "@kamk.fi",
+        "domain": ["@kamk.fi"],
         "code": "02473",
         "email": "",
 		"theseusData": {
@@ -101,7 +93,7 @@ const contactList = [
     },
     {
         // Karelia-ammattikorkeakoulu 
-        "domain": "@karelia.fi",
+        "domain": ["@karelia.fi"],
         "code": "02469",
         "email": "",
 		"theseusData": {
@@ -110,29 +102,8 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // nb! xamk may have 3 domains (mahd. kyamk.fi ja mamk.fi)
         // Kaakkois-Suomen ammattikorkeakoulu 
-        "domain": "@xamk.fi",
-        "code": "10118",
-        "email": "",
-		"theseusData": {
-			"theseusCode": "fi=Kaakkois-Suomen ammattikorkeakoulu|sv=Kaakkois-Suomen ammattikorkeakoulu|en=South-Eastern Finland University of Applied Sciences|"	
-		},
-		"requiredFields": ["alayksikko"]
-    },
-    {
-        // Kaakkois-Suomen ammattikorkeakoulu
-        "domain": "@kyamk.fi",
-        "code": "10118",
-        "email": "",
-       	"theseusData": {
-			"theseusCode": "fi=Kaakkois-Suomen ammattikorkeakoulu|sv=Kaakkois-Suomen ammattikorkeakoulu|en=South-Eastern Finland University of Applied Sciences|"	
-		},
-		"requiredFields": ["alayksikko"]
-    },
-    {
-        // Kaakkois-Suomen ammattikorkeakoulu
-        "domain": "@mamk.fi",
+        "domain": ["@xamk.fi", "@kyamk.fi", "@mamk.fi"],
         "code": "10118",
         "email": "",
 		"theseusData": {
@@ -142,7 +113,7 @@ const contactList = [
     },
     {
         // Lahden ammattikorkeakoulu
-        "domain": "@lamk.fi",
+        "domain": ["@lamk.fi"],
         "code": "02470",
         "email": "",
 		"theseusData": {
@@ -152,7 +123,7 @@ const contactList = [
     },
     {
         // Laurea-ammattikorkeakoulu
-        "domain": "@laurea.fi",
+        "domain": ["@laurea.fi"],
         "code": "02629",
         "email": "",
 		"theseusData": {
@@ -162,7 +133,7 @@ const contactList = [
     },
     {
         // Metropolia ammattikorkeakoulu
-        "domain": "@metropolia.fi",
+        "domain": ["@metropolia.fi"],
         "code": "10065",
         "email": "",
 		"theseusData": {
@@ -172,7 +143,7 @@ const contactList = [
     },
     {
         // Satakunnan ammattikorkeakoulu
-        "domain": "@samk.fi",
+        "domain": ["@samk.fi"],
         "code": "02507",
         "email": "",
 		"theseusData": {
@@ -182,7 +153,7 @@ const contactList = [
     },
     {
         // Seinäjoen ammattikorkeakoulu
-        "domain": "@seamk.fi",
+        "domain": ["@seamk.fi"],
         "code": "02472",
         "email": "",
         "theseusData": {
@@ -192,7 +163,7 @@ const contactList = [
     },
     {
         // Tampereen ammattikorkeakoulu
-        "domain": "@tamk.fi",
+        "domain": ["@tamk.fi", "@tuni.fi"],
         "code": "02630",
         "email": "",
 		"theseusData": {
@@ -200,19 +171,10 @@ const contactList = [
 		},
 		"requiredFields": ["alayksikko"]
     },
-    {
-        // Tampereen ammattikorkeakoulu
-        "domain": "@tuni.fi",
-        "code": "02630",
-        "email": "",
-	    "theseusData": {
-			"theseusCode": "fi=Tampereen ammattikorkeakoulu|sv=Tampereen ammattikorkeakoulu|en=Tampere University of Applied Sciences|"	
-		},
-		"requiredFields": ["alayksikko"]
-    },
+    
     {
         // Yrkeshögskolan Novia
-        "domain": "@novia.fi",
+        "domain": ["@novia.fi"],
         "code": "10066",
         "email": "",
 		"theseusData": {
@@ -223,7 +185,7 @@ const contactList = [
     },
 	{
         // Savonia-ammattikorkeakoulu
-        "domain": "@savonia.fi",
+        "domain": ["@savonia.fi"],
         "code": "02537",
         "email": "",
 		"theseusData": {
@@ -233,7 +195,7 @@ const contactList = [
     },
     {
         // Turun ammattikorkeakoulu
-        "domain": "@turkuamk.fi",
+        "domain": ["@turkuamk.fi"],
         "code": "02509",
         "email": "",
 		"theseusData": {
@@ -243,7 +205,7 @@ const contactList = [
     },
     {
         // Oulun ammattikorkeakoulu
-        "domain": "@oamk.fi",
+        "domain": ["@oamk.fi"],
         "code": "02471",
         "email": "",
 		"theseusData": {
@@ -253,16 +215,7 @@ const contactList = [
     },
     {
         // Poliisiammattikorkeakoulu
-        "domain": "@polamk.fi",
-        "code": "02557",
-        "email": "",
-		"theseusData": {
-			"theseusCode": "fi=Poliisiammattikorkeakoulu|sv=Polisyrkeshögskolan|en=Police University College|"	
-		}
-    },
-    {
-        // Poliisiammattikorkeakoulu
-        "domain": "@poliisi.fi",
+        "domain": ["@polamk.fi", "@poliisi.fi"],
         "code": "02557",
         "email": "",
 		"theseusData": {
@@ -271,23 +224,10 @@ const contactList = [
     },
 	{
         // LAB ammattikorkeakoulu
-		// nb! lab has two domains
-        "domain": "@lab.fi",
+        "domain": ["@lab.fi", "@lut.fi"],
         "code": "10126",
         "email": "",
 		"theseusData": {
-			"theseusCollectionId": 1475,
-			"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
-		},
-		"requiredFields": ["alayksikko"]
-    },
-	{
-        // LAB ammattikorkeakoulu
-        "domain": "@lut.fi",
-        "code": "10126",
-        "email": "",
-		"theseusData": {
-			"theseusCollectionId": 1475,
 			"theseusCode": "fi=LAB-ammattikorkeakoulu|sv=LAB-ammattikorkeakoulu|en=LAB University of Applied Sciences|"	
 		},
 		"requiredFields": ["alayksikko"]
@@ -295,42 +235,25 @@ const contactList = [
     {
         // tutkimusorganisaatio
         // Ilmatieteen laitos
-        "domain": "@fmi.fi",
+        "domain": ["@fmi.fi"],
         "code": "4940015",
         "email": ""
     },
     {
-        // nb! mml has 2 domains
         // Maanmittauslaitos
-        "domain": "@nls.fi",
-        "code": "4020217",
-        "email": ""
-    },
-    {
-        // Maanmittauslaitos
-        "domain": "@maanmittauslaitos.fi",
+        "domain": ["@nls.fi", "@maanmittauslaitos.fi"],
         "code": "4020217",
         "email": ""
     },
     {
         // Maanpuolustuskorkeakoulu
-        "domain": "@mil.fi",
+        "domain": ["@mil.fi"],
         "code": "02358",
         "email": ""
     },
-
-
-	// Testikäytössä
-	{
-        // Taideyliopisto
-        "domain": "@uniarts.fi",
-        "code": "10103",
-        "email": "",
-		"requiredFields": ["alayksikko"]
-    },
     {
         // Luonnonvarakeskus
-        "domain": "@luke.fi",
+        "domain": ["@luke.fi"],
         "code": "4100010",
         "email": "",
 		// For Luke publications are transferred to Jukurit instead of Theseus
@@ -339,42 +262,55 @@ const contactList = [
 		},
 		"visibleFields": ["hrnumero", "projektinumero"],
     },
-    {
+	{
+        // 	Suomen ympäristökeskus
+        "domain": ["@syke.fi", "@ymparisto.fi"],
+        "code": "7020017",
+        "email": "",
+		"visibleFields": ["ensimmainenkirjoittaja"]
+    },
+	{
+        // 	Ruokavirasto
+        "domain": ["@ruokavirasto.fi"],
+        "code": "430001",
+        "email": ""
+    },
+	{
+        // 	Työterveyslaitos
+        "domain": ["@ttl.fi"],
+        "code": "02202669",
+        "email": ""
+    },
+	{
         // 	Geologian tutkimuskeskus
-        "domain": "@gtk.fi",
+        "domain": ["@gtk.fi"],
         "code": "5040011",
+        "email": ""
+    },
+	{
+        // 	Lapin ammattikorkeakoulu
+        "domain": ["@ulapland.fi", "@lapinamk.fi"],
+        "code": "10108",
+        "email": "",
+		"requiredFields": ["alayksikko"]
+    },
+
+	// Testikäytössä
+	{
+        // Taideyliopisto
+        "domain": ["@uniarts.fi"],
+        "code": "10103",
         "email": "",
 		"requiredFields": ["alayksikko"]
     },
     {
         // 	Terveyden ja hyvinvoinnin laitos
-        "domain": "@thl.fi",
+        "domain": ["@thl.fi"],
         "code": "5610017",
         "email": ""
     },
-	{
-        // 	Ruokavirasto
-        "domain": "@ruokavirasto.fi",
-        "code": "4080015",
-        "email": ""
-    },
-	{
-        // 	Työterveyslaitos
-        "domain": "@ttl.fi",
-        "code": "02202669",
-        "email": "",
-		"theseusData": {
-			"theseusCollectionId": "",
-			"theseusCode": ""
-		}
-    },
-	{
-        // 	Suomen ympäristökeskus
-        "domain": "@syke.fi",
-        "code": "7020017",
-        "email": "",
-		"visibleFields": ["ensimmainenkirjoittaja"]
-    }
+
+	
 ];
 
 module.exports = {
