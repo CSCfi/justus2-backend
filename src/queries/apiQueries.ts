@@ -119,7 +119,6 @@ async function getJulkaisutmin(req: Request, res: Response, next: NextFunction) 
 
     USER_DATA = req.session.userData;
     // USER_DATA = await authService.getUserData(req.headers);
-    console.log(req.session.userData);
 
     if (!USER_DATA) {
         return res.status(403).send("Permission denied");
@@ -860,7 +859,6 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 async function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
-    console.log(req.session.userData);
 
     const isAdmin = await authService.isAdmin(USER_DATA);
     const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
@@ -1055,8 +1053,6 @@ async function insertOrganisaatiotekijaAndAlayksikko(obj: any, jid: any, headers
     const alayksikkoColumns = new pgp.helpers.ColumnSet(["organisaatiotekijaid", "alayksikko"], {table: "alayksikko"});
     const saveAlayksikko = pgp.helpers.insert(alayksikkoObj, alayksikkoColumns) + " RETURNING id";
 
-    console.log(saveAlayksikko);
-
     await db.any(saveAlayksikko);
     await auditLog.postAuditData(headers, "POST", "alayksikko", jid, alayksikkoObj);
 
@@ -1122,15 +1118,12 @@ async function updateArchiveTable(data: any, headers: any, id: any) {
 }
 
 function logout(req: Request, res: Response, next: NextFunction) {
-    console.log(req.session);
     req.session.destroy(err => {
         if (err) {
             console.log(err);
             return next(err);
         }
-        console.log(req.session);
         res.clearCookie("connect.sid", { path: "/" }).status(200).send("Logout successful and cookie deleted.");
-        // res.status(200).send("Logout successful");
     });
 }
 

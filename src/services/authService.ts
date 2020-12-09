@@ -7,8 +7,6 @@ const utf8 = require("utf8");
 
 const getUserData = function (headers: any) {
 
-    console.log("in get user data");
-
     if (!headers["shib-group"]) {
         return false;
     }
