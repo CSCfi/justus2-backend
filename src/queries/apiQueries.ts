@@ -692,11 +692,12 @@ function impersonateUser(req: Request, res: Response) {
     req.session.userData.rooli = req.body.role;
 
     Object.keys(domainMapping).forEach(function (val, key) {
-        if (domainMapping[key].domain.includes(organizationCode)) {
+        if (domainMapping[key].code === organizationCode) {
             req.session.userData.email = domainMapping[key].email;
             req.session.userData.seloste = domainMapping[key].seloste;
         }
     });
+    console.log(req.session.userData);
 
     oh.ObjectHandlerUser(req.session.userData, req.session.language, function(result: any) {
         res.status(200).json(
