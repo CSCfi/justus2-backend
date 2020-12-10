@@ -205,7 +205,7 @@ const contactList = [
     },
     {
         // Oulun ammattikorkeakoulu
-        "domain": ["@oamk.fi"],
+        "domain": ["@oamk.fi", "@oulu.fi"],
         "code": "02471",
         "email": "",
 		"theseusData": {
