@@ -299,6 +299,9 @@ const contactList = [
         "domain": ["@vamk.fi", "@tritonia.fi"],
         "code": "02627",
         "email": "",
+		"theseusData": {
+			"theseusCode": "fi=Vaasan ammattikorkeakoulu|sv=Vaasan ammattikorkeakoulu|en=Vaasa University of Applied Sciences|"
+		},
 		"requiredFields": ["alayksikko"]
     },
 

@@ -4,6 +4,9 @@ const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
 const sq = require("./../queries/subQueries");
 
+const organisationConfig = require("./../organization_config");
+const domainMapping = organisationConfig.domainMappings;
+
 // Database connection from db.ts
 const connection = require("./../db");
 const pgp = connection.pgp;
@@ -50,6 +53,7 @@ function getUser(req: Request, res: Response, next: NextFunction) {
         req.session["userData"].domain = userData.domain;
         req.session["userData"].organisaatio = userData.organisaatio;
         req.session["userData"].email = userData.email;
+        req.session["userData"].seloste = userData.seloste;
         req.session["userData"].rooli = userData.rooli;
         req.session["userData"].nimi = userData.nimi;
         req.session["userData"].owner = userData.owner;
@@ -683,8 +687,16 @@ function impersonateUser(req: Request, res: Response) {
         return res.status(403).send("Permission denied");
     }
 
+    const organizationCode = req.body.organizationId;
     req.session.userData.organisaatio = req.body.organizationId;
     req.session.userData.rooli = req.body.role;
+
+    Object.keys(domainMapping).forEach(function (val, key) {
+        if (domainMapping[key].domain.includes(organizationCode)) {
+            req.session.userData.email = domainMapping[key].email;
+            req.session.userData.seloste = domainMapping[key].seloste;
+        }
+    });
 
     oh.ObjectHandlerUser(req.session.userData, req.session.language, function(result: any) {
         res.status(200).json(
