@@ -112,16 +112,6 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Lahden ammattikorkeakoulu
-        "domain": ["@lamk.fi"],
-        "code": "02470",
-        "email": "",
-		"theseusData": {
-			"theseusCode": "fi=Lahden ammattikorkeakoulu|sv=Lahden ammattikorkeakoulu|en=Lahti University of Applied Sciences|"	
-		},
-		"requiredFields": ["alayksikko"]
-    },
-    {
         // Laurea-ammattikorkeakoulu
         "domain": ["@laurea.fi"],
         "code": "02629",
