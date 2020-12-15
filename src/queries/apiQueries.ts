@@ -4,6 +4,9 @@ const kp = require("./../koodistopalvelu");
 const oh = require("./../objecthandlers");
 const sq = require("./../queries/subQueries");
 
+const organisationConfig = require("./../organization_config");
+const domainMapping = organisationConfig.domainMappings;
+
 // Database connection from db.ts
 const connection = require("./../db");
 const pgp = connection.pgp;
@@ -58,6 +61,7 @@ class ApiQueries {
             req.session["userData"].domain = userData.domain;
             req.session["userData"].organisaatio = userData.organisaatio;
             req.session["userData"].email = userData.email;
+            req.session["userData"].seloste = userData.seloste;
             req.session["userData"].rooli = userData.rooli;
             req.session["userData"].nimi = userData.nimi;
             req.session["userData"].owner = userData.owner;
@@ -713,10 +717,19 @@ class ApiQueries {
             return res.status(403).send("Permission denied");
         }
 
-        req.session.userData.organisaatio = req.body.organizationId;
+        const organizationCode = req.body.organizationId;
+        req.session.userData.organisaatio = organizationCode;
         req.session.userData.rooli = req.body.role;
 
-        oh.ObjectHandlerUser(req.session.userData, req.session.language, function (result: any) {
+        Object.keys(domainMapping).forEach(function (val, key) {
+            if (domainMapping[key].code === organizationCode) {
+                req.session.userData.email = domainMapping[key].email;
+                req.session.userData.seloste = domainMapping[key].seloste;
+            }
+        });
+        console.log(req.session.userData);
+
+        oh.ObjectHandlerUser(req.session.userData, req.session.language, function(result: any) {
             res.status(200).json(
                 result
             );
@@ -728,7 +741,7 @@ class ApiQueries {
 
         USER_DATA = req.session.userData;
         // USER_DATA = await authService.getUserData(req.headers);
-        console.log(USER_DATA);
+
         const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
 
         if (hasAccessToPublication) {
@@ -939,9 +952,6 @@ class ApiQueries {
                 obj.push({"julkaisuid": jid, [identifier]: julkaisu[identifier][i]});
             }
         }
-
-        console.log("in insert issn");
-        console.log(obj);
 
         const table = "julkaisu_" + identifier;
         const columns = new pgp.helpers.ColumnSet(["julkaisuid", identifier], {table: table});

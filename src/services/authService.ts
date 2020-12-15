@@ -22,6 +22,7 @@ const getUserData = async function (headers: any) {
             "domain": "",
             "organisaatio": "",
             "email": "",
+            "seloste": "",
             "rooli": "",
             "nimi": name,
             "uid": headers["shib-uid"],
@@ -42,6 +43,7 @@ const getUserData = async function (headers: any) {
                 userData.domain = domain;
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
+                userData.seloste = domainMapping[key].seloste;
                 userData.rooli = role;
                 domainMapped = true;
             } else {

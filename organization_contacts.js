@@ -112,16 +112,6 @@ const contactList = [
 		"requiredFields": ["alayksikko"]
     },
     {
-        // Lahden ammattikorkeakoulu
-        "domain": ["@lamk.fi"],
-        "code": "02470",
-        "email": "",
-		"theseusData": {
-			"theseusCode": "fi=Lahden ammattikorkeakoulu|sv=Lahden ammattikorkeakoulu|en=Lahti University of Applied Sciences|"	
-		},
-		"requiredFields": ["alayksikko"]
-    },
-    {
         // Laurea-ammattikorkeakoulu
         "domain": ["@laurea.fi"],
         "code": "02629",
@@ -205,7 +195,7 @@ const contactList = [
     },
     {
         // Oulun ammattikorkeakoulu
-        "domain": ["@oamk.fi"],
+        "domain": ["@oamk.fi", "@oulu.fi"],
         "code": "02471",
         "email": "",
 		"theseusData": {
@@ -292,6 +282,16 @@ const contactList = [
         "domain": ["@ulapland.fi", "@lapinamk.fi"],
         "code": "10108",
         "email": "",
+		"requiredFields": ["alayksikko"]
+    },
+	{
+        // 	Vaasan ammattikorkeakoulu
+        "domain": ["@vamk.fi", "@tritonia.fi"],
+        "code": "02627",
+        "email": "",
+		"theseusData": {
+			"theseusCode": "fi=Vaasan ammattikorkeakoulu|sv=Vaasan ammattikorkeakoulu|en=Vaasa University of Applied Sciences|"
+		},
 		"requiredFields": ["alayksikko"]
     },
 
