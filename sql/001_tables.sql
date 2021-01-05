@@ -35,7 +35,7 @@ CREATE TABLE julkaisu
   rinnakkaistallennetunversionverkkoosoite text,
   jufotunnus text,
   jufoluokitus text,
-  julkaisumaksu: decimal,
+  julkaisumaksu: numeric,
   julkaisumaksuvuosi: integer,
   ensimmainenkirjoittaja: text,
   julkaisuntila character varying(5),
