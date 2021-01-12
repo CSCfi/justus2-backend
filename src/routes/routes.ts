@@ -74,7 +74,7 @@ router.delete("/persons/csv-remove", fu.deleteCsvFile);
 router.post("/person/save/", api.postPerson);
 
 // Database connection test
-router.get("/db-health", api.dbHealthCheck);
+router.get("/public/db-health", api.dbHealthCheck);
 
 export = router;
 
