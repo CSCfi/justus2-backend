@@ -11,7 +11,6 @@ const iconv = require("iconv-lite");
 const personQueries = require("./../queries/personTableQueries");
 import { PersonObject } from "../models/Person";
 
-
     async function readCSV (filePath: any, organization: string, fetchOnlyIds: boolean) {
 
         const results: any = [];
@@ -22,22 +21,19 @@ import { PersonObject } from "../models/Person";
                 .pipe(iconv.decodeStream("latin1"))
                 .pipe(csv(
                     {
-                        headers: [
-                            "tunniste",
-                            "etunimi",
-                            "sukunimi",
-                            "email",
-                            "orcid",
-                            "alayksikko1",
-                            "alayksikko2",
-                            "alayksikko3"
-                        ],
                         separator: ";",
                         strict: true,
-                        skipLines: 1
-
                     }
                 ))
+                .on("headers", (headers: any) => {
+                    console.log(headers);
+                    const expectedHeaders = ["tunniste", "etunimi", "sukunimi", "email", "orcid", "alayksikko1", "alayksikko2", "alayksikko3"];
+
+                    if (!arrayEquals(expectedHeaders, headers)) {
+                        reject ("CSV header or content column count does not match expected. Please check your CSV file.");
+                    }
+
+                })
                 .on("data", (row: PersonObject) => {
                     results.push(row);
                     ids.push(row.tunniste);
@@ -47,27 +43,27 @@ import { PersonObject } from "../models/Person";
                         getRowsToBeDeleted(ids, organization, false).then((data: any) => {
                             resolve(data);
                         }).catch((err) => {
-                            reject(err);
+                            reject(err.message);
                         });
 
                     } else {
                         processCSVData(results, organization, ids).then((err: Error) => {
                             if (err) {
-                                reject(err);
+                                reject(err.message);
                             } else {
                                 resolve();
                                 console.log("Data inserted to database!");
                             }
                         }).catch((err) => {
                             console.log(err);
-                            reject(err);
+                            reject(err.message);
                         });
                     }
 
                 })
                 .on("error", (err: Error) => {
                     console.log(err.message);
-                    reject(err);
+                    reject(err.message);
                 });
 
         });
@@ -236,6 +232,13 @@ async function getRowsToBeDeleted(tunnisteList: any, organization: string, onlyI
     }
     return await connection.db.any(query, params);
 
+}
+
+function arrayEquals(a: any, b: any) {
+    return Array.isArray(a) &&
+        Array.isArray(b) &&
+        a.length === b.length &&
+        a.every((val, index) => val === b[index]);
 }
 
 async function filterEmptyValues(csv: any, field: string) {

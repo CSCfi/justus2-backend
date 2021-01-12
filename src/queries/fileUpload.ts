@@ -30,6 +30,9 @@ async function countRowsToBeDeleted(req: Request, res: Response) {
 
     const user = req.session.userData;
     // const user = await authService.getUserData(req.headers);
+    if (!user) {
+        return res.status(401).send("Unauthorized");
+    }
 
     const organization = user.organisaatio;
     const isAdmin = await authService.isAdmin(user);
@@ -75,8 +78,11 @@ async function countRowsToBeDeleted(req: Request, res: Response) {
                         res.status(200).json(data);
                     }).catch(function (err: any) {
                         console.log(err);
-                        fs.unlinkSync(file.path);
-                        res.status(500).send(err.message);
+                        res.status(500).send(err);
+                        setTimeout(function () {
+                            fs.unlinkSync(file.path);
+                        }, 2000);
+
                     });
                 } catch (e) {
                     console.log(e.message);
@@ -99,6 +105,9 @@ async function savePersons(req: Request, res: Response) {
 
     const user = req.session.userData;
     // const user = await authService.getUserData(req.headers);
+    if (!user) {
+        return res.status(401).send("Unauthorized");
+    }
 
     const organization = user.organisaatio;
     const isAdmin = await authService.isAdmin(user);
@@ -125,6 +134,9 @@ async function deleteCsvFile(req: Request, res: Response) {
 
     const user = req.session.userData;
     // const user = await authService.getUserData(req.headers);
+    if (!user) {
+        return res.status(401).send("Unauthorized");
+    }
 
     const organization = user.organisaatio;
 
