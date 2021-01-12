@@ -28,49 +28,84 @@ const multer  = require("multer");
 
 async function countRowsToBeDeleted(req: Request, res: Response) {
 
-    // TODO: Add try catch block to all functions
-
-    const organization = req.session.userData.organisaatio;
-
+    const user = req.session.userData;
     // const user = await authService.getUserData(req.headers);
-    // const organization = user.organisaatio;
 
-    const storage = multer.diskStorage(
-        {
-            destination: csvUploadFolder,
-            filename: function ( req: any, file: any, cb: any ) {
-                cb(undefined, organization);
-            }
+    const organization = user.organisaatio;
+    const isAdmin = await authService.isAdmin(user);
+
+    if (organization && isAdmin) {
+        try {
+            const storage = multer.diskStorage(
+                {
+                    destination: csvUploadFolder,
+                    filename: function (req: any, file: any, cb: any) {
+                        cb(undefined, organization);
+                    }
+                }
+            );
+
+            const fileFilter = (req: any, file: any, cb: any) => {
+                const fileExt = path.extname(file.originalname).toLowerCase();
+                if (fileExt === ".csv") {
+                    cb(undefined, true);
+                } else {
+                    cb(new Error("Invalid file type"), false);
+                }
+            };
+
+            const csvUpload = multer({
+                storage: storage,
+                fileFilter: fileFilter
+            });
+
+            csvUpload.single("file")(req, res, function(err: Error) {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).send(err.message);
+                }
+                else if (!(<any>req).file) {
+                    return res.status(400).send("File is missing");
+                }
+
+                try {
+                    const file = (<any>req).file;
+                    const promise = csvParser.readCSV(file.path, organization, true);
+                    promise.then((data: any) => {
+                        res.status(200).json(data);
+                    }).catch(function (err: any) {
+                        console.log(err);
+                        fs.unlinkSync(file.path);
+                        res.status(500).send(err.message);
+                    });
+                } catch (e) {
+                    console.log(e.message);
+                    return res.status(500).send(e.message);
+                }
+
+            });
+        } catch (e) {
+            return res.status(500).send(e.message);
         }
-    );
 
-    const csvUpload = multer({  storage: storage } ).single("file");
-
-    csvUpload(req, res, async function () {
-
-        const file = (<any>req).file;
-        const promise = csvParser.readCSV(file.path, organization, true);
-
-        promise.then((data: any) => {
-            res.status(200).json( data );
-        }).catch(function (err: any) {
-            console.log(err);
-            res.status(500).send(err.message);
-        });
-
-    });
+    } else {
+        return res.status(403).send("Permission denied");
+    }
 }
+
+
 
 async function savePersons(req: Request, res: Response) {
 
-    const organization = req.session.userData.organisaatio;
-    
+    const user = req.session.userData;
     // const user = await authService.getUserData(req.headers);
-    // const organization = user.organisaatio;
 
-    const filePath = csvUploadFolder + organization;
+    const organization = user.organisaatio;
+    const isAdmin = await authService.isAdmin(user);
 
-    const promise = csvParser.readCSV(filePath, organization, false);
+    if (organization && isAdmin) {
+        const filePath = csvUploadFolder + organization;
+        const promise = csvParser.readCSV(filePath, organization, false);
 
         promise.then(() => {
             fs.unlinkSync(filePath);
@@ -80,28 +115,37 @@ async function savePersons(req: Request, res: Response) {
             fs.unlinkSync(filePath);
             res.status(500).send(err.message);
         });
+    } else {
+        return res.status(403).send("Permission denied");
+    }
 
 }
 
 async function deleteCsvFile(req: Request, res: Response) {
 
-    const organization = req.session.userData.organisaatio;
-    
+    const user = req.session.userData;
     // const user = await authService.getUserData(req.headers);
-    // const organization = user.organisaatio;
 
-    const filePath = csvUploadFolder + organization;
+    const organization = user.organisaatio;
 
-    fs.unlink(filePath, (err: Error) => {
-        if (err) {
-            console.log(err.message);
-            res.status(500).send(err.message);
-        } else {
-            console.log("CSV file removed successfully");
-            res.sendStatus(200);
-        }
+    if (organization) {
+        const filePath = csvUploadFolder + organization;
 
-    });
+        fs.unlink(filePath, (err: Error) => {
+            if (err) {
+                console.log(err.message);
+                res.status(500).send(err.message);
+            } else {
+                console.log("CSV file removed successfully");
+                res.sendStatus(200);
+            }
+
+        });
+    } else {
+        return res.status(403).send("Permission denied");
+    }
+
+
 
 }
 
