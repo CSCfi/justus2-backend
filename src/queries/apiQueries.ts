@@ -1179,7 +1179,6 @@ class ApiQueries {
         if (hasOrganisation && isAdmin) {
 
             const organization = USER_DATA.organisaatio;
-            // const organization: string = "02536";
 
             try {
 
