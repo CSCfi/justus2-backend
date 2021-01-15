@@ -23,6 +23,12 @@ import { theseus as ts } from "./../services/TheseusSender";
 // Import audit log class
 import { auditLog as auditLog } from "./../services/auditLogService";
 
+import { validate as validate } from "../services/ValidatorService";
+
+import { JulkaisuObject } from "../models/Julkaisu";
+import { Justus } from "../models/Justus";
+import { FileData } from "../models/FileData";
+
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
@@ -534,8 +540,8 @@ async function getAllPublicationDataById(req: Request, res: Response, next: Next
         const handleExists = await db.oneOrNone(handleQuery, params);
         const publicationIsInQueue = await db.oneOrNone(publicationQueueQuery, params);
 
-        const data: any = {};
-        let filedata: any = {};
+        const data = <Justus>{};
+        let filedata = <FileData>{};
 
         try {
             data["julkaisu"] = await db.one(query, params);
@@ -592,23 +598,25 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
 
         try {
 
-            const julkaisuObject = req.body.julkaisu;
-            const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+            const julkaisuObject: JulkaisuObject = req.body.julkaisu;
+            const orgatekijaArray = req.body.organisaatiotekija;
+            const tieteenalaArray = req.body.tieteenala;
+            const taiteenalaArray = req.body.taiteenala;
+            const avainsanaArray = req.body.avainsanat;
+            const tyyppikategoriaArray = req.body.taidealantyyppikategoria;
+            const lisatieto = req.body.lisatieto;
 
-            // Validate julkaisumaksu field first
-            if (julkaisuObject.julkaisumaksu) {
-                julkaisuObject["julkaisumaksu"] = await validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
-            } else {
-                julkaisuObject["julkaisumaksu"] = undefined;
-                julkaisuObject["julkaisumaksuvuosi"] = undefined;
-            }
-
-            if (!julkaisuObject.ensimmainenkirjoittaja) {
-                julkaisuObject["ensimmainenkirjoittaja"] = undefined;
-            }
+            const julkaisuValidated: JulkaisuObject =  await validate.julkaisu(julkaisuObject);
+            await validate.organisaatiotekija(orgatekijaArray);
+            await validate.tieteenala(tieteenalaArray);
+            await validate.taiteenala(taiteenalaArray);
+            await validate.avainsanat(avainsanaArray);
+            await validate.tyyppikategoria(tyyppikategoriaArray);
+            await validate.lisatieto(lisatieto);
 
             // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
-            const saveJulkaisu = pgp.helpers.insert(julkaisuObject, julkaisuColumns) + " RETURNING id";
+            const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+            const saveJulkaisu = pgp.helpers.insert(julkaisuValidated, julkaisuColumns) + " RETURNING id";
             const julkaisuId = await db.one(saveJulkaisu);
 
             const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
@@ -626,11 +634,11 @@ async function postJulkaisu(req: Request, res: Response, next: NextFunction) {
             await insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "issn");
             await insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "isbn");
             await insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
-            await insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
-            await insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
-            await insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
-            await insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
-            await insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
+            await insertTieteenala(tieteenalaArray, julkaisuId.id, req.headers);
+            await insertTaiteenala(taiteenalaArray, julkaisuId.id, req.headers);
+            await insertAvainsanat(avainsanaArray, julkaisuId.id, req.headers);
+            await insertTyyppikategoria(tyyppikategoriaArray, julkaisuId.id, req.headers);
+            await insertLisatieto(lisatieto, julkaisuId.id, req.headers);
             await insertProjektinumero(julkaisuObject, julkaisuId.id, req.headers);
 
             await db.any("COMMIT");
