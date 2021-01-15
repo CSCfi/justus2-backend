@@ -18,6 +18,8 @@ const callerId = process.env.KOODISTO_CALLER_ID;
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
+import { JulkaisuObject } from "./models/Julkaisu";
+import { JulkaisuObjectMin } from "./models/Julkaisu";
 const getRedis = (rediskey: string, success: any, error: any) => {
     client.mget(rediskey, function (err: Error, reply: any) {
         if (!err) {
@@ -638,10 +640,13 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
     return obj.map((x: any) => {
 
         const data: any = {};
-        let julkaisu: any = {};
+        let julkaisuData;
+
+        let julkaisu = <JulkaisuObject>{};
+        let julkaisuMin = <JulkaisuObjectMin>{};
 
         if (!allData) {
-            julkaisu = {
+            julkaisuMin = {
                 id: x.id,
                 organisaatiotunnus: x.organisaatiotunnus,
                 julkaisuvuosi: x.julkaisuvuosi,
@@ -651,6 +656,7 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
                 username: x.username,
                 modified: x.modified
             };
+            julkaisuData = julkaisuMin;
         } else {
             julkaisu = {
                 id: x.id,
@@ -686,13 +692,16 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
                 username: x.username,
                 modified: x.modified,
                 lisatieto: x.lisatieto,
+                julkaisumaksu: x.julkaisumaksu,
+                julkaisumaksuvuosi: x.julkaisumaksuvuosi,
                 ensimmainenkirjoittaja: x.ensimmainenkirjoittaja
             };
+            julkaisuData = julkaisu;
         }
 
         if (x.handle && x.aid) {
             const isJukuri = isJukuriPublication(x.organisaatiotunnus);
-            data["julkaisu"] = julkaisu;
+            data["julkaisu"] = julkaisuData;
             if (isJukuri) {
                 data["filedata"] = { "handle":  jukuriHandleLink +  x.handle };
             } else {
@@ -700,11 +709,11 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
             }
             return data;
         } else if (x.aid) {
-            data["julkaisu"] = julkaisu;
+            data["julkaisu"] = julkaisuData;
             data["filedata"] = { "handle":  "" };
             return data;
         } else {
-            data["julkaisu"] = julkaisu;
+            data["julkaisu"] = julkaisuData;
             return data;
         }
 
