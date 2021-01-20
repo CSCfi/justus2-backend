@@ -18,6 +18,9 @@ const callerId = process.env.KOODISTO_CALLER_ID;
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
+import { Keyword, KeywordList } from "./models/Keyword";
+import { JufoKanava, JufoList } from "./models/Jufo";
+
 const getRedis = (rediskey: string, success: any, error: any) => {
     client.mget(rediskey, function (err: Error, reply: any) {
         if (!err) {
@@ -332,41 +335,22 @@ function settoRedis(rediskey: string, obj: object[]) {
     }
 }
 
-// Objecthandler for Avainsanat from FINTO
-function ObjectHandlerAvainsanat(obj: any): object[] {
+function ObjectHandlerAvainsanat(obj: Array<Keyword>): Array<KeywordList> {
     const avainsanat: object [] = [];
-        if (obj instanceof Array) {
-            obj.forEach((e: any) => {
-                e[0].results.forEach((x: any ) => {
-                    const vals = {
-                        localname: x.localname,
-                        prefLabel: x.prefLabel,
-                        altLabel: x.altLabel,
-                    };
-                    avainsanat.push(vals);
-                });
-            });
-            return Object.values( avainsanat.reduce( ( acc: any, cur: any ) => Object.assign( acc, { [ cur.prefLabel ]: cur }), {} ));
-        }
-        else {
-            return obj.results.map((e: any) => {
-                return {
-                    localname: e.localname,
-                    prefLabel: e.prefLabel,
-                    altLabel: e.altLabel,
-                };
-             });
-        }
+    obj.forEach((e: Keyword) => {
+        const vals = {
+            localname: e.localname,
+            prefLabel: e.prefLabel,
+            altLabel: e.altLabel,
+        };
+        avainsanat.push(vals);
+        });
+    return Object.values( avainsanat.reduce( ( acc: any, cur: any ) => Object.assign( acc, { [ cur.prefLabel ]: cur }), {} ));
     }
 
-// Objecthandler for Julkaisusarjat from JUFO
-function ObjectHandlerJulkaisusarjat(obj: any, query: any): object[] {
-
-    const julkaisusarjat: object [] = [
-    ];
-
-    if (obj instanceof Array) {
-        obj.forEach((e: any)  => {
+function ObjectHandlerJulkaisusarjat(obj: Array<JufoList>, query: any): JufoList[] {
+    const julkaisusarjat: Array<JufoList> = [];
+        obj.forEach((e: JufoList)  => {
             const values = {
                 Jufo_ID: e.Jufo_ID,
                 Name: e.Name,
@@ -376,128 +360,45 @@ function ObjectHandlerJulkaisusarjat(obj: any, query: any): object[] {
         });
 
         const tempArray: any = [];
-        julkaisusarjat.forEach((e: any) => {
+        julkaisusarjat.forEach((e: JufoList) => {
             if (query.toLowerCase() === e.Name.toLowerCase()) {
                 tempArray.push(e);
                 julkaisusarjat.splice(julkaisusarjat.indexOf(e), 1);
             }
         });
-
         for (let i = 0; i < tempArray.length; i++) {
             julkaisusarjat.unshift(tempArray[i]);
         }
         return julkaisusarjat.slice(0, 20);
-    }
-    else {
-        return obj;
-    }
-}
 
-// Objecthandler for Konferenssinnimet from FINTO
-function ObjectHandlerKustantajat(obj: any): object[] {
-    const Konferenssinnimet: object [] = [
-    ];
-    if (obj instanceof Array) {
-    obj.forEach((e: any)  => {
+}
+function ObjectHandlerJufoList(obj: Array<JufoList>): JufoList[] {
+    const list: Array<JufoList> = [];
+    obj.forEach((e: JufoList)  => {
         const values = {
             Jufo_ID: e.Jufo_ID,
             Name: e.Name,
             Type: e.Type,
         };
-        Konferenssinnimet.push(values);
+        list.push(values);
     });
-    return Konferenssinnimet;
-    }
-    else {
-        return obj;
-    }
+    return list;
 }
 
-// Objecthandler for Konferenssinnimet from FINTO
-function ObjectHandlerKonferenssinnimet(obj: any): object[] {
-    const Konferenssinnimet: object [] = [
-    ];
-    if (obj instanceof Array) {
-    obj.forEach((e: any)  => {
-        const values = {
-            Jufo_ID: e.Jufo_ID,
-            Name: e.Name,
-            Type: e.Type,
-        };
-        Konferenssinnimet.push(values);
-    });
-    return Konferenssinnimet;
-    }
-    else {
-        return obj;
-    }
-}
+function ObjectHandlerJufoID(jufoRaw: any): JufoKanava {
+    const jufoTiedot = <JufoKanava>{};
+    jufoTiedot.Jufo_ID = jufoRaw.Jufo_ID ;
+    jufoTiedot.Name = jufoRaw.Name;
+    jufoTiedot.Publisher = jufoRaw.Publisher;
+    jufoTiedot.ISSN1 = jufoRaw.ISSN1;
+    jufoTiedot.ISSN2 = jufoRaw.ISSN2;
+    jufoTiedot.Level = jufoRaw.Level;
+    return jufoTiedot;
 
-// Objecthandler for Konferenssinnimet from FINTO
-function ObjectHandlerJufoID(obj: any): object[] {
-    const jufotiedot: object [] = [
-    ];
-    if (obj instanceof Array) {
-    obj.forEach((e: any)  => {
-        const values = {
-            Jufo_2015: e.Jufo_2015,
-            Abbreviation: e.Abbreviation,
-            SJR_SJR: e.SJR_SJR,
-            Other_Title: e.Other_Title,
-            ModifiedAt: e.ModifiedAt,
-            Continues: e.Continues,
-            ISBN: e.ISBN,
-            Professional: e.Professional,
-            Denmark_Level: e.Denmark_Level,
-            Active_Binary: e.Active_Binary,
-            Field: e.Field,
-            SNIP: e.SNIP,
-            Name: e.Name,
-            Website: e.Website,
-            ISSN1: e.ISSN1,
-            ISSNL: e.ISSNL,
-            Grounds_Removal: e.Grounds_Removal,
-            Jufo_ID: e.Jufo_ID,
-            Year_End: e.Year_End,
-            Publisher: e.Publisher,
-            Scientific: e.Scientific,
-            Language: e.Language,
-            Jufo_2012: e.Jufo_2012,
-            Continued_by: e.Continued_by,
-            Jufo_2014: e.Jufo_2014,
-            Type: e.Type,
-            Title_Details: e.Title_Details,
-            Norway_Level: e.Norway_Level,
-            Sherpa_Romeo_Code: e.Sherpa_Romeo_Code,
-            Substitutive_Channel: e.Substitutive_Channel,
-            Year_Start: e.Year_Start,
-            DOAJ_Index: e.DOAJ_Index,
-            Fields: e.Fields,
-            Country: e.Country,
-            Jufo_history: e.Jufo_history,
-            CreatedAt: e.CreatedAt,
-            Active: e.Active,
-            IPP: e.IPP,
-            Level: e.Level,
-            Subfield: e.Subfield,
-            ISSN2: e.ISSN2,
-            Jufo_2013: e.Jufo_2013,
-
-        };
-        jufotiedot.push(values);
-    });
-    return jufotiedot;
-    }
-    else {
-        return obj;
-    }
 }
-// Objecthandler for Jufo ISSN
-function ObjectHandlerJufoISSN(obj: any): object[] {
-    const tiedotbyissn: object [] = [
-    ];
-    if (obj instanceof Array) {
-    obj.forEach((e: any)  => {
+function ObjectHandlerJufoISSN(obj: Array<JufoList>): JufoList[] {
+    const tiedotbyissn: Array<JufoList> = [];
+    obj.forEach((e: JufoList)  => {
         const values = {
             Jufo_ID: e.Jufo_ID,
             Name: e.Name,
@@ -506,20 +407,7 @@ function ObjectHandlerJufoISSN(obj: any): object[] {
         tiedotbyissn.push(values);
     });
     return tiedotbyissn;
-    }
-    else {
-        return obj;
-    }
-}
 
-// Nullchecker for julkaisutvirtaCR, used to check if authors exists
-function nullchecker(doesauthorexist: any) {
-    if (doesauthorexist == undefined) {
-        return "";
-    }
-    else {
-        return doesauthorexist.map((s: any) => s.given + " " + s.family);
-    }
 }
 
 function getrediscallback(key: string, callbacker: Function) {
@@ -712,7 +600,6 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
 }
 
     function  mapOrganisaatiotekijaAndAlayksikko(obj: any) {
-
         for (let i = 0; i < obj.length; i++) {
             if (typeof obj[i].alayksikko === "undefined") {
                 obj[i].alayksikko = [];
@@ -724,7 +611,6 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
             if (obj[i].tempalayksikko.length < 1) {
                 obj[i].alayksikko.push("");
             }
-
             delete obj[i].tempalayksikko;
         }
         return obj;
@@ -977,8 +863,7 @@ module.exports = {
     ObjectHandlerAlayksikot: ObjectHandlerAlayksikot,
     ObjectHandlerAvainsanat: ObjectHandlerAvainsanat,
     ObjectHandlerJulkaisusarjat: ObjectHandlerJulkaisusarjat,
-    ObjectHandlerKonferenssinnimet: ObjectHandlerKonferenssinnimet,
-    ObjectHandlerKustantajat: ObjectHandlerKustantajat,
+    ObjectHandlerJufoList: ObjectHandlerJufoList,
     ObjectHandlerJufoID: ObjectHandlerJufoID,
     ObjectHandlerJufoISSN: ObjectHandlerJufoISSN,
     ObjectHandlerJulkaisudata: ObjectHandlerJulkaisudata,

@@ -3,6 +3,7 @@ import { resolve } from "path";
 
 const schedule = require("node-schedule");
 const https = require("https");
+const axios = require("axios").default;
 
 // Redis client
 const redis = require("redis");
@@ -108,7 +109,23 @@ function HTTPGETcombiner (URL: String, objecthandler: Function, lang: any ) {
 
 
 // Only finto and jufo services use this function, so no caller-id is needed
+export async function httpBaseGet (URL: String, params?: object) {
+
+    let responseArray;
+    try {
+        const promise = await axios.get(URL, { params });
+        responseArray = promise.data;
+    } catch (e) {
+        console.log(e.message);
+        throw Error;
+    }
+    return responseArray;
+
+}
+
 export function HTTPGETshow (URL: String, res: Response, objecthandler: Function, secondURL?: String, queryParams?: String) {
+
+
     if (secondURL) {
         const urls = [URL, secondURL];
         const first: object []  = [

@@ -16,89 +16,123 @@ const oh = require("./../objecthandlers");
 const utf8 = require("utf8");
 
 import  * as kp  from "./../koodistopalvelu";
-function getAvainSanat(req: Request, res: Response, next: NextFunction) {
-    if (req.query.lang.toString().toLowerCase() === "fi" || req.query.lang.toString().toLowerCase() === "sv") {
-        const url: string = BASEURLFINTO + req.query.lang.toString().toLowerCase() + "&query=" + req.query.q + "*";
-        const secondurl: string = BASEURLFINTO + "en" + "&query=" + req.query.q + "*";
-        kp.HTTPGETshow(utf8.encode(url), res, oh.ObjectHandlerAvainsanat, utf8.encode(secondurl));
-    }
-    else {
-        const apiurl: string = BASEURLFINTO + req.query.lang.toString().toLowerCase() + "&query=" + req.query.q + "*";
-        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerAvainsanat);
-    }
-}
-function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = jufoSearchUrl + "tyyppi=1&nimi=" + req.query.q.toString();
-    console.log("This is the apiurl for julkaisusarja GET: " + apiurl);
+import { Keyword, KeywordList } from "../models/Keyword";
+import { JufoKanava, JufoList } from "../models/Jufo";
 
-    // The jufo rest api is kinda weird, if the query word is <5 or over 50
-    // it returns nothing, which breaks the code, hence the odd looking error handling
+async function getAvainSanat(req: Request, res: Response, next: NextFunction) {
 
-    if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerJulkaisusarjat, undefined, req.query.q.toString());
-    }
-    else {
-        res.send("");
-    }
-}
-function getKonferenssinimet(req: Request, res: Response, next: NextFunction) {
+    const lang = req.query.lang.toString().toLowerCase();
+    const queryString = req.query.q.toString() + "*";
+    let keywordArray = Array<Keyword>();
+    let keywordList = Array<KeywordList>();
 
-    const apiurl: string = jufoSearchUrl + "tyyppi=3&nimi=" + req.query.q;
-    console.log("This is the apiurl for konferenssinnimet GET: " + apiurl);
+    try {
+        const urlParams = {
+            "lang": "en",
+            "query": queryString
+        };
+        // always fetch keywords in english
+        const promiseEn = await kp.httpBaseGet(BASEURLFINTO, urlParams);
+        keywordArray = promiseEn.results;
 
-    // The jufo rest api is kinda weird, if the query word is <5 or over 50
-    // it returns nothing, which breaks the code, hence the odd looking error handling
-
-    if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerKonferenssinnimet);
-    }
-    else {
-        res.send("");
+        // if language is not english, fetch also session language results
+        if (lang !== "en") {
+            urlParams.lang = lang;
+            const promise = await kp.httpBaseGet(BASEURLFINTO, urlParams);
+            keywordArray = keywordArray.concat(promise.results);
+        }
+        if (keywordArray.length) {
+            keywordList = oh.ObjectHandlerAvainsanat(keywordArray);
+        }
+        res.status(200).send(keywordList);
+    } catch (e) {
+        console.log("Error in keyword search:");
+        console.log(e);
+        res.sendStatus(500);
     }
 }
-function getKustantajat(req: Request, res: Response, next: NextFunction) {
 
-    const apiurl: string = jufoSearchUrl + "tyyppi=2&nimi=" + req.query.q;
-    console.log("This is the apiurl for kustantajat GET: " + apiurl);
-
-    // The jufo rest api is kinda weird, if the query word is <5 or over 50
-    // it returns nothing, which breaks the code, hence the odd looking error handling
-
-    if ((req.query.q).length >= 5 && (req.query.q).length <= 50) {
-        kp.HTTPGETshow(utf8.encode(apiurl), res, oh.ObjectHandlerKustantajat);
+async function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
+    const queryString = req.query.q.toString();
+    let jufoData = Array<JufoList>();
+    const urlParams = {
+        "tyyppi": 1,
+        "nimi": queryString
+    };
+    try {
+        jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
+        const journalList: JufoList = oh.ObjectHandlerJulkaisusarjat(jufoData, queryString);
+        res.status(200).send(journalList);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
     }
-    else {
-        res.send("");
+
+}
+async function getKustantajat(req: Request, res: Response, next: NextFunction) {
+    const queryString = req.query.q.toString();
+    let jufoData = Array<JufoList>();
+    const urlParams = {
+        "tyyppi": 2,
+        "nimi": queryString
+    };
+    try {
+        jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
+        const publisherList: JufoList = oh.ObjectHandlerJufoList(jufoData, queryString);
+        res.status(200).send(publisherList);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
     }
 }
-function getJufo(req: Request, res: Response, next: NextFunction) {
 
-    const apiurl: string = jufoKanavaUrl + "/" + req.params.id;
-    console.log("This is the apiurl for jufo GET: " + apiurl);
-
-    // The jufo rest api is kinda weird, if the query word is <5 or over 50
-    // it returns nothing, which breaks the code, hence the odd looking error handling
-
-    if ((req.params.id).length > 0 && (req.params.id).length <= 9) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJufoID);
-    }
-    else {
-        res.send("");
+async function getKonferenssinimet(req: Request, res: Response, next: NextFunction) {
+    const queryString = req.query.q.toString();
+    let jufoData = Array<JufoList>();
+    const urlParams = {
+        "tyyppi": 3,
+        "nimi": queryString
+    };
+    try {
+        jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
+        const conferenceList: JufoList = oh.ObjectHandlerJufoList(jufoData, queryString);
+        res.status(200).send(conferenceList);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
     }
 }
-function getJufotISSN(req: Request, res: Response, next: NextFunction) {
-    const apiurl: string = jufoSearchUrl + "issn=" + req.query.issn;
-    console.log("This is the apiurl for jufo issn GET: " + apiurl);
 
-    // The jufo rest api is kinda weird, if the query word is <5 or over 50
-    // it returns nothing, which breaks the code, hence the odd looking error handling
+async function getJufo(req: Request, res: Response, next: NextFunction) {
 
-    if ((req.query.issn).length >= 5 && (req.query.issn).length <= 10) {
-        kp.HTTPGETshow(apiurl, res, oh.ObjectHandlerJufoISSN);
+    const url: string = jufoKanavaUrl + "/" + req.params.id;
+
+    try {
+        const jufoRaw = await kp.httpBaseGet(url);
+        // Jufo api returns always array though fetching data with id
+        const jufo: JufoKanava = oh.ObjectHandlerJufoID(jufoRaw[0]);
+        res.status(200).send(jufo);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
     }
-    else {
-        res.send("");
+
+}
+async function getJufotISSN(req: Request, res: Response, next: NextFunction) {
+    const issn: string = req.query.issn.toString();
+    let jufoData = Array<JufoList>();
+    const urlParams = {
+        "issn": issn
+    };
+    try {
+        jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
+        const journalList: JufoList = oh.ObjectHandlerJufoISSN(jufoData);
+        res.status(200).send(journalList);
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
     }
+
 }
 function getJulkaisutVirtaCrossrefLista(req: Request, res: Response, next: NextFunction) {
 
