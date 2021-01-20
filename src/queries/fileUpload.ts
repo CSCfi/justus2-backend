@@ -262,12 +262,12 @@ async function validate(fileName: any, filePath: any) {
                  return res.status(200).send("File removed successfully");
 
              } catch (err) {
-                 console.log(err);
+                 console.log(err.message);
                  return res.sendStatus(500);
              }
         })
         .catch((err: Error) => {
-            console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table, err message: " + err);   
+            console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table, err message: " + err.message);
         });
          
      } else {
