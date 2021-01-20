@@ -8,8 +8,6 @@ import { theseus as ts } from "./../services/TheseusSender";
 
 // Import audit log class
 import { auditLog as auditLog } from "./../services/auditLogService";
-import { validate as validate } from "../services/ValidatorService";
-import { FileData } from "../models/FileData";
 
 const authService = require("./../services/authService");
 
@@ -33,82 +31,92 @@ async function uploadJulkaisu(req: Request, res: Response) {
     upload(req, res, async function () {
 
         const julkaisuId = req.body.data.julkaisuid;
-        const julkaisuData: FileData = req.body.data;
+        const julkaisuData = req.body.data;
         const file = (<any>req).file;
 
-        try {
-            await validate.fileData(julkaisuData, file);
-            await validateFileExtension(file.originalname, file.path);
-        } catch (e) {
-            await removeJulkaisurinnakkaistallennettuValue(julkaisuId);
-            return res.status(500).send(e.message);
+        if (!julkaisuId || !julkaisuData) {
+            console.log("Error occurred, publication file related data is missing: " + req.body.data.julkaisuid);
+            return res.status(500).send("Publication related data is missing");
+        }
+
+        if (!file) {
+            console.log("Error occurred, publication file is missing for julkaisu: " + req.body.data.julkaisuid);
+            return res.status(500).send("Publication file is missing");
         }
 
         console.log("Starting file upload for publication: " + julkaisuId);
 
-        try {
-            // first move file from temp folder to publications folder
-            await moveFile(file, julkaisuId);
+        const valid = await validate(file.originalname, file.path);
 
-            const itemId = await metaDataAlreadyUpdated(julkaisuId);
-            const julkaisuIdExists = await fetchJulkaisuIdFromArchiveTable(julkaisuId);
+        if (valid) {
+            try {
+                // first move file from temp folder to publications folder
+                await moveFile(file, julkaisuId);
 
-            if (itemId && itemId.itemid) {
-                await postDataToArchiveTable(file, julkaisuData, req.headers, true);
-                await ts.sendBitstreamToItem(julkaisuId, itemId.itemid, true);
-            } else {
-                if (julkaisuIdExists) {
+                const itemId = await metaDataAlreadyUpdated(julkaisuId);
+                const julkaisuIdExists = await fetchJulkaisuIdFromArchiveTable(julkaisuId);
+
+                if (itemId && itemId.itemid) {
                     await postDataToArchiveTable(file, julkaisuData, req.headers, true);
-
+                    await ts.sendBitstreamToItem(julkaisuId, itemId.itemid, true);
                 } else {
-                    await postDataToQueueTable(julkaisuId);
-                    await postDataToArchiveTable(file, julkaisuData, req.headers, false);
-                }
-            }
+                    if (julkaisuIdExists) {
+                        await postDataToArchiveTable(file, julkaisuData, req.headers, true);
 
-            console.log("Successfully uploaded file for publication: " + julkaisuId);
-            return res.status(200).json("OK");
-
-
-        } catch (e) {
-            console.log(e);
-            if (e && e.code === "EEXIST") {
-                fs.unlinkSync(file.path);
-                return res.status(500).send("This publication has already a file");
-            } else {
-
-                // if something goes wrong, verify that julkaisuid is removed from queue table and publication is removed from server
-                await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
-                    id: julkaisuId
-                });
-
-                const tempFileExists = await fs.existsSync(file.path);
-                if (tempFileExists) {
-                    try {
-                        await fs.unlinkSync(file.path);
-
-                    } catch (e) {
-                        console.log(e);
+                    } else {
+                        await postDataToQueueTable(julkaisuId);
+                        await postDataToArchiveTable(file, julkaisuData, req.headers, false);
                     }
                 }
 
-                const path = publicationFolder + "/" + julkaisuId;
-                const fileExists = await fs.existsSync(path);
+                console.log("Successfully uploaded file for publication: " + julkaisuId);
+                return res.status(200).json("OK");
 
-                if (fileExists) {
-                    try {
-                        await deleteJulkaisuFile(path, savedFileName);
 
-                    } catch (e) {
-                        console.log(e);
-                    }
-                }
-
-                await removeJulkaisurinnakkaistallennettuValue(julkaisuId);
+            } catch (e) {
                 console.log(e);
-                return res.status(500).send(e.code);
+                if (e && e.code === "EEXIST") {
+                    fs.unlinkSync(file.path);
+                    return res.status(500).send("This publication has already a file");
+                } else {
+
+                    // if something goes wrong, verify that julkaisuid is removed from queue table and publication is removed from server
+                    await connection.db.result("DELETE FROM julkaisujono WHERE julkaisuid = ${id}", {
+                        id: julkaisuId
+                    });
+
+                    const tempFileExists = await fs.existsSync(file.path);
+                    if (tempFileExists) {
+                        try {
+                            await fs.unlinkSync(file.path);
+
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    }
+
+                    const path = publicationFolder + "/" + julkaisuId;
+                    const fileExists = await fs.existsSync(path);
+
+                    if (fileExists) {
+                        try {
+                            await deleteJulkaisuFile(path, savedFileName);
+
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    }
+
+                    await removeJulkaisurinnakkaistallennettuValue(julkaisuId);
+                    console.log(e);
+                    return res.status(500).send(e.code);
+                }
             }
+        } else {
+            await removeJulkaisurinnakkaistallennettuValue(julkaisuId);
+            return res.status(500).send("Invalid file");
         }
+
 
     });
 }
@@ -208,7 +216,7 @@ async function moveFile (file: any, id: any) {
 
 }
 
-async function validateFileExtension(fileName: any, filePath: any) {
+async function validate(fileName: any, filePath: any) {
 
     // only pdf files are allowed
     const fileExt = path.extname(fileName).toLowerCase();
@@ -216,7 +224,9 @@ async function validateFileExtension(fileName: any, filePath: any) {
         console.log("Invalid file extension, removing file...");
         fs.unlinkSync(filePath);
         console.log("Done!");
-        throw Error ("Invalid file extension");
+        return false;
+    } else {
+        return true;
     }
 }
 
