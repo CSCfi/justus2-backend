@@ -55,13 +55,18 @@ async function getAvainSanat(req: Request, res: Response, next: NextFunction) {
 async function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction) {
     const queryString = req.query.q.toString();
     let jufoData = Array<JufoList>();
+    let journalList = Array<JufoList>();
     const urlParams = {
         "tyyppi": 1,
         "nimi": queryString
     };
     try {
         jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
-        const journalList: JufoList = oh.ObjectHandlerJulkaisusarjat(jufoData, queryString);
+        if (jufoData.length) {
+            journalList = oh.ObjectHandlerJulkaisusarjat(jufoData, queryString);
+        } else {
+            journalList = [];
+        }
         res.status(200).send(journalList);
     } catch (e) {
         console.log(e);
@@ -72,13 +77,18 @@ async function getJulkaisuSarjat(req: Request, res: Response, next: NextFunction
 async function getKustantajat(req: Request, res: Response, next: NextFunction) {
     const queryString = req.query.q.toString();
     let jufoData = Array<JufoList>();
+    let publisherList = Array<JufoList>();
     const urlParams = {
         "tyyppi": 2,
         "nimi": queryString
     };
     try {
         jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
-        const publisherList: JufoList = oh.ObjectHandlerJufoList(jufoData, queryString);
+        if (jufoData.length) {
+            publisherList = oh.ObjectHandlerJufoList(jufoData);
+        } else {
+            publisherList = [];
+        }
         res.status(200).send(publisherList);
     } catch (e) {
         console.log(e);
@@ -89,13 +99,18 @@ async function getKustantajat(req: Request, res: Response, next: NextFunction) {
 async function getKonferenssinimet(req: Request, res: Response, next: NextFunction) {
     const queryString = req.query.q.toString();
     let jufoData = Array<JufoList>();
+    let conferenceList = Array<JufoList>();
     const urlParams = {
         "tyyppi": 3,
         "nimi": queryString
     };
     try {
         jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
-        const conferenceList: JufoList = oh.ObjectHandlerJufoList(jufoData, queryString);
+        if (jufoData.length) {
+            conferenceList = oh.ObjectHandlerJufoList(jufoData);
+        } else {
+            conferenceList = [];
+        }
         res.status(200).send(conferenceList);
     } catch (e) {
         console.log(e);
