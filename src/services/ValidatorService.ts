@@ -122,7 +122,6 @@ class ValidatorService {
 
         for (const k in lisatieto) {
             if (k !== "julkaisuvuodenlisatieto" && k !== "tapahtuma" && k !== "julkistamispaikkakunta" && k !== "muutunniste") {
-                console.log("ei validi kenttä");
                 throw Error("Invalid data!");
             }
 
