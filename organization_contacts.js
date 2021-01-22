@@ -282,6 +282,9 @@ const contactList = [
         "domain": ["@ulapland.fi", "@lapinamk.fi"],
         "code": "10108",
         "email": "",
+		"theseusData": {
+			"theseusCode": "fi=Lapin ammattikorkeakoulu|sv=Lapin ammattikorkeakoulu|en=Lapland University of Applied Sciences|"
+		},
 		"requiredFields": ["alayksikko"]
     },
 	{

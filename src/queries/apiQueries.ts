@@ -27,6 +27,12 @@ import { theseus as ts } from "./../services/TheseusSender";
 // Import audit log class
 import { auditLog as auditLog } from "./../services/auditLogService";
 
+import { validate as validate } from "../services/ValidatorService";
+
+import { JulkaisuObject } from "../models/Julkaisu";
+import { Justus } from "../models/Justus";
+import { FileData } from "../models/FileData";
+
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
@@ -556,8 +562,8 @@ class ApiQueries {
             const handleExists = await db.oneOrNone(handleQuery, params);
             const publicationIsInQueue = await db.oneOrNone(publicationQueueQuery, params);
 
-            const data: any = {};
-            let filedata: any = {};
+            const data = <Justus>{};
+            let filedata = <FileData>{};
 
             try {
                 data["julkaisu"] = await db.one(query, params);
@@ -604,6 +610,10 @@ class ApiQueries {
         USER_DATA = req.session.userData;
         // USER_DATA = await authService.getUserData(req.headers);
 
+        if (!USER_DATA) {
+            return res.status(403).send("Permission denied");
+        }
+
         const hasAccess = await authService.hasOrganisation(USER_DATA);
 
         if (hasAccess) {
@@ -614,84 +624,79 @@ class ApiQueries {
 
             try {
 
-                const julkaisuObject = req.body.julkaisu;
+                const julkaisuObject: JulkaisuObject = req.body.julkaisu;
+                const orgatekijaArray = req.body.organisaatiotekija;
+                const tieteenalaArray = req.body.tieteenala;
+                const taiteenalaArray = req.body.taiteenala;
+                const avainsanaArray = req.body.avainsanat;
+                const tyyppikategoriaArray = req.body.taidealantyyppikategoria;
+                const lisatieto = req.body.lisatieto;
+
+                const julkaisuValidated: JulkaisuObject =  await validate.julkaisu(julkaisuObject);
+                await validate.organisaatiotekija(orgatekijaArray);
+                await validate.tieteenala(tieteenalaArray);
+                await validate.taiteenala(taiteenalaArray);
+                await validate.avainsanat(avainsanaArray);
+                await validate.tyyppikategoria(tyyppikategoriaArray);
+                await validate.lisatieto(lisatieto);
+
                 const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
+                const saveJulkaisu = pgp.helpers.insert(julkaisuValidated, julkaisuColumns) + " RETURNING id";
+                const julkaisuId = await db.one(saveJulkaisu);
 
-                // Validate julkaisumaksu field first
-                if (julkaisuObject.julkaisumaksu) {
-                    julkaisuObject["julkaisumaksu"] = await this.validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
-                } else {
-                    julkaisuObject["julkaisumaksu"] = undefined;
-                    julkaisuObject["julkaisumaksuvuosi"] = undefined;
+                const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuValidated));
+                delete kayttoLokiObject["issn"];
+                delete kayttoLokiObject["isbn"];
+                delete kayttoLokiObject["projektinumero"];
+
+                const kayttoLokiId = await auditLog.postAuditData(req.headers,
+                    method, "julkaisu", julkaisuId.id, kayttoLokiObject);
+
+                const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
+                const insertAccessId = pgp.helpers.update({ "accessid": kayttoLokiId.id }, idColumn) + "WHERE id = " +  parseInt(julkaisuId.id) + " RETURNING accessid";
+
+                await db.one(insertAccessId);
+
+                await this.insertIssnAndIsbn(julkaisuValidated, julkaisuId.id, req.headers, "issn");
+                await this.insertIssnAndIsbn(julkaisuValidated, julkaisuId.id, req.headers, "isbn");
+                await this.insertOrganisaatiotekijaAndAlayksikko(orgatekijaArray, julkaisuId.id, req.headers);
+                await this.insertTieteenala(tieteenalaArray, julkaisuId.id, req.headers);
+                await this.insertTaiteenala(taiteenalaArray, julkaisuId.id, req.headers);
+                await this.insertAvainsanat(avainsanaArray, julkaisuId.id, req.headers);
+                await this.insertTyyppikategoria(tyyppikategoriaArray, julkaisuId.id, req.headers);
+                await this.insertLisatieto(lisatieto, julkaisuId.id, req.headers);
+                await this.insertProjektinumero(julkaisuValidated, julkaisuId.id, req.headers);
+
+                await db.any("COMMIT");
+
+                // For Luonnonvarakeskus metadata is always sent to Jukuri
+                const isJukuriPublication: boolean = oh.isJukuriPublication(req.body.julkaisu.organisaatiotunnus);
+
+                if (isJukuriPublication) {
+                    await fileUpload.postDataToQueueTable(julkaisuId.id);
+
+                    const table = new connection.pgp.helpers.ColumnSet(["julkaisuid", "destination"], {table: "julkaisuarkisto"});
+                    const query = pgp.helpers.insert({"julkaisuid": julkaisuId.id, "destination": "jukuri"}, table) + " RETURNING id";
+
+                    await connection.db.one(query);
+
+                    // update kaytto_loki table
+                    await auditLog.postAuditData(req.headers, "POST", "julkaisuarkisto", julkaisuId.id, {"julkaisuid": julkaisuId.id, "destination": "jukuri"});
                 }
 
-                if (!julkaisuObject.ensimmainenkirjoittaja) {
-                    julkaisuObject["ensimmainenkirjoittaja"] = undefined;
+                res.status(200).json({ "id":  julkaisuId.id });
+                console.log("Succesfully saved julkaisu with id: " + julkaisuId.id);
 
-                    // Queries. First insert julkaisu  data and data to kaytto_loki table. Then update accessid and execute other queries
-                    const saveJulkaisu = pgp.helpers.insert(julkaisuObject, julkaisuColumns) + " RETURNING id";
-                    const julkaisuId = await db.one(saveJulkaisu);
-
-                    const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
-                    delete kayttoLokiObject["issn"];
-                    delete kayttoLokiObject["isbn"];
-
-                    const kayttoLokiId = await auditLog.postAuditData(req.headers,
-                        method, "julkaisu", julkaisuId.id, kayttoLokiObject);
-
-                    const idColumn = new pgp.helpers.ColumnSet(["accessid"], {table: "julkaisu"});
-                    const insertAccessId = pgp.helpers.update({"accessid": kayttoLokiId.id}, idColumn) + "WHERE id = " + parseInt(julkaisuId.id) + " RETURNING accessid";
-
-                    await db.one(insertAccessId);
-
-                    await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "issn");
-                    await this.insertIssnAndIsbn(julkaisuObject, julkaisuId.id, req.headers, "isbn");
-                    await this.insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, julkaisuId.id, req.headers);
-                    await this.insertTieteenala(req.body.tieteenala, julkaisuId.id, req.headers);
-                    await this.insertTaiteenala(req.body.taiteenala, julkaisuId.id, req.headers);
-                    await this.insertAvainsanat(req.body.avainsanat, julkaisuId.id, req.headers);
-                    await this.insertTyyppikategoria(req.body.taidealantyyppikategoria, julkaisuId.id, req.headers);
-                    await this.insertLisatieto(req.body.lisatieto, julkaisuId.id, req.headers);
-                    await this.insertProjektinumero(julkaisuObject, julkaisuId.id, req.headers);
-
-                    await db.any("COMMIT");
-
-                    // For Luonnonvarakeskus metadata is always sent to Jukuri
-                    const isJukuriPublication: boolean = oh.isJukuriPublication(req.body.julkaisu.organisaatiotunnus);
-
-                    if (isJukuriPublication) {
-                        await fileUpload.postDataToQueueTable(julkaisuId.id);
-
-                        const table = new connection.pgp.helpers.ColumnSet(["julkaisuid", "destination"], {table: "julkaisuarkisto"});
-                        const query = pgp.helpers.insert({
-                            "julkaisuid": julkaisuId.id,
-                            "destination": "jukuri"
-                        }, table) + " RETURNING id";
-
-                        await connection.db.one(query);
-
-                        // update kaytto_loki table
-                        await auditLog.postAuditData(req.headers, "POST", "julkaisuarkisto", julkaisuId.id, {
-                            "julkaisuid": julkaisuId.id,
-                            "destination": "jukuri"
-                        });
-                    }
-
-                    res.status(200).json({"id": julkaisuId.id});
-                    console.log("Succesfully saved julkaisu with id: " + julkaisuId.id);
-
-                }
-                }
-            catch (err) {
-                    console.log(err);
-                    console.log("Error in posting new publication with error code: " + err);
-                    await db.any("ROLLBACK");
-                    res.status(500).send(err.message);
-                }
+            } catch (err) {
+                console.log(err);
+                console.log("Error in posting new publication with error code: " + err);
+                await db.any("ROLLBACK");
+                res.status(500).send(err.message);
             }
-        else {
-                return res.status(403).send("Permission denied");
-            }
+        } else {
+            return res.status(403).send("Permission denied");
+        }
+
     }
 
 
@@ -737,165 +742,172 @@ class ApiQueries {
     }
 
 // PUT requests
-    public async updateJulkaisu(req: Request, res: Response, next: NextFunction) {
+    // PUT requests
+    async updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 
-        USER_DATA = req.session.userData;
-        // USER_DATA = await authService.getUserData(req.headers);
+    USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
 
-        const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
+    const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
 
-        if (hasAccessToPublication) {
+    if (hasAccessToPublication) {
 
-            await db.any("BEGIN");
+        // begin transaction
+        await db.any("BEGIN");
 
-            try {
+        try {
+            const julkaisuObject = req.body.julkaisu;
+            const orgatekijaArray = req.body.organisaatiotekija;
+            const tieteenalaArray = req.body.tieteenala;
+            const taiteenalaArray = req.body.taiteenala;
+            const avainsanaArray = req.body.avainsanat;
+            const tyyppikategoriaArray = req.body.taidealantyyppikategoria;
+            const lisatieto = req.body.lisatieto;
 
-                const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
-                const julkaisuObject = req.body.julkaisu;
+            const julkaisuValidated: JulkaisuObject =  await validate.julkaisu(julkaisuObject);
+            await validate.organisaatiotekija(orgatekijaArray);
+            await validate.tieteenala(tieteenalaArray);
+            await validate.taiteenala(taiteenalaArray);
+            await validate.avainsanat(avainsanaArray);
+            await validate.tyyppikategoria(tyyppikategoriaArray);
+            await validate.lisatieto(lisatieto);
 
-                // Validate julkaisumaksu field first
-                if (julkaisuObject.julkaisumaksu) {
-                    julkaisuObject["julkaisumaksu"] = await this.validateJulkaisumaksu(julkaisuObject.julkaisumaksu);
-                } else {
-                    julkaisuObject["julkaisumaksu"] = undefined;
-                    julkaisuObject["julkaisumaksuvuosi"] = undefined;
-                }
+            const julkaisuColumns = new pgp.helpers.ColumnSet(dbHelpers.julkaisu, {table: "julkaisu"});
 
-                if (!julkaisuObject.ensimmainenkirjoittaja) {
-                    julkaisuObject["ensimmainenkirjoittaja"] = undefined;
-                }
+            const updateJulkaisu = pgp.helpers.update(julkaisuValidated, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
 
-                const updateJulkaisu = pgp.helpers.update(julkaisuObject, julkaisuColumns) + " WHERE id = " +  parseInt(req.params.id);
-                await db.none(updateJulkaisu);
+            await db.none(updateJulkaisu);
 
-                const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuObject));
-                delete kayttoLokiObject["issn"];
-                delete kayttoLokiObject["isbn"];
+            const kayttoLokiObject = JSON.parse(JSON.stringify(julkaisuValidated));
+            delete kayttoLokiObject["issn"];
+            delete kayttoLokiObject["isbn"];
+            delete kayttoLokiObject["projektinumero"];
 
-                await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, kayttoLokiObject);
+            await auditLog.postAuditData(req.headers, "PUT", "julkaisu", req.params.id, kayttoLokiObject);
 
-                const deletedIssnRows = await db.result("DELETE FROM julkaisu_issn WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
+            const deletedIssnRows = await db.result("DELETE FROM julkaisu_issn WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
 
-                if (deletedIssnRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_issn", req.params.id, [undefined]);
-                }
-
-                await this.insertIssnAndIsbn(julkaisuObject, req.params.id, req.headers, "issn");
-
-                const deletedIsbnRows = await db.result("DELETE FROM julkaisu_isbn WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-
-                if (deletedIsbnRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_isbn", req.params.id, [undefined]);
-                }
-
-                await this.insertIssnAndIsbn(julkaisuObject, req.params.id, req.headers, "isbn");
-
-                const deletedProjektinumeroRows = await db.result("DELETE FROM julkaisu_projektinumero WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-                if (deletedProjektinumeroRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_projektinumero", req.params.id, [undefined]);
-                }
-                await this.insertProjektinumero(julkaisuObject, req.params.id, req.headers);
-
-                const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-
-                if (deletedOrganisaatiotekijaRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "organisaatiotekija", req.params.id, [undefined]);
-                }
-
-                await this.insertOrganisaatiotekijaAndAlayksikko(req.body.organisaatiotekija, req.params.id, req.headers);
-
-                const deletedTieteenalaRows = await db.result("DELETE FROM tieteenala WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-                if (deletedTieteenalaRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "tieteenala", req.params.id, [undefined]);
-                }
-                await this.insertTieteenala(req.body.tieteenala, req.params.id, req.headers);
-
-                const deletedTaiteenalaRows = await db.result("DELETE FROM taiteenala WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-                if (deletedTaiteenalaRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "taiteenala", req.params.id, [undefined]);
-                }
-                await this.insertTaiteenala(req.body.taiteenala, req.params.id, req.headers);
-
-                const deletedAvainsanaRows = await db.result("DELETE FROM avainsana WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-                if (deletedAvainsanaRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "avainsana", req.params.id, [undefined]);
-                }
-                await this.insertAvainsanat(req.body.avainsanat, req.params.id, req.headers);
-
-                const deletedTyyppikategoriaRows = await db.result("DELETE FROM taidealantyyppikategoria WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-                if (deletedTyyppikategoriaRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
-                }
-                await this.insertTyyppikategoria(req.body.taidealantyyppikategoria, req.params.id, req.headers);
-
-                const deletedLisatietoRows = await db.result("DELETE FROM lisatieto WHERE julkaisuid = ${id}", {
-                    id: req.params.id
-                });
-                if (deletedLisatietoRows.rowCount > 0) {
-                    await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
-                }
-                await this.insertLisatieto(req.body.lisatieto, req.params.id, req.headers);
-
-                const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
-                const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
-
-                // if publication file is originally uploaded to Justus service,
-                // we have to update data in julkaisuarkisto table,
-                // and if file is already transferred to Theseus / Jukuri
-                // we have to update data there also
-
-                const isFileUploaded = await ts.isFileUploaded(req.params.id);
-                const orgid = req.body.julkaisu.organisaatiotunnus;
-
-                if (isFileUploaded && isFileUploaded.filename) {
-                    await this.updateArchiveTable(req.body.filedata, req.headers, req.params.id);
-                    if (isPublicationInTheseus) {
-                        const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
-                        await ts.PutTheseus(obj, req.params.id, orgid);
-                        await ts.EmbargoUpdate(req.params.id, req.body.filedata.embargo, orgid);
-                    }
-                }
-
-                if (isPublication && !isFileUploaded.filename) {
-                    if (isPublicationInTheseus) {
-                        const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
-                        await ts.PutTheseus(obj, req.params.id, orgid);
-                        console.log("Metadata updated to Jukuri");
-                    }
-                }
-
-                await db.any("COMMIT");
-                console.log("Succesfully updated julkaisu with id: " + req.params.id);
-                return res.sendStatus(200);
-
-            } catch (err) {
-                // if error exists in any query, rollback
-                console.log(err);
-                console.log("Error in updating publication: " + req.params.id + " with error code: " + err);
-                await db.any("ROLLBACK");
-                res.status(500).send(err.message);
+            if (deletedIssnRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_issn", req.params.id, [undefined]);
             }
-        } else {
-            return res.status(403).send("Permission denied");
-        }
 
+            await this.insertIssnAndIsbn(julkaisuValidated, req.params.id, req.headers, "issn");
+
+            const deletedIsbnRows = await db.result("DELETE FROM julkaisu_isbn WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+
+            if (deletedIsbnRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_isbn", req.params.id, [undefined]);
+            }
+
+            await this.insertIssnAndIsbn(julkaisuValidated, req.params.id, req.headers, "isbn");
+
+            const deletedProjektinumeroRows = await db.result("DELETE FROM julkaisu_projektinumero WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedProjektinumeroRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "julkaisu_projektinumero", req.params.id, [undefined]);
+            }
+            await this.insertProjektinumero(julkaisuValidated, req.params.id, req.headers);
+
+            const deletedOrganisaatiotekijaRows = await db.result("DELETE FROM organisaatiotekija WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+
+            if (deletedOrganisaatiotekijaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "organisaatiotekija", req.params.id, [undefined]);
+            }
+
+            await this.insertOrganisaatiotekijaAndAlayksikko(orgatekijaArray, req.params.id, req.headers);
+
+            const deletedTieteenalaRows = await db.result("DELETE FROM tieteenala WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedTieteenalaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "tieteenala", req.params.id, [undefined]);
+            }
+            await this.insertTieteenala(tieteenalaArray, req.params.id, req.headers);
+
+            const deletedTaiteenalaRows =  await db.result("DELETE FROM taiteenala WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedTaiteenalaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "taiteenala", req.params.id, [undefined]);
+            }
+            await this.insertTaiteenala(taiteenalaArray, req.params.id, req.headers);
+
+            const deletedAvainsanaRows = await db.result("DELETE FROM avainsana WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedAvainsanaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "avainsana", req.params.id, [undefined]);
+            }
+            await this.insertAvainsanat(avainsanaArray, req.params.id, req.headers);
+
+            const deletedTyyppikategoriaRows = await db.result("DELETE FROM taidealantyyppikategoria WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedTyyppikategoriaRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
+            }
+            await this.insertTyyppikategoria(tyyppikategoriaArray, req.params.id, req.headers);
+
+            const deletedLisatietoRows = await db.result("DELETE FROM lisatieto WHERE julkaisuid = ${id}", {
+                id: req.params.id
+            });
+            if (deletedLisatietoRows.rowCount > 0) {
+                await auditLog.postAuditData(req.headers, "DELETE", "taidealantyyppikategoria", req.params.id, [undefined]);
+            }
+            await this.insertLisatieto(lisatieto, req.params.id, req.headers);
+
+            const isPublication = await fileUpload.fileHasBeenUploadedToJustus(req.params.id);
+            const isPublicationInTheseus = await fileUpload.isPublicationInTheseus(req.params.id);
+
+            // if publication file is originally uploaded to Justus service,
+            // we have to update data in julkaisuarkisto table,
+            // and if file is already transferred to Theseus / Jukuri
+            // we have to update data there also
+
+            const isFileUploaded = await ts.isFileUploaded(req.params.id);
+            const orgid = req.body.julkaisu.organisaatiotunnus;
+
+            if (isFileUploaded && isFileUploaded.filename) {
+                await this.updateArchiveTable(req.body.filedata, req.headers, req.params.id);
+                if (isPublicationInTheseus) {
+                    const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
+                    await ts.PutTheseus(obj, req.params.id, orgid);
+                    await ts.EmbargoUpdate(req.params.id, req.body.filedata.embargo, orgid);
+                }
+            }
+
+            if (isPublication && !isFileUploaded.filename) {
+                if (isPublicationInTheseus) {
+                    const obj = await ts.mapTheseusFields(req.params.id, req.body, "put");
+                    await ts.PutTheseus(obj, req.params.id, orgid);
+                    console.log("Metadata updated to Jukuri");
+                }
+            }
+
+            await db.any("COMMIT");
+            console.log("Succesfully updated julkaisu with id: " + req.params.id);
+            return res.sendStatus(200);
+
+        } catch (err) {
+            // if error exists in any query, rollback
+            console.log(err);
+            console.log("Error in updating publication: " + req.params.id + " with error code: " + err);
+            await db.any("ROLLBACK");
+            res.status(500).send(err.message);
+        }
+    } else {
+        return res.status(403).send("Permission denied");
     }
+
+}
+
 
     public async putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
@@ -988,7 +1000,6 @@ class ApiQueries {
         const tieteenalaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
         const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.tieteenala, {table: "tieteenala"});
         const saveTieteenala = pgp.helpers.insert(tieteenalaObj, tieteenalaColumns) + " RETURNING id";
-
         await db.many(saveTieteenala);
         await auditLog.postAuditData(headers, "POST", "tieteenala", jid, tieteenalaObj);
     }
@@ -1001,9 +1012,8 @@ class ApiQueries {
 
         const taiteenalaObj = dbHelpers.addJulkaisuIdToObject(obj, jid);
         const tieteenalaColumns = new pgp.helpers.ColumnSet(dbHelpers.taiteenala, {table: "taiteenala"});
-        const saveTieteenala = pgp.helpers.insert(taiteenalaObj, tieteenalaColumns) + " RETURNING id";
-
-        await db.many(saveTieteenala);
+        const saveTaiteenala = pgp.helpers.insert(taiteenalaObj, tieteenalaColumns) + " RETURNING id";
+        await db.many(saveTaiteenala);
         await auditLog.postAuditData(headers, "POST", "taiteenala", jid, taiteenalaObj);
 
     }
@@ -1035,7 +1045,6 @@ class ApiQueries {
 
         await db.many(saveTyyppikategoria);
         await auditLog.postAuditData(headers, "POST", "taidealantyyppikategoria", jid, tyyppikategoriaObj);
-
 
     }
 
@@ -1455,12 +1464,6 @@ class ApiQueries {
         } else {
             return res.status(403).send("Permission denied");
         }
-    }
-
-    public async validateJulkaisumaksu(julkaisumaksu: any) {
-        // first replace , with .
-        const replaced = julkaisumaksu.replace(",", ".");
-        return parseFloat(replaced);
     }
 
     public logout(req: Request, res: Response, next: NextFunction) {
