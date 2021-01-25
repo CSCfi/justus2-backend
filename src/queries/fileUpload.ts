@@ -257,6 +257,7 @@ async function deleteJulkaisu(req: Request, res: Response) {
             })
             .catch((err: Error) => {
                 console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table, err message: " + err);
+                return res.status(500).send(err);
             });
 
     } else {
