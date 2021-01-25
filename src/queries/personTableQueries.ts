@@ -1,5 +1,6 @@
 export {};
 import { PersonObject } from "../models/Person";
+import { auditLog } from "../services/auditLogService";
 // Database connection from db.ts
 const connection = require("./../db");
 
@@ -43,6 +44,8 @@ async function savePersonData(person: PersonObject, organization: string) {
         const personTable = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
         const updatePersonQuery = connection.pgp.helpers.update(updatePersonObj, personTable) + " WHERE id = " + "${personid}" + " RETURNING id;";
         await connection.db.one(updatePersonQuery, personIdParams);
+
+        await auditLog.postPersonTableAuditData(personid, organization, "PUT", "person", updatePersonObj);
 
         // first delete previous records
         await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
@@ -118,6 +121,8 @@ async function insertNewPerson(person: any, organization: string) {
     // insert data to person table
     const personId = await connection.db.one(personPromise);
 
+    await auditLog.postPersonTableAuditData(personId.id, organization, "POST", "person", personValues);
+
     // insert data to person_organization table
     await insertOrganisaatioTekija(personId.id, person, organization);
 
@@ -139,24 +144,30 @@ async function insertOrganisaatioTekija(personid: number, alayksikkoData: any, o
         "organisaatiotunniste",
         "alayksikko"
     ];
+    const kayttoLokiData = [];
 
     const organizationValues = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko1}];
     const saveOrganization = new connection.pgp.helpers.ColumnSet(organizationColumns, {table: "person_organization"});
     const organizationPromise = connection.pgp.helpers.insert(organizationValues, saveOrganization) + " RETURNING id";
 
     await connection.db.one(organizationPromise);
+    kayttoLokiData.push(organizationValues[0]);
 
     if (alayksikkoData.alayksikko2) {
         const organizationValues2 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko2}];
         const organizationPromise2 = connection.pgp.helpers.insert(organizationValues2, saveOrganization) + " RETURNING id";
         await connection.db.one(organizationPromise2);
+        kayttoLokiData.push(organizationValues2[0]);
     }
 
     if (alayksikkoData.alayksikko3) {
         const organizationValues3 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko3}];
         const organizationPromise3 = connection.pgp.helpers.insert(organizationValues3, saveOrganization) + " RETURNING id";
         await connection.db.one(organizationPromise3);
+        kayttoLokiData.push(organizationValues3[0]);
     }
+
+    await auditLog.postPersonTableAuditData(personid, organization, "POST", "person_organization", kayttoLokiData);
 }
 
 async function insertOrcid(personID: number, orcid: string) {

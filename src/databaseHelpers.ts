@@ -101,6 +101,7 @@ const tieteenala = ["julkaisuid", "tieteenalakoodi", "jnro"];
 const taiteenala = ["julkaisuid", "taiteenalakoodi", "jnro"];
 
 const kaytto_loki = ["name", "mail", "uid", "julkaisu", "organization", "role", "itable", "action", "data"];
+const person_kaytto_loki = ["name", "uid", "person", "organization", "itable", "action", "data"];
 
 let addJulkaisuIdToObject = function(obj: any, jid: any) {
     Object.keys(obj).forEach(function (key) {
@@ -145,6 +146,7 @@ module.exports = {
     tieteenala: tieteenala,
     taiteenala: taiteenala,
     kaytto_loki: kaytto_loki,
+    person_kaytto_loki: person_kaytto_loki,
     theseusJulkaisuFields: theseusJulkaisuFields,
     personFields: personFields,
     addJulkaisuIdToObject: addJulkaisuIdToObject,

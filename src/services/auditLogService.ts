@@ -25,11 +25,32 @@ class AuditLog {
             "data": JSON.stringify(inputData)
         };
 
-
         const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbHelpers.kaytto_loki, {table: "kaytto_loki"});
         const saveLokiData = connection.pgp.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
         const klId = await connection.db.one(saveLokiData);
         return klId;
+    }
+
+    public async postPersonTableAuditData(personid: number, organization: string, method: string, table: string, inputData: any) {
+        const uid = "123344";
+        const org = organization;
+
+        const kayttoLokiData = {
+            "name": "Justus Demo",
+            "uid": uid,
+            "person": personid,
+            "organization": org,
+            "role": "admin",
+            "itable": table,
+            "action": method,
+            "data": JSON.stringify(inputData)
+        };
+
+        const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbHelpers.person_kaytto_loki, {table: "person_kaytto_loki"});
+        const saveLokiData = connection.pgp.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
+        console.log(saveLokiData);
+        const id = await connection.db.one(saveLokiData);
+        console.log(id);
     }
 
 }
