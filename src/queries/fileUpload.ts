@@ -233,32 +233,29 @@ async function deleteJulkaisu(req: Request, res: Response) {
             return res.status(403).send("Publication is already approved, remove file from Jukuri");
         }
 
-        ts.DeleteFromTheseus(julkaisuid)
-            .then(async function() {
-                try {
+        try {
+            const responseStatus = await ts.DeleteFromTheseus(julkaisuid);
+            const params = {"id": julkaisuid};
 
-                    const params = {"id": julkaisuid};
+            await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
 
-                    await connection.db.result("DELETE FROM julkaisuarkisto WHERE julkaisuid = ${id}", params);
+            const obj = {"julkaisurinnakkaistallennettu": "0", "rinnakkaistallennetunversionverkkoosoite": ""};
+            const updateRinnakkaistallennusColumns = connection.pgp.helpers.update(obj,
+                ["julkaisurinnakkaistallennettu", "rinnakkaistallennetunversionverkkoosoite"], "julkaisu")
+                + "WHERE id = ${id}";
+            await connection.db.oneOrNone(updateRinnakkaistallennusColumns, params);
 
-                    const obj = {"julkaisurinnakkaistallennettu": "0", "rinnakkaistallennetunversionverkkoosoite": ""};
-                    const updateRinnakkaistallennusColumns = connection.pgp.helpers.update(obj,
-                        ["julkaisurinnakkaistallennettu", "rinnakkaistallennetunversionverkkoosoite"], "julkaisu")
-                        + "WHERE id = ${id}";
-                    await connection.db.oneOrNone(updateRinnakkaistallennusColumns, params);
+            await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
+            if (responseStatus === 404) {
+                return res.status(404).send("File already deleted form Theseus");
+            } else {
+                return res.status(200).send("File removed successfully");
+            }
 
-                    await auditLog.postAuditData(req.headers, "DELETE", "julkaisuarkisto", julkaisuid, [undefined]);
-                    return res.status(200).send("File removed successfully");
-
-                } catch (err) {
-                    console.log(err);
-                    return res.sendStatus(500);
-                }
-            })
-            .catch((err: Error) => {
-                console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table, err message: " + err);
-                return res.status(500).send(err);
-            });
+        } catch (e) {
+            console.log("Couldn't delete the julkaisu " + julkaisuid + ", so we won't remove the ID from the archive table, err message: " + e);
+            return res.status(500).send(e);
+        }
 
     } else {
         // file is not yet transferred to Theseus so remove file from server and id from julkaisujono table

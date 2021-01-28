@@ -577,13 +577,15 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             .then(async function() {
 
                 const itemidquery = "SELECT itemid FROM julkaisuarkisto WHERE julkaisuid = " + "${id};";
-                const itemid = await connection.db.any(itemidquery, params);
+                const itemid = await connection.db.one(itemidquery, params);
+                const itemidParsed = itemid.itemid;
 
-                const urlFinal = baseURL + "items/" + itemid[0]["itemid"];
+                const urlFinal = baseURL + "items/" + itemidParsed;
                 const headersOpt = {
                     "rest-dspace-token": token,
                     "content-type": "application/json"
                 };
+
                 const options = {
                     rejectUnauthorized: false,
                     method: "DELETE",
@@ -593,16 +595,22 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                 rp(options)
                     .then(async function (res: Response, req: Request) {
                         console.log("Successful delete" + res);
-                        resolve();
+                        resolve(200);
                     })
-                    .catch(function (err: Error) {
-                        console.log("Error while deleting julkaisu: " + id + " with error: " + err);
-                        reject();
+                    .catch(function (err: any) {
+                        if (err.statusCode && err.statusCode === 404) {
+                            resolve(404);
+                        } else {
+                            console.log("Error while deleting julkaisu: " + id + " with error: " + err);
+                            reject();
+                        }
+
                     });
                 })
                 .catch(function(err: Error) {
+                    console.log(err);
                     console.log("Error while deleting publication from " + version + " with " + id + ", with error message: " + err);
-                    reject();
+                    reject(err);
                 });
             });
     }
