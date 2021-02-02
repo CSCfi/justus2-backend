@@ -50,7 +50,7 @@ router.get("/haku/urntunnus", ext.getUrn);
 
 // KoodistoPalvelu queries
 router.get("/organisaatiolistaus", koodistopalvelu.getOrganisaatioListaus);
-router.get("/organisaationimet", koodistopalvelu.getOrganisaatioNames);
+router.get("/public/organisaationimet", koodistopalvelu.getOrganisaatioNames);
 router.get("/haku/julkaisunluokat", koodistopalvelu.getJulkaisunLuokat);
 router.get("/haku/julkaisuntilat", koodistopalvelu.getJulkaisunTilat);
 router.get("/haku/tekijanrooli", koodistopalvelu.getTekijanRooli);
@@ -62,7 +62,7 @@ router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
 router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
 
 // Database connection test
-router.get("/db-health", db.dbHealthCheck);
+router.get("/public/db-health", db.dbHealthCheck);
 
 export = router;
 

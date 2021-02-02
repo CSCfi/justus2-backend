@@ -707,6 +707,9 @@ function impersonateUser(req: Request, res: Response) {
         if (domainMapping[key].code === organizationCode) {
             req.session.userData.email = domainMapping[key].email;
             req.session.userData.seloste = domainMapping[key].seloste;
+            if (!domainMapping[key].jukuriData) {
+                req.session.userData.jukuriUser = undefined;
+            }
         }
     });
     console.log(req.session.userData);
