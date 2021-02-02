@@ -890,6 +890,7 @@ async function updateJulkaisu(req: Request, res: Response, next: NextFunction) {
 async function putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 
     USER_DATA = req.session.userData;
+    // USER_DATA = await authService.getUserData(req.headers);
 
     const isAdmin = await authService.isAdmin(USER_DATA);
     const hasAccessToPublication = await authService.hasAccessToPublication(USER_DATA, req.params.id);
