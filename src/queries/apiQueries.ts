@@ -730,9 +730,11 @@ class ApiQueries {
             if (domainMapping[key].code === organizationCode) {
                 req.session.userData.email = domainMapping[key].email;
                 req.session.userData.seloste = domainMapping[key].seloste;
+                if (!domainMapping[key].jukuriData) {
+                    req.session.userData.jukuriUser = undefined;
+                }
             }
         });
-        console.log(req.session.userData);
 
         oh.ObjectHandlerUser(req.session.userData, req.session.language, function(result: any) {
             res.status(200).json(
@@ -907,7 +909,6 @@ class ApiQueries {
     }
 
 }
-
 
     public async putJulkaisuntila(req: Request, res: Response, next: NextFunction) {
 

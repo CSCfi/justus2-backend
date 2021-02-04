@@ -136,12 +136,17 @@ async function getJufo(req: Request, res: Response, next: NextFunction) {
 async function getJufotISSN(req: Request, res: Response, next: NextFunction) {
     const issn: string = req.query.issn.toString();
     let jufoData = Array<JufoList>();
+    let journalList = Array<JufoList>();
     const urlParams = {
         "issn": issn
     };
     try {
         jufoData = await kp.httpBaseGet(jufoSearchUrl, urlParams);
-        const journalList: JufoList = oh.ObjectHandlerJufoISSN(jufoData);
+        if (jufoData.length) {
+            journalList = oh.ObjectHandlerJufoISSN(jufoData);
+        } else {
+            journalList = [];
+        }
         res.status(200).send(journalList);
     } catch (e) {
         console.log(e);
