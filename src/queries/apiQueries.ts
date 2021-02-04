@@ -18,7 +18,7 @@ const authService = require("./../services/authService");
 const fileUpload = require("./../queries/fileUpload");
 
 const csvParser = require("./../services/csvHandler");
-const personQueries = require("./../queries/personTableQueries");
+import { personQueries as personQueries } from "./../queries/personTableQueries";
 
 // Import TheseusSender class
 import { theseus as ts } from "./../services/TheseusSender";
@@ -1287,6 +1287,8 @@ class ApiQueries {
 
         if (hasOrganisation && isAdmin) {
 
+            await db.any("BEGIN");
+
             try {
                 const organization = USER_DATA.organisaatio;
                 // const organization: string = "02536";
@@ -1295,7 +1297,8 @@ class ApiQueries {
 
                 // First verify that user with this tunniste and organization combination does not exist in database
                 const tunniste = req.body.tunniste;
-                const tunnisteData = await personQueries.checkIfPersonExists(organization, tunniste, undefined);
+                const tunnisteData = await personQueries.checkIfPersonExists(organization, tunniste);
+
                 if (tunnisteData) {
                     return res.status(400).send("This user already exists in database");
                 }
@@ -1315,9 +1318,11 @@ class ApiQueries {
 
                 await personQueries.insertNewPerson(personObj, organization);
 
+                await db.any("COMMIT");
                 res.status(200).send("OK");
             } catch (e) {
                 console.log(e);
+                await db.any("ROLLBACK");
                 res.status(500).send(e.message);
             }
         } else {
@@ -1333,11 +1338,11 @@ class ApiQueries {
         const isAdmin = await authService.isAdmin(USER_DATA);
 
         const organization = USER_DATA.organisaatio;
-        // const organization = "02536";
 
         const orcid = req.body.orcid;
         const personid = req.body.id;
-        const personIdParams = {"personid": personid};
+
+        console.log(orcid);
 
         const personData = {
             "etunimi": req.body.etunimi,
@@ -1358,43 +1363,34 @@ class ApiQueries {
 
             try {
 
-                const updateColumns = new pgp.helpers.ColumnSet(["etunimi", "sukunimi", "email", "modified"], {table: "person"});
-                const updatePersonData = pgp.helpers.update(personData, updateColumns) + "WHERE id = " + parseInt(req.params.id) + " RETURNING id";
-                await db.one(updatePersonData);
+                // update data in person table
+                await personQueries.updatePerson(personid, personData, organization);
 
-                // first delete previous alayksikko records
-                await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
+                // delete previous organisational units
+                await personQueries.deleteOrganizationData(personid, organization);
 
+                // insert organisational units
                 await personQueries.insertOrganisaatioTekija(personid, alayksikkoData, organization);
 
-                // first check if user currently has orcid
+                // check if user currently has orcid
                 const identifierId = await personQueries.checkIfPersonHasOrcid(personid);
 
                 if (!orcid && identifierId) {
-                    console.log("Deleting orcid for person " + personid);
-                    const orcidParams = { "tunnistetyyppi": "orcid", "personid": personid };
-                    await connection.db.result("DELETE FROM person_identifier WHERE tunnistetyyppi = ${tunnistetyyppi} AND personid = ${personid}", orcidParams);
-                }
-
-                if (orcid && identifierId) {
-                    console.log("Updating orcid for person " + personid);
-
+                    await personQueries.deleteIdentifierData(personid, "orcid", organization);
+                } else if (orcid && identifierId) {
                     // Verify that ORCID is not in use in this organization
                     const orcidData = await personQueries.checkIfOrcidExists(organization, orcid, personid);
                     if (orcidData) {
                         return res.status(400).send("This orcid is already in use in this organization");
                     }
-                    await personQueries.updateOrcid(personid, orcid);
-                }
-                if (!identifierId && orcid) {
-                    console.log("Inserting orcid for person " + personid);
-
+                    await personQueries.updateOrcid(personid, orcid, organization);
+                } else if (!identifierId && orcid) {
                     // Verify that ORCID is not in use in this organization
                     const orcidData = await personQueries.checkIfOrcidExists(organization, orcid, undefined);
                     if (orcidData) {
                         return res.status(400).send("This orcid is already in use in this organization");
                     }
-                    await personQueries.insertOrcid(personid, orcid);
+                    await personQueries.insertOrcid(personid, orcid, organization);
                 }
 
                 await db.any("COMMIT");

@@ -8,7 +8,7 @@ const csvFolder = process.env.CSV_DOWNLOAD_FOLDER;
 const connection = require("./../db");
 const iconv = require("iconv-lite");
 
-const personQueries = require("./../queries/personTableQueries");
+import { personQueries as personQueries } from "./../queries/personTableQueries";
 import { PersonObject } from "../models/Person";
 
     async function readCSV (filePath: any, organization: string, fetchOnlyIds: boolean) {

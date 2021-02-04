@@ -1,79 +1,74 @@
-export {};
 import { PersonObject } from "../models/Person";
 import { auditLog } from "../services/auditLogService";
 // Database connection from db.ts
 const connection = require("./../db");
 
-async function savePersonData(person: PersonObject, organization: string) {
+class PersonTableQueries {
 
-    const personColumns = [
-        "etunimi",
-        "sukunimi",
-        "email"
-    ];
+    async savePersonData(person: PersonObject, organization: string) {
 
-    const tunniste = person.tunniste;
+        const tunniste = person.tunniste;
 
-    const personParams = {"tunniste": tunniste, "organization": organization};
+        const personParams = {"tunniste": tunniste, "organization": organization};
 
-    const query = "SELECT DISTINCT p.id FROM person p " +
-        "INNER JOIN person_organization o " +
-        "ON o.personid = p.id " +
-        "WHERE o.organisaatiotunniste = ${organization} " +
-        "AND p.tunniste = ${tunniste};";
+        const query = "SELECT DISTINCT p.id FROM person p " +
+            "INNER JOIN person_organization o " +
+            "ON o.personid = p.id " +
+            "WHERE o.organisaatiotunniste = ${organization} " +
+            "AND p.tunniste = ${tunniste};";
 
-    const data = await connection.db.oneOrNone(query, personParams);
+        const data = await connection.db.oneOrNone(query, personParams);
 
-    // no data in person table; insert new record
-    if (!data) {
+        // no data in person table; insert new record
+        if (!data) {
 
-        await insertNewPerson(person, organization);
+            await this.insertNewPerson(person, organization);
 
-    } else {
-
-        const personid = data.id;
-        const personIdParams = {"personid": personid};
-
-        personColumns.push("modified");
-        const updatePersonObj = {
-            "etunimi": person.etunimi,
-            "sukunimi": person.sukunimi,
-            "email": person.email,
-            "modified": new Date()
-        };
-        const personTable = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
-        const updatePersonQuery = connection.pgp.helpers.update(updatePersonObj, personTable) + " WHERE id = " + "${personid}" + " RETURNING id;";
-        await connection.db.one(updatePersonQuery, personIdParams);
-
-        await auditLog.postPersonTableAuditData(personid, organization, "PUT", "person", updatePersonObj);
-
-        // first delete previous records
-        await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
-
-        // insert new data, create separate function of organization insert
-        await insertOrganisaatioTekija(personid, person, organization);
-
-        if (!person.orcid || person.orcid === "") {
-            return;
         } else {
 
-            //    update or insert
-            const identifierId = await checkIfPersonHasOrcid(personid);
+            // TODO: add try catch
 
-            if (identifierId) {
-                // if identifier id exists, update orcid
-                const orcidData = await checkIfOrcidExists(organization, person.orcid, personid);
-                if (orcidData) {
-                    throw new Error("Error in orcid field, orcid is already in use in this organization.");
-                }
-                await updateOrcid(personid, person.orcid);
+            const personid = data.id;
+
+            const updatePersonObj = {
+                "etunimi": person.etunimi,
+                "sukunimi": person.sukunimi,
+                "email": person.email,
+                "modified": new Date()
+            };
+
+            // update data in person table
+            await this.updatePerson(personid, updatePersonObj, organization);
+
+            // delete previous organisational units
+            await this.deleteOrganizationData(personid, organization);
+
+            // insert organisational units
+            await this.insertOrganisaatioTekija(personid, person, organization);
+
+            if (!person.orcid || person.orcid === "") {
+                console.log("ei orcid tietoa");
+                return;
+
             } else {
-                // otherwise insert new record
-                const orcidData = await checkIfOrcidExists(organization, person.orcid);
-                if (orcidData) {
-                    throw new Error("Error in orcid field, orcid is already in use in this organization.");
+                const identifierId = await this.checkIfPersonHasOrcid(personid);
+
+                if (identifierId) {
+                    // if identifier id exists, update orcid
+                    const orcidData = await this.checkIfOrcidExists(organization, person.orcid, personid);
+                    if (orcidData) {
+                        throw new Error("Error in orcid field, orcid is already in use in this organization.");
+                    }
+                    await this.updateOrcid(personid, person.orcid, organization);
+                } else {
+                    // otherwise insert new record
+                    const orcidData = await this.checkIfOrcidExists(organization, person.orcid);
+                    if (orcidData) {
+                        throw new Error("Error in orcid field, orcid is already in use in this organization.");
+                    }
+                    await this.insertOrcid(personid, person.orcid, organization);
+
                 }
-                await insertOrcid(personid, person.orcid);
 
             }
 
@@ -81,147 +76,189 @@ async function savePersonData(person: PersonObject, organization: string) {
 
     }
 
-}
+    async updatePerson(personid: number, updatePersonObj: any, organization: string) {
 
-async function checkIfPersonHasOrcid(personid: number) {
-    const personIdParams = {"personid": personid};
+        const personColumns = [
+            "etunimi",
+            "sukunimi",
+            "email",
+            "modified"
+        ];
 
-    const orcidQuery = "SELECT id FROM person_identifier WHERE personid = " +
-        "${personid} AND tunnistetyyppi = 'orcid';";
+        const personIdParams = {"personid": personid};
 
-    return await connection.db.oneOrNone(orcidQuery, personIdParams);
-}
+        const personTable = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
+        const updatePersonQuery = connection.pgp.helpers.update(updatePersonObj, personTable) + " WHERE id = " + "${personid}" + " RETURNING id;";
+        await connection.db.one(updatePersonQuery, personIdParams);
 
-async function updateOrcid(personid: number, orcid: string) {
-    const personIdParams = {"personid": personid};
+        await auditLog.postPersonTableAuditData(personid, organization, "PUT", "person", updatePersonObj);
 
-    const updatIdentifierObj = {"tunniste": orcid, "modified": new Date()};
-    const identifierTable = new connection.pgp.helpers.ColumnSet(["tunniste", "modified"], {table: "person_identifier"});
-    const updateIdentifierQuery = connection.pgp.helpers.update(updatIdentifierObj, identifierTable) +
-        " WHERE personid = " + "${personid}" + " AND tunnistetyyppi = 'orcid' RETURNING id;";
+    }
 
-    await connection.db.one(updateIdentifierQuery, personIdParams);
-}
+    async checkIfPersonHasOrcid(personid: number) {
+        const personIdParams = {"personid": personid};
 
-async function insertNewPerson(person: any, organization: string) {
+        const orcidQuery = "SELECT id FROM person_identifier WHERE personid = " +
+            "${personid} AND tunnistetyyppi = 'orcid';";
 
-    const personColumns = [
-        "etunimi",
-        "sukunimi",
-        "email",
-        "tunniste"
-    ];
+        return await connection.db.oneOrNone(orcidQuery, personIdParams);
+    }
 
-    const personValues = [{"tunniste": person.tunniste, "etunimi": person.etunimi,
-        "sukunimi": person.sukunimi, "email": person.email}];
+    async updateOrcid(personid: number, orcid: string, organization: string) {
+        const personIdParams = {"personid": personid};
 
-    const savePerson = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
-    const personPromise = connection.pgp.helpers.insert(personValues, savePerson) + " RETURNING id";
+        const updatIdentifierObj = {"tunniste": orcid, "modified": new Date()};
+        const identifierTable = new connection.pgp.helpers.ColumnSet(["tunniste", "modified"], {table: "person_identifier"});
+        const updateIdentifierQuery = connection.pgp.helpers.update(updatIdentifierObj, identifierTable) +
+            " WHERE personid = " + "${personid}" + " AND tunnistetyyppi = 'orcid' RETURNING id;";
 
-    // insert data to person table
-    const personId = await connection.db.one(personPromise);
+        await auditLog.postPersonTableAuditData(personid, organization, "PUT", "person_identifier", updatIdentifierObj);
+        await connection.db.one(updateIdentifierQuery, personIdParams);
+    }
 
-    await auditLog.postPersonTableAuditData(personId.id, organization, "POST", "person", personValues);
+    async insertNewPerson(person: any, organization: string) {
 
-    // insert data to person_organization table
-    await insertOrganisaatioTekija(personId.id, person, organization);
+        const personColumns = [
+            "etunimi",
+            "sukunimi",
+            "email",
+            "tunniste"
+        ];
 
-    // insert data to person_identifier table (save orcid only if data exists)
-    if (person.orcid && person.orcid !== "") {
-        const orcidData = await checkIfOrcidExists(organization, person.orcid);
-        if (orcidData) {
-            throw new Error("Error in orcid field, orcid is already in use in this organization.");
+        const personValues = [{
+            "tunniste": person.tunniste, "etunimi": person.etunimi,
+            "sukunimi": person.sukunimi, "email": person.email
+        }];
+
+        const savePerson = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
+        const personPromise = connection.pgp.helpers.insert(personValues, savePerson) + " RETURNING id";
+
+        // insert data to person table
+        const personId = await connection.db.one(personPromise);
+
+        await auditLog.postPersonTableAuditData(personId.id, organization, "POST", "person", personValues);
+
+        // insert data to person_organization table
+        await this.insertOrganisaatioTekija(personId.id, person, organization);
+
+        // insert data to person_identifier table (save orcid only if data exists)
+        if (person.orcid && person.orcid !== "") {
+            const orcidData = await this.checkIfOrcidExists(organization, person.orcid);
+            if (orcidData) {
+                throw new Error("Error in orcid field, orcid is already in use in this organization.");
+            }
+
+            await this.insertOrcid(personId.id, person.orcid, organization);
+        }
+    }
+
+    async insertOrganisaatioTekija(personid: number, alayksikkoData: any, organization: string) {
+
+        const organizationColumns = [
+            "personid",
+            "organisaatiotunniste",
+            "alayksikko"
+        ];
+        const kayttoLokiData = [];
+
+        const organizationValues = [{
+            "personid": personid,
+            "organisaatiotunniste": organization,
+            "alayksikko": alayksikkoData.alayksikko1
+        }];
+        const saveOrganization = new connection.pgp.helpers.ColumnSet(organizationColumns, {table: "person_organization"});
+        const organizationPromise = connection.pgp.helpers.insert(organizationValues, saveOrganization) + " RETURNING id";
+
+        await connection.db.one(organizationPromise);
+        kayttoLokiData.push(organizationValues[0]);
+
+        if (alayksikkoData.alayksikko2) {
+            const organizationValues2 = [{
+                "personid": personid,
+                "organisaatiotunniste": organization,
+                "alayksikko": alayksikkoData.alayksikko2
+            }];
+            const organizationPromise2 = connection.pgp.helpers.insert(organizationValues2, saveOrganization) + " RETURNING id";
+            await connection.db.one(organizationPromise2);
+            kayttoLokiData.push(organizationValues2[0]);
         }
 
-        await insertOrcid(personId.id, person.orcid);
-    }
-}
+        if (alayksikkoData.alayksikko3) {
+            const organizationValues3 = [{
+                "personid": personid,
+                "organisaatiotunniste": organization,
+                "alayksikko": alayksikkoData.alayksikko3
+            }];
+            const organizationPromise3 = connection.pgp.helpers.insert(organizationValues3, saveOrganization) + " RETURNING id";
+            await connection.db.one(organizationPromise3);
+            kayttoLokiData.push(organizationValues3[0]);
+        }
 
-async function insertOrganisaatioTekija(personid: number, alayksikkoData: any, organization: string) {
-
-    const organizationColumns = [
-        "personid",
-        "organisaatiotunniste",
-        "alayksikko"
-    ];
-    const kayttoLokiData = [];
-
-    const organizationValues = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko1}];
-    const saveOrganization = new connection.pgp.helpers.ColumnSet(organizationColumns, {table: "person_organization"});
-    const organizationPromise = connection.pgp.helpers.insert(organizationValues, saveOrganization) + " RETURNING id";
-
-    await connection.db.one(organizationPromise);
-    kayttoLokiData.push(organizationValues[0]);
-
-    if (alayksikkoData.alayksikko2) {
-        const organizationValues2 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko2}];
-        const organizationPromise2 = connection.pgp.helpers.insert(organizationValues2, saveOrganization) + " RETURNING id";
-        await connection.db.one(organizationPromise2);
-        kayttoLokiData.push(organizationValues2[0]);
+        await auditLog.postPersonTableAuditData(personid, organization, "POST", "person_organization", kayttoLokiData);
     }
 
-    if (alayksikkoData.alayksikko3) {
-        const organizationValues3 = [{"personid": personid, "organisaatiotunniste": organization, "alayksikko": alayksikkoData.alayksikko3}];
-        const organizationPromise3 = connection.pgp.helpers.insert(organizationValues3, saveOrganization) + " RETURNING id";
-        await connection.db.one(organizationPromise3);
-        kayttoLokiData.push(organizationValues3[0]);
+    async deleteOrganizationData(personid: number, organization: string) {
+
+        const personIdParams = {"personid": personid};
+
+        await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
+        await auditLog.postPersonTableAuditData(personid, organization, "DELETE", "person_organization", undefined);
     }
 
-    await auditLog.postPersonTableAuditData(personid, organization, "POST", "person_organization", kayttoLokiData);
-}
+    async insertOrcid(personID: number, orcid: string, organization: string) {
 
-async function insertOrcid(personID: number, orcid: string) {
+        const identifierColumns = [
+            "personid",
+            "tunnistetyyppi",
+            "tunniste"
+        ];
 
-    const identifierColumns = [
-        "personid",
-        "tunnistetyyppi",
-        "tunniste"
-    ];
+        const identifierValues = [{"personid": personID, "tunnistetyyppi": "orcid", "tunniste": orcid}];
+        const saveIdentifier = new connection.pgp.helpers.ColumnSet(identifierColumns, {table: "person_identifier"});
+        const identifierPromise = connection.pgp.helpers.insert(identifierValues, saveIdentifier) + " RETURNING id";
 
-    const identifierValues = [{"personid": personID, "tunnistetyyppi": "orcid", "tunniste": orcid }];
-    const saveIdentifier = new connection.pgp.helpers.ColumnSet(identifierColumns, {table: "person_identifier"});
-    const identifierPromise = connection.pgp.helpers.insert(identifierValues, saveIdentifier) + " RETURNING id";
-
-    await connection.db.one(identifierPromise);
-}
-
-async function checkIfPersonExists(organization: string, tunniste: string) {
-    const params = {"organization": organization, "tunniste": tunniste};
-
-    const tunnisteQuery = "SELECT p.id, p.tunniste FROM person p INNER JOIN person_organization o ON p.id = o.personid" +
-        " WHERE p.tunniste = ${tunniste} AND o.organisaatiotunniste = ${organization};";
-
-    return await connection.db.oneOrNone(tunnisteQuery, params);
-}
-
-async function checkIfOrcidExists(organization: string, orcid: string, personid?: string) {
-    let params;
-
-    const baseQuery =
-        "SELECT DISTINCT 1 FROM person_identifier i INNER JOIN person_organization o ON i.personid = o.personid" +
-        " WHERE i.tunnistetyyppi = ${tunnistetyyppi} AND i.tunniste = ${tunniste} AND o.organisaatiotunniste = ${organization}";
-
-    let orcidQuery;
-
-    if (personid) {
-        params = { "tunnistetyyppi": "orcid", "tunniste": orcid, "organization": organization, "personid": personid };
-        orcidQuery = baseQuery +  " AND i.personid != ${personid};";
-
-    } else {
-        params = { "tunnistetyyppi": "orcid", "tunniste": orcid, "organization": organization };
-        orcidQuery = baseQuery + ";";
+        await auditLog.postPersonTableAuditData(personID, organization, "POST", "person_identifier", identifierValues);
+        await connection.db.one(identifierPromise);
     }
 
-    return await connection.db.oneOrNone(orcidQuery, params);
+    async deleteIdentifierData(personid: number, tyyppi: string, organization: string) {
+        console.log("Deleting orcid for person " + personid);
+        const orcidParams = { "tunnistetyyppi": tyyppi, "personid": personid };
+        await connection.db.result("DELETE FROM person_identifier WHERE tunnistetyyppi = ${tunnistetyyppi} AND personid = ${personid}", orcidParams);
+        await auditLog.postPersonTableAuditData(personid, organization, "DELETE", "person_identifier", undefined);
+
+    }
+
+    async checkIfPersonExists(organization: string, tunniste: string) {
+        const params = {"organization": organization, "tunniste": tunniste};
+
+        const tunnisteQuery = "SELECT p.id, p.tunniste FROM person p INNER JOIN person_organization o ON p.id = o.personid" +
+            " WHERE p.tunniste = ${tunniste} AND o.organisaatiotunniste = ${organization};";
+
+        return await connection.db.oneOrNone(tunnisteQuery, params);
+    }
+
+    async checkIfOrcidExists(organization: string, orcid: string, personid?: string) {
+        let params;
+
+        const baseQuery =
+            "SELECT DISTINCT 1 FROM person_identifier i INNER JOIN person_organization o ON i.personid = o.personid" +
+            " WHERE i.tunnistetyyppi = ${tunnistetyyppi} AND i.tunniste = ${tunniste} AND o.organisaatiotunniste = ${organization}";
+
+        let orcidQuery;
+
+        if (personid) {
+            params = {"tunnistetyyppi": "orcid", "tunniste": orcid, "organization": organization, "personid": personid};
+            orcidQuery = baseQuery + " AND i.personid != ${personid};";
+
+        } else {
+            params = {"tunnistetyyppi": "orcid", "tunniste": orcid, "organization": organization};
+            orcidQuery = baseQuery + ";";
+        }
+
+        return await connection.db.oneOrNone(orcidQuery, params);
+    }
+
 }
 
-module.exports = {
-    savePersonData: savePersonData,
-    insertNewPerson: insertNewPerson,
-    insertOrganisaatioTekija: insertOrganisaatioTekija,
-    updateOrcid: updateOrcid,
-    insertOrcid: insertOrcid,
-    checkIfPersonHasOrcid: checkIfPersonHasOrcid,
-    checkIfPersonExists: checkIfPersonExists,
-    checkIfOrcidExists: checkIfOrcidExists
-};
+export const personQueries = new PersonTableQueries();
