@@ -1291,24 +1291,16 @@ class ApiQueries {
 
             try {
                 const organization = USER_DATA.organisaatio;
-                // const organization: string = "02536";
 
                 const personObj = req.body;
+                const tunniste = req.body.tunniste;
+                const orcid = req.body.orcid;
 
                 // First verify that user with this tunniste and organization combination does not exist in database
-                const tunniste = req.body.tunniste;
                 const tunnisteData = await personQueries.checkIfPersonExists(organization, tunniste);
 
                 if (tunnisteData) {
                     return res.status(400).send("This user already exists in database");
-                }
-
-                // Then verify that ORCID is not in use in this organization
-                const orcid = req.body.orcid;
-                const orcidData = await personQueries.checkIfOrcidExists(organization, orcid);
-
-                if (orcidData) {
-                    return res.status(400).send("This orcid is already in use in this organization");
                 }
 
                 personObj.alayksikko1 = personObj.alayksikko[0];
@@ -1316,8 +1308,20 @@ class ApiQueries {
                 personObj.alayksikko3 = personObj.alayksikko[2];
                 delete personObj.alayksikko;
 
-                await personQueries.insertNewPerson(personObj, organization);
+                const personid = await personQueries.insertPerson(personObj, organization, req.headers);
 
+                // insert data to person_organization table
+                await personQueries.insertOrganisaatioTekija(personid, personObj, organization, req.headers);
+
+                // insert data to person_identifier table (save orcid only if data exists)
+                if (orcid && orcid !== "") {
+                    const orcidData = await personQueries.checkIfOrcidExists(organization, orcid);
+                    // before saving check that this orcid does not already exist in database
+                    if (orcidData) {
+                        return res.status(400).send("This orcid is already in use in this organization");
+                    }
+                    await personQueries.insertOrcid(personid, orcid, req.headers);
+                }
                 await db.any("COMMIT");
                 res.status(200).send("OK");
             } catch (e) {
@@ -1364,33 +1368,33 @@ class ApiQueries {
             try {
 
                 // update data in person table
-                await personQueries.updatePerson(personid, personData, organization);
+                await personQueries.updatePerson(personid, personData, req.headers);
 
                 // delete previous organisational units
-                await personQueries.deleteOrganizationData(personid, organization);
+                await personQueries.deleteOrganizationData(personid, req.headers);
 
                 // insert organisational units
-                await personQueries.insertOrganisaatioTekija(personid, alayksikkoData, organization);
+                await personQueries.insertOrganisaatioTekija(personid, alayksikkoData, organization, req.headers);
 
                 // check if user currently has orcid
                 const identifierId = await personQueries.checkIfPersonHasOrcid(personid);
 
                 if (!orcid && identifierId) {
-                    await personQueries.deleteIdentifierData(personid, "orcid", organization);
+                    await personQueries.deleteIdentifierData(personid, "orcid", req.headers);
                 } else if (orcid && identifierId) {
                     // Verify that ORCID is not in use in this organization
                     const orcidData = await personQueries.checkIfOrcidExists(organization, orcid, personid);
                     if (orcidData) {
                         return res.status(400).send("This orcid is already in use in this organization");
                     }
-                    await personQueries.updateOrcid(personid, orcid, organization);
+                    await personQueries.updateOrcid(personid, orcid, req.headers);
                 } else if (!identifierId && orcid) {
                     // Verify that ORCID is not in use in this organization
                     const orcidData = await personQueries.checkIfOrcidExists(organization, orcid, undefined);
                     if (orcidData) {
                         return res.status(400).send("This orcid is already in use in this organization");
                     }
-                    await personQueries.insertOrcid(personid, orcid, organization);
+                    await personQueries.insertOrcid(personid, orcid, req.headers);
                 }
 
                 await db.any("COMMIT");
@@ -1447,10 +1451,9 @@ class ApiQueries {
         if (hasOrganisation && isAdmin) {
 
             try {
-                const personid = req.params.id;
-                const params = {"personid": personid};
 
-                await db.result("DELETE FROM person WHERE id = ${personid}", params);
+                const personid = parseInt(req.params.id);
+                await personQueries.deletePerson(personid, req.headers);
 
                 res.status(200).send("Person successfully deleted");
             } catch (e) {

@@ -116,7 +116,7 @@ async function savePersons(req: Request, res: Response) {
 
     if (organization && isAdmin) {
         const filePath = csvUploadFolder + organization;
-        const promise = csvParser.readCSV(filePath, organization, false);
+        const promise = csvParser.readCSV(filePath, organization, false, req.headers);
 
         promise.then(() => {
             fs.unlinkSync(filePath);

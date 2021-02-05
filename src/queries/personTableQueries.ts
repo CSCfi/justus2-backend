@@ -1,3 +1,4 @@
+import { IncomingHttpHeaders } from "http";
 import { PersonObject } from "../models/Person";
 import { auditLog } from "../services/auditLogService";
 // Database connection from db.ts
@@ -5,7 +6,7 @@ const connection = require("./../db");
 
 class PersonTableQueries {
 
-    async savePersonData(person: PersonObject, organization: string) {
+    async savePersonData(person: PersonObject, organization: string, headers: IncomingHttpHeaders) {
 
         const tunniste = person.tunniste;
 
@@ -22,11 +23,22 @@ class PersonTableQueries {
         // no data in person table; insert new record
         if (!data) {
 
-            await this.insertNewPerson(person, organization);
+            const personid = await this.insertPerson(person, organization, headers);
+
+            // insert data to person_organization table
+            await this.insertOrganisaatioTekija(personid, person, organization, headers);
+
+            // insert data to person_identifier table (save orcid only if data exists)
+            if (person.orcid && person.orcid !== "") {
+                const orcidData = await this.checkIfOrcidExists(organization, person.orcid);
+                if (orcidData) {
+                    throw new Error("Error in orcid field, orcid is already in use in this organization.");
+                }
+
+                await this.insertOrcid(personid, person.orcid, headers);
+            }
 
         } else {
-
-            // TODO: add try catch
 
             const personid = data.id;
 
@@ -38,16 +50,15 @@ class PersonTableQueries {
             };
 
             // update data in person table
-            await this.updatePerson(personid, updatePersonObj, organization);
+            await this.updatePerson(personid, updatePersonObj, headers);
 
             // delete previous organisational units
-            await this.deleteOrganizationData(personid, organization);
+            await this.deleteOrganizationData(personid, headers);
 
             // insert organisational units
-            await this.insertOrganisaatioTekija(personid, person, organization);
+            await this.insertOrganisaatioTekija(personid, person, organization, headers);
 
             if (!person.orcid || person.orcid === "") {
-                console.log("ei orcid tietoa");
                 return;
 
             } else {
@@ -59,14 +70,14 @@ class PersonTableQueries {
                     if (orcidData) {
                         throw new Error("Error in orcid field, orcid is already in use in this organization.");
                     }
-                    await this.updateOrcid(personid, person.orcid, organization);
+                    await this.updateOrcid(personid, person.orcid, headers);
                 } else {
                     // otherwise insert new record
                     const orcidData = await this.checkIfOrcidExists(organization, person.orcid);
                     if (orcidData) {
                         throw new Error("Error in orcid field, orcid is already in use in this organization.");
                     }
-                    await this.insertOrcid(personid, person.orcid, organization);
+                    await this.insertOrcid(personid, person.orcid, headers);
 
                 }
 
@@ -76,7 +87,7 @@ class PersonTableQueries {
 
     }
 
-    async updatePerson(personid: number, updatePersonObj: any, organization: string) {
+    async updatePerson(personid: number, updatePersonObj: any, headers: IncomingHttpHeaders) {
 
         const personColumns = [
             "etunimi",
@@ -91,20 +102,12 @@ class PersonTableQueries {
         const updatePersonQuery = connection.pgp.helpers.update(updatePersonObj, personTable) + " WHERE id = " + "${personid}" + " RETURNING id;";
         await connection.db.one(updatePersonQuery, personIdParams);
 
-        await auditLog.postPersonTableAuditData(personid, organization, "PUT", "person", updatePersonObj);
+        await auditLog.postPersonTableAuditData(headers, personid, "PUT", "person", updatePersonObj);
 
     }
 
-    async checkIfPersonHasOrcid(personid: number) {
-        const personIdParams = {"personid": personid};
 
-        const orcidQuery = "SELECT id FROM person_identifier WHERE personid = " +
-            "${personid} AND tunnistetyyppi = 'orcid';";
-
-        return await connection.db.oneOrNone(orcidQuery, personIdParams);
-    }
-
-    async updateOrcid(personid: number, orcid: string, organization: string) {
+    async updateOrcid(personid: number, orcid: string, headers: IncomingHttpHeaders) {
         const personIdParams = {"personid": personid};
 
         const updatIdentifierObj = {"tunniste": orcid, "modified": new Date()};
@@ -112,12 +115,12 @@ class PersonTableQueries {
         const updateIdentifierQuery = connection.pgp.helpers.update(updatIdentifierObj, identifierTable) +
             " WHERE personid = " + "${personid}" + " AND tunnistetyyppi = 'orcid' RETURNING id;";
 
-        await auditLog.postPersonTableAuditData(personid, organization, "PUT", "person_identifier", updatIdentifierObj);
         await connection.db.one(updateIdentifierQuery, personIdParams);
+        await auditLog.postPersonTableAuditData(headers, personid, "PUT", "person_identifier", updatIdentifierObj);
+
     }
 
-    async insertNewPerson(person: any, organization: string) {
-
+    async insertPerson(person: any, organization: string, headers: IncomingHttpHeaders) {
         const personColumns = [
             "etunimi",
             "sukunimi",
@@ -125,34 +128,21 @@ class PersonTableQueries {
             "tunniste"
         ];
 
-        const personValues = [{
+        const personValues = {
             "tunniste": person.tunniste, "etunimi": person.etunimi,
             "sukunimi": person.sukunimi, "email": person.email
-        }];
+        };
 
         const savePerson = new connection.pgp.helpers.ColumnSet(personColumns, {table: "person"});
         const personPromise = connection.pgp.helpers.insert(personValues, savePerson) + " RETURNING id";
 
         // insert data to person table
-        const personId = await connection.db.one(personPromise);
-
-        await auditLog.postPersonTableAuditData(personId.id, organization, "POST", "person", personValues);
-
-        // insert data to person_organization table
-        await this.insertOrganisaatioTekija(personId.id, person, organization);
-
-        // insert data to person_identifier table (save orcid only if data exists)
-        if (person.orcid && person.orcid !== "") {
-            const orcidData = await this.checkIfOrcidExists(organization, person.orcid);
-            if (orcidData) {
-                throw new Error("Error in orcid field, orcid is already in use in this organization.");
-            }
-
-            await this.insertOrcid(personId.id, person.orcid, organization);
-        }
+        const personid = await connection.db.one(personPromise);
+        await auditLog.postPersonTableAuditData(headers, personid.id, "POST", "person", personValues);
+        return personid.id;
     }
 
-    async insertOrganisaatioTekija(personid: number, alayksikkoData: any, organization: string) {
+    async insertOrganisaatioTekija(personid: number, alayksikkoData: any, organization: string, headers: IncomingHttpHeaders) {
 
         const organizationColumns = [
             "personid",
@@ -194,18 +184,10 @@ class PersonTableQueries {
             kayttoLokiData.push(organizationValues3[0]);
         }
 
-        await auditLog.postPersonTableAuditData(personid, organization, "POST", "person_organization", kayttoLokiData);
+        await auditLog.postPersonTableAuditData(headers, personid, "POST", "person_organization", kayttoLokiData);
     }
 
-    async deleteOrganizationData(personid: number, organization: string) {
-
-        const personIdParams = {"personid": personid};
-
-        await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
-        await auditLog.postPersonTableAuditData(personid, organization, "DELETE", "person_organization", undefined);
-    }
-
-    async insertOrcid(personID: number, orcid: string, organization: string) {
+    async insertOrcid(personID: number, orcid: string, headers: IncomingHttpHeaders) {
 
         const identifierColumns = [
             "personid",
@@ -217,15 +199,26 @@ class PersonTableQueries {
         const saveIdentifier = new connection.pgp.helpers.ColumnSet(identifierColumns, {table: "person_identifier"});
         const identifierPromise = connection.pgp.helpers.insert(identifierValues, saveIdentifier) + " RETURNING id";
 
-        await auditLog.postPersonTableAuditData(personID, organization, "POST", "person_identifier", identifierValues);
         await connection.db.one(identifierPromise);
+        await auditLog.postPersonTableAuditData(headers, personID, "POST", "person_identifier", identifierValues);
     }
 
-    async deleteIdentifierData(personid: number, tyyppi: string, organization: string) {
-        console.log("Deleting orcid for person " + personid);
+    async deletePerson(personid: number, headers: IncomingHttpHeaders) {
+        const params = {"personid": personid};
+        await connection.db.result("DELETE FROM person WHERE id = ${personid}", params);
+        await auditLog.postPersonTableAuditData(headers, personid, "DELETE", "person", undefined);
+    }
+
+    async deleteOrganizationData(personid: number, headers: IncomingHttpHeaders) {
+        const personIdParams = {"personid": personid};
+        await connection.db.result("DELETE FROM person_organization WHERE personid = ${personid}", personIdParams);
+        await auditLog.postPersonTableAuditData(headers, personid, "DELETE", "person_organization", undefined);
+    }
+
+    async deleteIdentifierData(personid: number, tyyppi: string, headers: IncomingHttpHeaders) {
         const orcidParams = { "tunnistetyyppi": tyyppi, "personid": personid };
         await connection.db.result("DELETE FROM person_identifier WHERE tunnistetyyppi = ${tunnistetyyppi} AND personid = ${personid}", orcidParams);
-        await auditLog.postPersonTableAuditData(personid, organization, "DELETE", "person_identifier", undefined);
+        await auditLog.postPersonTableAuditData(headers, personid, "DELETE", "person_identifier", undefined);
 
     }
 
@@ -237,6 +230,16 @@ class PersonTableQueries {
 
         return await connection.db.oneOrNone(tunnisteQuery, params);
     }
+
+    async checkIfPersonHasOrcid(personid: number) {
+        const personIdParams = {"personid": personid};
+
+        const orcidQuery = "SELECT id FROM person_identifier WHERE personid = " +
+            "${personid} AND tunnistetyyppi = 'orcid';";
+
+        return await connection.db.oneOrNone(orcidQuery, personIdParams);
+    }
+
 
     async checkIfOrcidExists(organization: string, orcid: string, personid?: string) {
         let params;

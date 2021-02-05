@@ -1,4 +1,5 @@
-
+import { IncomingHttpHeaders } from "http";
+import { UserObject } from "../models/User";
 const authService = require("./authService");
 const dbHelpers = require("./../databaseHelpers");
 
@@ -31,16 +32,20 @@ class AuditLog {
         return klId;
     }
 
-    public async postPersonTableAuditData(personid: number, organization: string, method: string, table: string, inputData: any) {
-        const uid = "123344";
-        const org = organization;
+    public async postPersonTableAuditData(headers: IncomingHttpHeaders, personid: number, method: string, table: string, inputData: any) {
+
+        const user: UserObject["perustiedot"] = await authService.getUserData(headers);
+        const uid = headers["shib-uid"];
+
+        if (!user || !uid) {
+            throw Error("No user data available");
+        }
 
         const kayttoLokiData = {
-            "name": "Justus Demo",
+            "name": user.nimi,
             "uid": uid,
             "person": personid,
-            "organization": org,
-            "role": "admin",
+            "organization": user.organisaatio,
             "itable": table,
             "action": method,
             "data": JSON.stringify(inputData)
@@ -48,7 +53,6 @@ class AuditLog {
 
         const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbHelpers.person_kaytto_loki, {table: "person_kaytto_loki"});
         const saveLokiData = connection.pgp.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
-        console.log(saveLokiData);
         const id = await connection.db.one(saveLokiData);
         console.log(id);
     }

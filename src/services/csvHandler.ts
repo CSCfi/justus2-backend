@@ -1,3 +1,4 @@
+import { IncomingHttpHeaders } from "http";
 const csv = require("csv-parser");
 const fs = require("fs");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
@@ -11,7 +12,7 @@ const iconv = require("iconv-lite");
 import { personQueries as personQueries } from "./../queries/personTableQueries";
 import { PersonObject } from "../models/Person";
 
-    async function readCSV (filePath: any, organization: string, fetchOnlyIds: boolean) {
+    async function readCSV (filePath: any, organization: string, fetchOnlyIds: boolean, requestHeaders?: IncomingHttpHeaders) {
 
         const results: any = [];
         const ids: any = [];
@@ -47,7 +48,7 @@ import { PersonObject } from "../models/Person";
                         });
 
                     } else {
-                        processCSVData(results, organization, ids).then((err: Error) => {
+                        processCSVData(results, organization, ids, requestHeaders).then((err: Error) => {
                             if (err) {
                                 reject(err.message);
                             } else {
@@ -105,7 +106,7 @@ import { PersonObject } from "../models/Person";
     }
 
 
-async function processCSVData(csvData: any, organization: string, tunnisteList: any) {
+async function processCSVData(csvData: any, organization: string, tunnisteList: any, headers: IncomingHttpHeaders) {
 
         // first validate
         const invalid = await validateCSVFields(csvData, organization);
@@ -131,13 +132,15 @@ async function processCSVData(csvData: any, organization: string, tunnisteList: 
 
               // loop through all rows before commit
               for (let i = 0; i < csvData.length; i++) {
-                  await personQueries.savePersonData(csvData[i], organization);
+                  await personQueries.savePersonData(csvData[i], organization, headers);
               }
 
               const listOfIds = await getRowsToBeDeleted(tunnisteList, organization, true);
 
               if (listOfIds.length !== 0) {
-                  await deleteRows(listOfIds);
+                  for (let i = 0; i < listOfIds.length; i++) {
+                      await personQueries.deletePerson(listOfIds[i].id, headers);
+                  }
               }
               await connection.db.any("COMMIT");
 
@@ -192,21 +195,6 @@ async function validateCSVFields(csv: any, org: string) {
     }
      // no errors, return undefined
      return undefined;
-
-}
-
-async function deleteRows(idList: any) {
-
-    const idArray: number[] = [];
-
-    for (let i = 0; i < idList.length; i++) {
-        idArray.push(parseInt(idList[i].id));
-    }
-
-    const params = { "idArray": [idArray] };
-
-    await connection.db.any("DELETE FROM person " +
-        "WHERE id = ANY ( ${idArray} )", params );
 
 }
 
