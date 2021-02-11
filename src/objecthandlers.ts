@@ -1,18 +1,13 @@
-/*  Alot of theese ObjectHandlers will look identical but we are still using
-    different ObjectHandlers for now, just incase we want to modify
-    the JSON response its easier to have them in separate functions
-*/
 
 import { Request, Response, NextFunction } from "express";
-import { UserObject } from "./models/User";
 
 const https = require("https");
 const redis = require("redis");
 const client = redis.createClient();
-const organisationConfig = require("./organization_config");
+const organisationConfig = require("./config/organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
-import { queries as api } from "./queries/apiQueries";
+import { personQueries as personQueries } from "./queries/personQueries";
 
 const koodistoUrl = process.env.KOODISTO_URL;
 const callerId = process.env.KOODISTO_CALLER_ID;
@@ -20,13 +15,11 @@ const callerId = process.env.KOODISTO_CALLER_ID;
 const theseusHandleLink = process.env.THESEUS_HANDLE_LINK;
 const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
-import { JulkaisuObject } from "./models/Julkaisu";
-import { JulkaisuObjectMin } from "./models/Julkaisu";
-import {  Organisaatiotekija } from "./models/Organisaatiotekija";
-import { Justus } from "./models/Justus";
-import { Lisatieto } from "./models/Taiteenala";
-import { Keyword, KeywordList } from "./models/Keyword";
-import { JufoKanava, JufoList } from "./models/Jufo";
+import { JulkaisuObject } from "./types/Julkaisu";
+import { JulkaisuObjectMin } from "./types/Julkaisu";
+import { Keyword, KeywordList } from "./types/Keyword";
+import { JufoKanava, JufoList } from "./types/Jufo";
+import { UserObject } from "./types/User";
 
 const getRedis = (rediskey: string, success: any, error: any) => {
     client.mget(rediskey, function (err: Error, reply: any) {
@@ -535,8 +528,8 @@ function ObjectHandlerJulkaisudata(obj: any, allData: boolean) {
         const data: any = {};
         let julkaisuData;
 
-        let julkaisu = <JulkaisuObject>{};
-        let julkaisuMin = <JulkaisuObjectMin>{};
+        let julkaisu: JulkaisuObject;
+        let julkaisuMin: JulkaisuObjectMin;
 
         if (!allData) {
             julkaisuMin = {
@@ -713,7 +706,7 @@ function ObjectHandlerPersonData(obj: any) {
 
 async function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
     const org = perustiedot.organisaatio;
-    perustiedot.showHrData = await api.queryHrData(org);
+    perustiedot.showHrData = await personQueries.queryHrData(org);
     getrediscallback("organizationCodes" + lang, addorgname);
     function addorgname(reply: any) {
         reply.forEach((s: any) =>  {

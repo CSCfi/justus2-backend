@@ -1,13 +1,13 @@
-import { Justus } from "../models/Justus";
-import { JulkaisuObject } from "../models/Julkaisu";
-import { Tieteenala } from "../models/Tieteenala";
-import { Taiteenala, Lisatieto } from "../models/Taiteenala";
-import { Organisaatiotekija } from "../models/Organisaatiotekija";
-import { FileData } from "../models/FileData";
+import { Justus } from "../types/Justus";
+import { JulkaisuObject } from "../types/Julkaisu";
+import { Tieteenala } from "../types/Tieteenala";
+import { Taiteenala, Lisatieto } from "../types/Taiteenala";
+import { Organisaatiotekija } from "../types/Organisaatiotekija";
+import { FileData } from "../types/FileData";
 
 class ValidatorService {
 
-    async julkaisu(julkaisu: JulkaisuObject) {
+    julkaisu = async (julkaisu: JulkaisuObject) => {
 
         if (!julkaisu) {
             throw Error("Publication data missing");
@@ -38,7 +38,7 @@ class ValidatorService {
         return julkaisu;
     }
 
-    async organisaatiotekija(organisaatiotekija: Justus["organisaatiotekija"]) {
+    organisaatiotekija = async (organisaatiotekija: Justus["organisaatiotekija"]) => {
 
         if (!organisaatiotekija || organisaatiotekija.length < 1) {
             throw Error("Organisation authors missing!");
@@ -51,7 +51,7 @@ class ValidatorService {
         });
     }
 
-    async tieteenala(tieteenala: Justus["tieteenala"]) {
+    tieteenala = async (tieteenala: Justus["tieteenala"]) => {
 
         if (!tieteenala || tieteenala.length < 1) {
             throw Error("Field of science missing!");
@@ -70,7 +70,7 @@ class ValidatorService {
 
     }
 
-    async taiteenala(taiteenala: Justus["taiteenala"]) {
+    taiteenala = async (taiteenala: Justus["taiteenala"]) => {
         // can be missing
         if (taiteenala && taiteenala.length > 0) {
             if (await this.hasDuplicates(taiteenala, "taiteenalakoodi")) {
@@ -87,7 +87,7 @@ class ValidatorService {
         }
     }
 
-    async avainsanat(avainsanat: Justus["avainsanat"]) {
+    avainsanat = async (avainsanat: Justus["avainsanat"]) => {
         // can be missing
         if (avainsanat && avainsanat.length > 0) {
             if (Array.isArray(avainsanat)) {
@@ -102,7 +102,7 @@ class ValidatorService {
         }
     }
 
-    async tyyppikategoria(kategoriat: Justus["taidealantyyppikategoria"]) {
+    tyyppikategoria = async (kategoriat: Justus["taidealantyyppikategoria"]) => {
         if (kategoriat && kategoriat.length > 0) {
             if (Array.isArray(kategoriat)) {
                 kategoriat.forEach((val) => {
@@ -118,7 +118,7 @@ class ValidatorService {
         }
     }
 
-    async lisatieto(lisatieto: Lisatieto) {
+    lisatieto = async (lisatieto: Lisatieto) => {
 
         for (const k in lisatieto) {
             if (k !== "julkaisuvuodenlisatieto" && k !== "tapahtuma" && k !== "julkistamispaikkakunta" && k !== "muutunniste") {
@@ -129,7 +129,7 @@ class ValidatorService {
     //  TODO check for empty value
     }
 
-    async fileData(fileData: FileData, file: any) {
+    fileData = async (fileData: FileData, file: any) => {
 
         if (!file) {
             throw Error ("File is missing");
@@ -142,13 +142,13 @@ class ValidatorService {
         }
     }
 
-    async validateJulkaisumaksu(julkaisumaksu: any) {
+    validateJulkaisumaksu = async (julkaisumaksu: any) => {
         // first replace , with .
         const replaced = julkaisumaksu.replace(",", ".");
         return parseFloat(replaced);
     }
 
-    async hasDuplicates(values: any, field: any) {
+    hasDuplicates = async (values: any, field: any) => {
         const seen = new Set();
         return values.some(function (object: any) {
             return seen.size === seen.add(object[field]).size;

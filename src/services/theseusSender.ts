@@ -1,27 +1,22 @@
 import { Request, Response, NextFunction } from "express";
-const request = require("request");
-const rp = require("request-promise");
-const path = require("path");
-
-const kp = require("../koodistopalvelu");
-const fs = require("fs");
-const slugify = require("slugify");
-const as = require("./authService");
+import { julkaisuQueries } from "../queries/julkaisuQueries";
+import { julkaisuArkistoQueries as julkaisuArkisto } from "../queries/julkaisuArkistoQueries";
+import * as  julkaisuFile from "../controllers/julkaisuFile";
 
 // Database connection
 const connection = require("./../db");
 
+const rp = require("request-promise");
+const fs = require("fs");
+const slugify = require("slugify");
+const oh = require("./../objecthandlers");
+const dbFields = require("../types/DatabaseFields");
+
 const BASEURL = process.env.THESEUS_BASE_URL;
 const JUKURIURL = process.env.JUKURI_BASE_URL;
 
-const fu = require("../queries/fileUpload");
-const api = require("./../queries/subQueries");
-const oh = require("./../objecthandlers");
-
-const dbHelpers = require("./../databaseHelpers");
-
 const savedFileName = "file.blob";
-const organisationConfig = require("./../organization_config");
+const organisationConfig = require("../config/organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
 const publicationFolder = process.env.FILE_FOLDER;
@@ -54,24 +49,17 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
      public async checkQueue() {
 
         const self = this;
-        const versions = [
-                    {
-                        name: "theseus"
-                    },
-                    {
-                        name: "jukuri"
-                    }
-                ];
-                versions.forEach(async function(e: any) {
-                    self.tokenHandler(e.name)
-                    .then((version: any) => {
-                        self.launchPost(version);
-                    }
-                    ).catch((msg: any) => {
-                        console.log("Something went wrong with getting a new token for " + e.name +  " and msg " + msg);
-                    }
-                    );
-                });
+        const versions = [ {name: "theseus" }, { name: "jukuri" } ];
+            versions.forEach(async function(e: any) {
+                self.tokenHandler(e.name)
+                .then((version: any) => {
+                    self.launchPost(version);
+                }
+                ).catch((msg: any) => {
+                    console.log("Something went wrong with getting a new token for " + e.name +  " and msg " + msg);
+                }
+                );
+            });
     }
 
     public async launchPost(version: any)  {
@@ -122,11 +110,11 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         } else {
             const params = {"id": julkaisunID};
             // ALL queries for the metadataobject
-            const julkaisuTableFields = dbHelpers.getTableFields("julkaisu", true);
+            const julkaisuTableFields = dbFields.getTableFieldsWithPrefix("julkaisu", true);
             const queryJulkaisu = "SELECT julkaisu.id, " + julkaisuTableFields + " FROM julkaisu WHERE id = " +
                 "${id};";
 
-            let arkistotableFields = dbHelpers.julkaisuarkistoUpdateFields;
+            let arkistotableFields = dbFields.julkaisuarkistoUpdateFields;
             arkistotableFields =  arkistotableFields.join(",");
 
             const queryArkistoTable = "SELECT urn, " + arkistotableFields + " FROM julkaisuarkisto WHERE julkaisuid = " +
@@ -137,12 +125,12 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             try {
                 julkaisuData["julkaisu"] = await connection.db.one(queryJulkaisu, params);
                 arkistoData = await connection.db.oneOrNone(queryArkistoTable, params);
-                julkaisuData["avainsanat"] = await api.getAvainsana(julkaisunID);
-                julkaisuData["julkaisu"]["isbn"] = await api.getIsbn(julkaisunID);
-                julkaisuData["julkaisu"]["issn"] = await api.getIssn(julkaisunID);
-                julkaisuData["julkaisu"]["projektinumero"] = await api.getProjektinumero(julkaisunID);
-                julkaisuData["tieteenala"] = await api.getTieteenala(julkaisunID);
-                julkaisuData["organisaatiotekija"] = await api.getOrganisaatiotekija(julkaisunID);
+                julkaisuData["avainsanat"] = await julkaisuQueries.getAvainsana(julkaisunID);
+                julkaisuData["julkaisu"]["isbn"] = await julkaisuQueries.getIsbn(julkaisunID);
+                julkaisuData["julkaisu"]["issn"] = await julkaisuQueries.getIssn(julkaisunID);
+                julkaisuData["julkaisu"]["projektinumero"] = await julkaisuQueries.getProjektinumero(julkaisunID);
+                julkaisuData["tieteenala"] = await julkaisuQueries.getTieteenala(julkaisunID);
+                julkaisuData["organisaatiotekija"] = await julkaisuQueries.getOrganisaatiotekija(julkaisunID);
             } catch (e) {
                 console.log(e);
             }
@@ -230,7 +218,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
         console.log("The stuff in insert temp table: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
 
-        if (fu.isPublicationInTheseus(julkaisuID)) {
+        if (julkaisuArkisto.isPublicationInTheseus(julkaisuID)) {
             try {
                 if (fileExists && fileExists.filename) {
                     await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
@@ -328,7 +316,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
                 console.log("Rinnakkaistallennetunversionverkkoosoite updated for julkaisu " + julkaisuID);
 
-                await fu.deleteJulkaisuFile(filePath, savedFileName);
+                await julkaisuFile.deleteJulkaisuFile(filePath, savedFileName);
 
                 console.log("File deleted from server");
                 console.log("Successfully sent publication with id " + julkaisuID + " to " + version + " and updated all data!");
@@ -343,6 +331,8 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
     }
 
     checkToken(version: any): Promise<any> {
+
+        console.log("IN CHECKTOKEN");
 
         let urlFinal = BASEURL + "status";
         let headersOpt = {
@@ -427,6 +417,8 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
 
     public async EmbargoUpdate(id: any, embargo: any, orgid: any) {
+
+        console.log("in embargo update");
         const self = this;
         let version = "theseus";
         let baseURL = BASEURL;
@@ -617,6 +609,8 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
     public async PutTheseus(metadataObject: any, id: any, org: any) {
         
+        console.log("in put theseus");
+
         let version = "theseus";
         let jukuriPublication;
         let baseURL = BASEURL;

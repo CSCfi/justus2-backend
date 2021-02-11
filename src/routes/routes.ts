@@ -1,80 +1,83 @@
 import { Router } from "express";
-// Defining our router
 const router: Router = Router();
 
-import { queries as api } from "./../queries/apiQueries";
-
-// Koodistopalvelu file
-const koodistopalvelu = require("./../queries/koodispalveluQueries");
-// External services (jufo, virta, crossref etc)
-const ext = require("./../queries/externalServices");
-// File upload
-const fu = require("./../queries/fileUpload");
-const ts = require("../services/TheseusSender");
+import * as userController from "../controllers/user";
+import * as julkaisuController from "../controllers/julkaisu";
+import * as personController from "../controllers/person";
+import * as externalController from "../controllers/externalServices";
+import *  as julkaisuFile from "../controllers/julkaisuFile";
+import * as personFile from "../controllers/personFile";
+import * as koodistoController from "../controllers/koodistoService";
 
 // Define the routes here, all will have the prexix /api/ as per the proxypass in the apache settings
-// GET requests here
-router.get("/julkaisut/lista/all", api.getJulkaisut.bind(api));
-router.get("/julkaisut/lista/:organisaatiotunnus?", api.getJulkaisutmin);
-router.get("/julkaisut/haku/:organisaatiotunnus?", api.getJulkaisutHaku);
-router.get("/julkaisut/tiedot/:id", api.getAllPublicationDataById);
-router.get("/user", api.getUser);
-router.get("/julkaisu/download/:id", fu.downloadJulkaisu);
 
-// POST requests
-router.post("/julkaisu", api.postJulkaisu.bind(api));
-router.post("/language", api.postLanguage);
-router.post("/logout", api.logout);
-router.post("/julkaisu/upload", fu.uploadJulkaisu);
+// User related requests
+router.get("/user", userController.getUser);
+router.post("/language", userController.postLanguage);
+router.post("/logout", userController.logout);
+router.post("/impersonate", userController.impersonateUser);
 
-// For owners
-router.post("/impersonate", api.impersonateUser);
+// Julkaisu GET requests
+router.get("/julkaisut/lista/all", julkaisuController.getJulkaisut);
+router.get("/julkaisut/lista/:organisaatiotunnus?", julkaisuController.getJulkaisutmin);
+router.get("/julkaisut/haku/:organisaatiotunnus?", julkaisuController.getJulkaisutHaku);
+router.get("/julkaisut/tiedot/:id", julkaisuController.getAllPublicationDataById);
+router.get("/julkaisu/download/:id", julkaisuFile.downloadJulkaisu);
 
-// PUT requests
-router.put("/julkaisu/:id", api.updateJulkaisu.bind(api));
-router.put("/julkaisuntila/:id", api.putJulkaisuntila);
+// Julkaisu POST requests
+router.post("/julkaisu", julkaisuController.postJulkaisu);
+router.post("/julkaisu/upload", julkaisuFile.uploadJulkaisu);
 
-// DELETE requests
-router.delete("/julkaisu/poista/:id", fu.deleteJulkaisu);
+// Julkaisu PUT requests
+router.put("/julkaisu/:id", julkaisuController.updateJulkaisu);
+router.put("/julkaisuntila/:id", julkaisuController.putJulkaisuntila);
 
+// Julkaisu DELETE requests
+router.delete("/julkaisu/poista/:id", julkaisuFile.deleteJulkaisu);
 
-// Queries for external services
-router.get("/haku/avainsanat", ext.getAvainSanat);
-router.get("/haku/julkaisusarjat", ext.getJulkaisuSarjat);
-router.get("/haku/konferenssinnimet", ext.getKonferenssinimet);
-router.get("/haku/kustantajat", ext.getKustantajat);
-router.get("/haku/jufo/:id", ext.getJufo);
-router.get("/haku/jufot", ext.getJufotISSN);
-router.get("/haku/julkaisut", ext.getJulkaisutVirtaCrossrefLista);
-router.get("/haku/julkaisu", ext.getJulkaisuVirtaCrossrefEsitaytto);
-router.get("/haku/urntunnus", ext.getUrn);
+// GET requests to external services (Finto, Jufo, Virta, Crossref)
+router.get("/haku/avainsanat", externalController.getAvainSanat);
+router.get("/haku/julkaisusarjat", externalController.getJulkaisuSarjat);
+router.get("/haku/konferenssinnimet", externalController.getKonferenssinimet);
+router.get("/haku/kustantajat", externalController.getKustantajat);
+router.get("/haku/jufo/:id", externalController.getJufo);
+router.get("/haku/jufot", externalController.getJufotISSN);
+router.get("/haku/julkaisut", externalController.getJulkaisutVirtaCrossrefLista);
+router.get("/haku/julkaisu", externalController.getJulkaisuVirtaCrossrefEsitaytto);
+router.get("/haku/urntunnus", externalController.getUrn);
 
-// KoodistoPalvelu queries
-router.get("/organisaatiolistaus", koodistopalvelu.getOrganisaatioListaus);
-router.get("/public/organisaationimet", koodistopalvelu.getOrganisaatioNames);
-router.get("/haku/julkaisunluokat", koodistopalvelu.getJulkaisunLuokat);
-router.get("/haku/julkaisuntilat", koodistopalvelu.getJulkaisunTilat);
-router.get("/haku/tekijanrooli", koodistopalvelu.getTekijanRooli);
-router.get("/haku/kielet", koodistopalvelu.getKielet);
-router.get("/haku/valtiot", koodistopalvelu.getValtiot);
-router.get("/haku/taidealantyyppikategoria", koodistopalvelu.getTaideAlanTyyppiKategoria);
-router.get("/haku/taiteenalat", koodistopalvelu.getTaiteenalat);
-router.get("/haku/tieteenalat", koodistopalvelu.getTieteenalat);
-router.get("/haku/alayksikot", koodistopalvelu.getAlaYksikot);
+// GET requests to koodistopalvelu data
+router.get("/organisaatiolistaus", koodistoController.getOrganisaatioListaus);
+router.get("/public/organisaationimet", koodistoController.getOrganisaatioNames);
+router.get("/haku/julkaisunluokat", koodistoController.getJulkaisunLuokat);
+router.get("/haku/julkaisuntilat", koodistoController.getJulkaisunTilat);
+router.get("/haku/tekijanrooli", koodistoController.getTekijanRooli);
+router.get("/haku/kielet", koodistoController.getKielet);
+router.get("/haku/valtiot", koodistoController.getValtiot);
+router.get("/haku/taidealantyyppikategoria", koodistoController.getTaideAlanTyyppiKategoria);
+router.get("/haku/taiteenalat", koodistoController.getTaiteenalat);
+router.get("/haku/tieteenalat", koodistoController.getTieteenalat);
+router.get("/haku/alayksikot", koodistoController.getAlaYksikot);
 
-// Person table queries
-router.get("/persons/get", api.getPersonListaus.bind(api));
-router.put("/person/update/:id", api.updatePerson);
-router.get("/persons/download", api.downloadPersons.bind(api));
-router.post("/persons/upload", fu.countRowsToBeDeleted);
-router.post("/persons/save", fu.savePersons);
-router.get("/persons/publications/:orcid", api.getPublicationListForOnePerson);
-router.delete("/persons/remove/:id", api.removePerson);
-router.delete("/persons/csv-remove", fu.deleteCsvFile);
-router.post("/person/save/", api.postPerson);
+// Person GET requests
+router.get("/persons/get", personController.getPersonListaus);
+router.get("/persons/publications/:orcid", personController.getPublicationListForOnePerson);
+router.get("/persons/download", personController.downloadPersons);
+
+// Person POST requests
+router.post("/person/save/", personController.postPerson);
+router.post("/persons/upload", personFile.countRowsToBeDeleted);
+router.post("/persons/save", personFile.savePersons);
+
+// Person PUT requests
+router.put("/person/update/:id", personController.updatePerson);
+
+// Person DELETE requests
+router.delete("/persons/remove/:id", personController.removePerson);
+router.delete("/persons/csv-remove", personFile.deleteCsvFile);
 
 // Database connection test
-router.get("/public/db-health", api.dbHealthCheck);
+router.get("/public/db-health", userController.dbHealthCheck);
 
 export = router;
 

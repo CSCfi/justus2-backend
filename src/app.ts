@@ -1,8 +1,7 @@
-import express, { NextFunction } from "express";
+import express from "express";
 import compression from "compression";  // compresses requests
 import lusca from "lusca";
 import dotenv from "dotenv";
-import flash from "express-flash";
 import path from "path";
 import expressValidator from "express-validator";
 
@@ -10,7 +9,6 @@ dotenv.config({ path: ".env.variables" });
 const sessionSecret = process.env.SESSION_SECRET;
 
 const redis = require("redis");
-
 
 // Create express server
 const app = express();
@@ -21,6 +19,7 @@ const bodyParser = require("body-parser");
 
 // Controllers (route handlers)
 import * as homeController from "./controllers/home";
+import { init as init } from "./init";
 
 const apiRouter = require("./routes/routes");
 const session = require ("express-session");
@@ -38,7 +37,6 @@ app.use(session({
     saveUninitialized: false
 }));
 
-
 app.use(morgan("dev"));
 app.use(compression());
 app.use(bodyParser.json());
@@ -49,9 +47,12 @@ app.set("view engine", "pug");
 app.get("/", homeController.index);
 app.use("/", apiRouter);
 app.use(expressValidator);
-app.use(flash);
 app.use(lusca.xframe("SAMEORIGIN"));
 app.use(lusca.xssProtection);
 app.disable("etag");
+
+init.setKoodisto();
+init.setInterval();
+init.setSchedule();
 
 export default app;

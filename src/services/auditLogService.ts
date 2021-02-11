@@ -1,13 +1,14 @@
 import { IncomingHttpHeaders } from "http";
-import { UserObject } from "../models/User";
-const authService = require("./authService");
-const dbHelpers = require("./../databaseHelpers");
+import { UserObject } from "../types/User";
+import { authService as authService } from "../services/authService";
+
+const dbFields = require("../types/DatabaseFields");
 
 const connection = require("./../db");
 
 class AuditLog {
 
-    public async postAuditData(headers: any, method: any, table: any, id: any, inputData: any) {
+    public async postAuditData(headers: IncomingHttpHeaders, method: any, table: any, id: any, inputData: any) {
 
         if (!inputData) { return; }
 
@@ -26,7 +27,7 @@ class AuditLog {
             "data": JSON.stringify(inputData)
         };
 
-        const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbHelpers.kaytto_loki, {table: "kaytto_loki"});
+        const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbFields.kaytto_loki, {table: "kaytto_loki"});
         const saveLokiData = connection.pgp.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
         const klId = await connection.db.one(saveLokiData);
         return klId;
@@ -51,7 +52,7 @@ class AuditLog {
             "data": JSON.stringify(inputData)
         };
 
-        const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbHelpers.person_kaytto_loki, {table: "person_kaytto_loki"});
+        const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbFields.person_kaytto_loki, {table: "person_kaytto_loki"});
         const saveLokiData = connection.pgp.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
         const id = await connection.db.one(saveLokiData);
         console.log(id);
