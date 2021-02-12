@@ -332,8 +332,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
 
     checkToken(version: any): Promise<any> {
 
-        console.log("IN CHECKTOKEN");
-
         let urlFinal = BASEURL + "status";
         let headersOpt = {
 

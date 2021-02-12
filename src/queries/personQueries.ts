@@ -175,7 +175,9 @@ class PersonQueries {
             " WHERE personid = " + "${personid}" + " AND tunnistetyyppi = 'orcid' RETURNING id;";
 
         await connection.db.one(updateIdentifierQuery, personIdParams);
-        await auditLog.postPersonTableAuditData(headers, personid, "PUT", "person_identifier", updatIdentifierObj);
+
+        const auditLogData = {"tunnistetyyppi": "orcid", "tunniste": orcid, "modified": new Date()};
+        await auditLog.postPersonTableAuditData(headers, personid, "PUT", "person_identifier", auditLogData);
 
     }
 
