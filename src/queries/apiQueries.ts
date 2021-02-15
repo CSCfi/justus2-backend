@@ -692,7 +692,7 @@ function postLanguage(req: Request, res: Response) {
     }
 }
 
-function impersonateUser(req: Request, res: Response) {
+async function impersonateUser(req: Request, res: Response) {
 
     if (!req.session.userData || !req.session.userData.owner) {
         return res.status(403).send("Permission denied");
@@ -713,11 +713,9 @@ function impersonateUser(req: Request, res: Response) {
     });
     console.log(req.session.userData);
 
-    oh.ObjectHandlerUser(req.session.userData, req.session.language, function(result: any) {
-        res.status(200).json(
-            result
-        );
-    });
+    const userDataToClient = await oh.ObjectHandlerUser(req.session.userData, req.session.language);
+    res.status(200).send(userDataToClient);
+
 }
 
 // PUT requests
