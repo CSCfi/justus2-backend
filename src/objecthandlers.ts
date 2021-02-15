@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from "express";
 const https = require("https");
 const redis = require("redis");
 const client = redis.createClient();
+const { promisify } = require("util");
 const organisationConfig = require("./config/organization_config");
 const domainMapping = organisationConfig.domainMappings;
 
@@ -19,18 +20,8 @@ import { JulkaisuObject } from "./types/Julkaisu";
 import { JulkaisuObjectMin } from "./types/Julkaisu";
 import { Keyword, KeywordList } from "./types/Keyword";
 import { JufoKanava, JufoList } from "./types/Jufo";
-import { UserObject } from "./types/User";
+import { Alayksikot, UserObject, Yksikot } from "./types/User";
 
-const getRedis = (rediskey: string, success: any, error: any) => {
-    client.mget(rediskey, function (err: Error, reply: any) {
-        if (!err) {
-            success(reply);
-        }
-        else {
-            error(err);
-        }
-    });
-};
 
 function namechecker(name: any) {
     if (name == undefined) {
@@ -39,6 +30,18 @@ function namechecker(name: any) {
     else {
         return name.nimi;
     }
+}
+
+async function getRedisData(key: string) {
+    const get = promisify(client.mget).bind(client);
+
+    const data = await get(key).catch((err: Error) => {
+        if (err) {
+            console.log(err);
+        }
+    });
+
+    return JSON.parse(data[0]);
 }
 
 // Objecthandler for Koodistopalvelu kielet
@@ -410,20 +413,6 @@ function ObjectHandlerJufoISSN(obj: Array<JufoList>): JufoList[] {
 
 }
 
-function getrediscallback(key: string, callbacker: Function) {
-    getRedis(key, function success(reply: string) {
-        let newdata = undefined;
-        try {
-            newdata = JSON.parse(reply);
-        } catch (err) {
-            newdata = [];
-        }
-        callbacker(newdata);
-    }, function error(err: Error) {
-        console.log("Something went wrong" + err);
-    });
-}
-
 function ObjectHandlerOrgNames(obj: any, orgid: any, lang: any) {
 
     const names: any  = [];
@@ -705,156 +694,106 @@ function ObjectHandlerPersonData(obj: any) {
     }
 
 async function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
+    const user = <UserObject>{};
+
+    console.log("in objecthandler user");
     const org = perustiedot.organisaatio;
-    perustiedot.showHrData = await personQueries.queryHrData(org);
-    getrediscallback("organizationCodes" + lang, addorgname);
-    function addorgname(reply: any) {
-        reply.forEach((s: any) =>  {
-            if (s.arvo === org) {
-                const orgname = s.value;
-                perustiedot.organisaationimi = orgname;
+
+    let visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
+    let requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
+
+    Object.keys(domainMapping).forEach(function (val, key) {
+        if (domainMapping[key].code === org) {
+            if (domainMapping[key].visibleFields) {
+                visibleFields = visibleFields.concat(domainMapping[key].visibleFields);
             }
-        });
-    getrediscallback("getAlayksikot", getdata);
-        function getdata(reply: any) {
-            const alayksikot: object [] = [
-            ];
-                alayksikot.push(reply);
-                parsealayksikot(alayksikot, org, callback);
-
-    }
-    function parsealayksikot(obj: any, orgid: any, callbacker: any) {
-        const yarray: object [] = [];
-        const y2017: object [] = [];
-        const y2016: object [] = [];
-        const y2018: object [] = [];
-        const y2019: object [] = [];
-        const y2020: object [] = [];
-
-        const twotwenty = {
-            vuosi: "2020",
-            yksikot: y2020,
-        };
-        const twonine = {
-            vuosi: "2019",
-            yksikot: y2019,
-        };
-        const twoeight = {
-            vuosi: "2018",
-            yksikot: y2018,
-        };
-        const twoseven = {
-            vuosi: "2017",
-            yksikot: y2017
-        };
-        const twosix = {
-            vuosi: "2016",
-            yksikot: y2016
-        };
-         obj.map((s: any) => {
-            s.map((x: any) => {
-                const match = x.arvo.slice(0, x.arvo.indexOf("-"));
-                const year = x.arvo.split("-")[1].split("-")[0];
-                if (orgid === match && year === "2017") {
-                    const y27 = {
-                        arvo: x.arvo,
-                        selite: x.selite,
-                    };
-                    y2017.push(y27);
-
-                }
-                else if (orgid === match && year === "2018") {
-                    const y28 = {
-                        arvo: x.arvo,
-                        selite: x.selite,
-                    };
-                    y2018.push(y28);
-                }
-                else if (orgid === match && year === "2019") {
-                    const y29 = {
-                        arvo: x.arvo,
-                        selite: x.selite,
-                    };
-                    y2019.push(y29);
-                }
-                else if (orgid === match && year === "2020") {
-                    const y20 = {
-                        arvo: x.arvo,
-                        selite: x.selite,
-                    };
-                    y2020.push(y20);
-                }
-                else if (orgid === match && year != "2017" && year != "2018") {
-                    const y26 = {
-                        arvo: x.arvo,
-                        selite: x.selite,
-                    };
-                    y2016.push(y26);
-                }
-            });
-        });
-
-        let visibleFields = JSON.parse(JSON.stringify(organisationConfig.commonVisibleFields));
-        let requiredFields = JSON.parse(JSON.stringify(organisationConfig.commonRequiredFields));
-
-        Object.keys(domainMapping).forEach(function (val, key) {
-            if (domainMapping[key].code === org) {
-                if (domainMapping[key].visibleFields) {
-                    visibleFields = visibleFields.concat(domainMapping[key].visibleFields);
-                }
-
-                if (domainMapping[key].requiredFields) {
-                    requiredFields = requiredFields.concat(domainMapping[key].requiredFields);
-                }
-
-                if (domainMapping[key].theseusData) {
-                    perustiedot.showPublicationInput = true;
-                } else if (domainMapping[key].jukuriData) {
-                    perustiedot.showPublicationInput = true;
-                    perustiedot.jukuriUser = true;
-                } else {
-                    perustiedot.showPublicationInput = false;
-                }
-
+            if (domainMapping[key].requiredFields) {
+                requiredFields = requiredFields.concat(domainMapping[key].requiredFields);
             }
-        });
-
-        twosix.yksikot.sort(compare);
-        twoseven.yksikot.sort(compare);
-        twoeight.yksikot.sort(compare);
-        twonine.yksikot.sort(compare);
-        twotwenty.yksikot.sort(compare);
-
-        yarray.push(twotwenty);
-        yarray.push(twonine);
-        yarray.push(twoeight);
-        yarray.push(twoseven);
-        yarray.push(twosix);
-
-        if (y2016.length || y2017.length || y2018.length || y2019.length || y2020.length) {
-                  visibleFields.push("alayksikko");
-              const orgall: UserObject =  {
-                perustiedot,
-                alayksikot: yarray,
-                visibleFields,
-                requiredFields
-              };
-              callbacker(orgall);
-
+            if (domainMapping[key].theseusData) {
+                perustiedot.showPublicationInput = true;
+            } else if (domainMapping[key].jukuriData) {
+                perustiedot.showPublicationInput = true;
+                perustiedot.jukuriUser = true;
+            } else {
+                perustiedot.showPublicationInput = false;
             }
-            else {
-                const orgallx: UserObject = {
-                    perustiedot,
-                    alayksikot: yarray,
-                    visibleFields,
-                    requiredFields
-                  };
-                  callbacker(orgallx);
-            }
+
         }
+    });
+
+    const organizationCodes = await getRedisData("organizationCodes" + lang);
+
+    organizationCodes.forEach((s: any) =>  {
+        if (s.arvo === org) {
+            perustiedot.organisaationimi = s.value;
+        }
+    });
+
+    const organizationalUnits = await getRedisData("getAlayksikot");
+
+    const userUnits = await parseOrganizationUnits(organizationalUnits, org);
+
+    if (userUnits[0].yksikot.length || userUnits[1].yksikot.length || userUnits[2].yksikot.length || userUnits[3].yksikot.length) {
+        visibleFields.push("alayksikko");
     }
+
+    user["alayksikot"] = userUnits;
+    user["perustiedot"] = perustiedot;
+    user["visibleFields"] = visibleFields;
+    user["requiredFields"] = requiredFields;
+
+    return user;
 
 }
+
+const parseOrganizationUnits = async(organizationalUnits: any, organization: any) => {
+
+    const allUnits: Array<Alayksikot> = [];
+
+    try {
+        const y2018: Array<Yksikot> = [];
+        const y2019: Array<Yksikot> = [];
+        const y2020: Array<Yksikot> = [];
+        const y2021: Array<Yksikot> = [];
+
+        const units2021 = { vuosi: "2021", yksikot: y2021 };
+        const units2020 = { vuosi: "2020", yksikot: y2020 };
+        const units2019 = { vuosi: "2019", yksikot: y2019 };
+        const units2018 = { vuosi: "2018", yksikot: y2018 };
+
+        for (const key in organizationalUnits) {
+            const unit = organizationalUnits[key].arvo;
+            const selite = organizationalUnits[key].selite;
+            const match = unit.slice(0, unit.indexOf("-"));
+            const year = unit.split("-")[1].split("-")[0];
+
+            if (organization === match && year === "2018") {
+                units2018.yksikot.push({"arvo": unit, "selite": selite});
+            } else if (organization === match && year === "2019") {
+                units2019.yksikot.push({"arvo": unit, "selite": selite});
+            } else if (organization === match && year === "2020") {
+                units2020.yksikot.push({"arvo": unit, "selite": selite});
+            } else if (organization === match && year === "2021") {
+                units2021.yksikot.push({"arvo": unit, "selite": selite});
+            }
+        }
+        units2018.yksikot.sort(compare);
+        allUnits.push(units2018);
+        units2019.yksikot.sort(compare);
+        allUnits.push(units2019);
+        units2020.yksikot.sort(compare);
+        allUnits.push(units2020);
+        units2021.yksikot.sort(compare);
+        allUnits.push(units2021);
+
+        return allUnits;
+    } catch (e) {
+        console.log(e);
+        throw Error;
+    }
+
+};
 
 function compare(a: any, b: any) {
     if ( a.selite < b.selite ) {

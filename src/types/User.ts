@@ -6,6 +6,7 @@ export type UserObject = {
         kieli: string;
         nimi: string;
         organisaatio: string;
+        organisaationimi?: string;
         rooli: string;
         uid: string,
         showHrData: boolean;
@@ -13,7 +14,17 @@ export type UserObject = {
         jukuriUser: boolean;
         owner: boolean;
     };
-    alayksikot: {};
+    alayksikot: Alayksikot[];
     requiredFields: [];
     visibleFields: [];
+};
+
+export type Alayksikot = {
+    vuosi: string;
+    yksikot: Yksikot[]
+};
+
+export type Yksikot = {
+    arvo: string;
+    selite: string;
 };

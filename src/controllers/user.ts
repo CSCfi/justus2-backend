@@ -14,6 +14,7 @@ const oh = require("../objecthandlers");
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
+
         let userData: UserObject["perustiedot"];
 
         if (req.session.userData) {
@@ -46,11 +47,9 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
         }
 
         userData.kieli = req.session.language;
-        await oh.ObjectHandlerUser(userData, req.session.language, function (result: any) {
-            res.status(200).json(
-                result
-            );
-        });
+        const userDataToClient = await oh.ObjectHandlerUser(userData, req.session.language);
+        res.status(200).send(userDataToClient);
+
     } catch (e) {
         res.status(500).send("Could not get user data");
     }
@@ -73,7 +72,7 @@ export const postLanguage = (req: Request, res: Response) => {
     }
 };
 
-export const impersonateUser = (req: Request, res: Response) => {
+export const impersonateUser = async(req: Request, res: Response) => {
 
     if (!req.session.userData || !req.session.userData.owner) {
         return res.status(403).send("Permission denied");
@@ -93,11 +92,9 @@ export const impersonateUser = (req: Request, res: Response) => {
         }
     });
 
-    oh.ObjectHandlerUser(req.session.userData, req.session.language, function(result: any) {
-        res.status(200).json(
-            result
-        );
-    });
+    const userDataToClient = await oh.ObjectHandlerUser(req.session.userData, req.session.language);
+    res.status(200).send(userDataToClient);
+
 };
 
 
