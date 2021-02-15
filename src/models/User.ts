@@ -6,6 +6,7 @@ export interface UserObject {
         kieli: string;
         nimi: string;
         organisaatio: string;
+        organisaationimi?: string;
         rooli: string;
         uid: string,
         showHrData: boolean;
@@ -13,7 +14,7 @@ export interface UserObject {
         jukuriUser: boolean;
         owner: boolean;
     };
-    alayksikot: {};
+    alayksikot: [{ vuosi: string, yksikot: [{ arvo: string, selite: string }] }];
     requiredFields: [];
     visibleFields: [];
 }

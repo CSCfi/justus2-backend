@@ -38,7 +38,7 @@ let USER_DATA: any = {};
 // Add Query functions here and define them in the module.exports at the end
 // All GET requests first
 
-function getUser(req: Request, res: Response, next: NextFunction) {
+async function getUser(req: Request, res: Response, next: NextFunction) {
 
     let userData;
 
@@ -73,11 +73,10 @@ function getUser(req: Request, res: Response, next: NextFunction) {
     }
 
     userData.kieli = req.session.language;
-    oh.ObjectHandlerUser(userData, req.session.language, function(result: any) {
-        res.status(200).json(
-            result
-        );
-    });
+
+    const userDataToClient = await oh.ObjectHandlerUser(userData, req.session.language);
+
+    res.status(200).send(userDataToClient);
 
 }
 
