@@ -736,9 +736,11 @@ async function ObjectHandlerUser(perustiedot: any, lang: any, callback: any) {
 
     if (userUnits[0].yksikot.length || userUnits[1].yksikot.length || userUnits[2].yksikot.length || userUnits[3].yksikot.length) {
         visibleFields.push("alayksikko");
+        user["alayksikot"] = userUnits;
+    } else {
+        user["alayksikot"] = [];
     }
 
-    user["alayksikot"] = userUnits;
     user["perustiedot"] = perustiedot;
     user["visibleFields"] = visibleFields;
     user["requiredFields"] = requiredFields;

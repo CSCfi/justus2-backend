@@ -128,15 +128,32 @@ class JulkaisuArkistoQueries {
     isPublicationInTheseus = async (id: any) => {
 
         const params = {"id": id};
+        const query = "SELECT handle FROM julkaisuarkisto WHERE julkaisuid = " +
+            "${id};";
+
+        const data = await connection.db.oneOrNone(query, params);
+
+        if (data && data.handle) {
+            console.log("Publication is in Theseus");
+            return true;
+        } else {
+            console.log("Publication is not in Theseus");
+            return false;
+        }
+    }
+
+    isPublicationInQueue = async (id: any) => {
+
+        const params = {"id": id};
         const query = "SELECT 1 FROM julkaisujono WHERE julkaisuid = " +
             "${id};";
 
         const data = await connection.db.oneOrNone(query, params);
 
         if (data) {
-            return false;
-        } else {
             return true;
+        } else {
+            return false;
         }
     }
 

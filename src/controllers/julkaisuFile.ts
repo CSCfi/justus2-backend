@@ -108,10 +108,10 @@ const path = require("path");
 
     export const downloadJulkaisu = async (req: Request, res: Response) => {
 
-        const isFileInTheseus = await julkaisuArkisto.isPublicationInTheseus(req.params.id);
+        const isPublicationInQueue = await julkaisuArkisto.isPublicationInQueue(req.params.id);
         console.log(publicationFolder + "/" + req.params.id + "/file.blob");
 
-        if (!isFileInTheseus) {
+        if (isPublicationInQueue) {
 
             const publicationToDownload = publicationFolder + "/" + req.params.id + "/file.blob";
             const params = {"id": req.params.id};

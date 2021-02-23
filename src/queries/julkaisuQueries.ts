@@ -313,7 +313,7 @@ class JulkaisuQueries {
             const jukuriUpdateColumns = updateColumns.slice();
             jukuriUpdateColumns.push("urn");
             obj["urn"] = data.urn;
-            table = new pgp.helpers.ColumnSet(jukuriUpdateColumns, {table: "julkaisuarkisto"});
+            table = new con.pgp.helpers.ColumnSet(jukuriUpdateColumns, {table: "julkaisuarkisto"});
 
         } else {
             updateColumns = dbFields.julkaisuarkistoUpdateFields;
