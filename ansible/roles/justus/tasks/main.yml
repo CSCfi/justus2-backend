@@ -108,6 +108,6 @@
     force: yes
      
 - name: Install typescript and tslint globally
-  shell: /usr/bin/npm install --global typescript tslint
+  shell: /usr/bin/npm install --global typescript@4.0.5 tslint
   become: true
 

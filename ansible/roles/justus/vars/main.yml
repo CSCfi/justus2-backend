@@ -5,3 +5,5 @@ sql_files_to_execute:
   - 002_view-uijulkaisut.sql
   - 003_fx_kaytto_loki_insert.sql
   - 004_kaytto_loki.sql
+  - 005_fx_person_kaytto_loki_insert.sql
+  - 006_person_kaytto_loki.sql

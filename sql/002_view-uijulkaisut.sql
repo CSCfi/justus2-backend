@@ -77,7 +77,7 @@ CREATE VIEW v_sa_julkaisut AS
    FROM julkaisu;
    
    ALTER TABLE v_sa_julkaisut
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_tieteenalat
 
@@ -90,7 +90,7 @@ CREATE VIEW v_sa_tieteenalat  AS
    FROM tieteenala;
    
    ALTER TABLE v_sa_tieteenalat
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_taiteenalat
 
@@ -103,7 +103,7 @@ CREATE VIEW v_sa_taiteenalat AS
    FROM taiteenala;
 	
 ALTER TABLE v_sa_taiteenalat
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_avainsanat
 
@@ -117,7 +117,7 @@ CREATE VIEW v_sa_avainsanat AS
 FROM avainsana;
 
   ALTER TABLE v_sa_avainsanat
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_rinnakkaistallennettu
 
@@ -132,7 +132,7 @@ CREATE VIEW v_sa_rinnakkaistallennettu AS
 	FROM julkaisu;
 	
 	 ALTER TABLE v_sa_rinnakkaistallennettu
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_tekijat
 
@@ -152,7 +152,7 @@ CREATE VIEW v_sa_tekijat AS
 	ON (a.organisaatiotekijaid = o.id));
 	
 ALTER TABLE v_sa_tekijat
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_lisatiedot
 
@@ -165,7 +165,7 @@ CREATE VIEW v_sa_lisatiedot AS
 	FROM lisatieto;
 
 ALTER TABLE v_sa_lisatiedot
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_taidealantyyppikategoria
 
@@ -179,7 +179,7 @@ CREATE VIEW v_sa_taidealantyyppikategoria AS
    FROM taidealantyyppikategoria;
    
 ALTER TABLE v_sa_taidealantyyppikategoria
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_julkaisut_isbn
 
@@ -194,7 +194,7 @@ CREATE VIEW v_sa_julkaisut_isbn AS
 	FROM julkaisu_isbn;
 	
 ALTER TABLE v_sa_julkaisut_isbn
-  OWNER TO sql_sync;
+  OWNER TO postgres;
   
 -- View: v_sa_julkaisut_issn
 
@@ -209,4 +209,4 @@ CREATE VIEW v_sa_julkaisut_issn AS
 	FROM julkaisu_issn;
 	
 	ALTER TABLE v_sa_julkaisut_issn
-  OWNER TO sql_sync;
+  OWNER TO postgres;

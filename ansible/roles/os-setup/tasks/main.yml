@@ -1,7 +1,6 @@
 - name: Install common dev tools for vagrant
   yum: 
     name: [
-      "kernel",
       "net-tools",
       "gcc",
       "nano",

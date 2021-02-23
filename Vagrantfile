@@ -1,14 +1,14 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-Vagrant.require_version ">= 2.0.4"
+Vagrant.require_version ">= 2.2.10"
 
 # https://stackoverflow.com/a/28801317 | Demand a Vagrant plugin within the Vagrantfile?
-required_plugins = %w(vagrant-vbguest)
+required_plugins = ["vagrant-vbguest"]
 plugins_to_install = required_plugins.select { |plugin| not Vagrant.has_plugin? plugin }
 if not plugins_to_install.empty?
   puts "Installing plugins: #{plugins_to_install.join(' ')}"
-  if system "vagrant plugin install #{plugins_to_install.join(' ')}"
+  if system "vagrant plugin install #{plugins_to_install.join(' ')} --plugin-version 0.22.1"
     exec "vagrant #{ARGV.join(' ')}"
   else
     abort "Installation of one or more plugins has failed. Aborting."
