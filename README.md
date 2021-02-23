@@ -36,8 +36,8 @@
 
 - After Virtual Box is created and running run these commands
 ```
-$ vagrant ssh
 $ npm install
+$ vagrant ssh
 $ bash start.sh
 ```
 - The backend should now be up and running
