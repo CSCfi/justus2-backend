@@ -1,8 +1,8 @@
 # JUSTUS Backend
 
 #### Prerequisites
-- Virtualbox ( Confirmed working version is 5.2.44 ) - https://www.virtualbox.org/wiki/Downloads
-- Vagrant (Confirmed working version is 2.1.2 ) - https://www.vagrantup.com/downloads.html or via package manager
+- Virtualbox ( Confirmed working version is 6.1.0 ) - https://www.virtualbox.org/wiki/Downloads
+- Vagrant (Confirmed working version is 2.2.10 ) - https://www.vagrantup.com/downloads.html or via package manager
 ```
 // Example
 § apt install vagrant
