@@ -1,6 +1,6 @@
 ---
 - name: Install postgre via curl from root
-  shell: rpm -Uvh https://yum.postgresql.org/11/redhat/rhel-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+  shell: rpm -Uvh https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
   become: true
 
 - name: Install PostgreSQL and requirements
