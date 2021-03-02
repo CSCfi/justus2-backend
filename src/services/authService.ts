@@ -29,7 +29,7 @@ class AuthService {
             "domain": "",
             "organisaatio": "",
             "email": "",
-            "seloste": "",
+            "seloste": undefined,
             "rooli": "",
             "nimi": name,
             "uid": uid,
@@ -49,6 +49,7 @@ class AuthService {
                 userData.domain = domain;
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
+                // array
                 userData.seloste = domainMapping[key].seloste;
                 userData.rooli = role;
             } else {
