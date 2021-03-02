@@ -22,7 +22,7 @@ const getUserData = function (headers: any) {
             "domain": "",
             "organisaatio": "",
             "email": "",
-            "seloste": "",
+            "seloste": undefined,
             "rooli": "",
             "nimi": name,
             "uid": headers["shib-uid"],
@@ -42,6 +42,7 @@ const getUserData = function (headers: any) {
                 userData.domain = domain;
                 userData.organisaatio = domainMapping[key].code;
                 userData.email = domainMapping[key].email;
+                // array
                 userData.seloste = domainMapping[key].seloste;
                 userData.rooli = role;
                 domainMapped = true;

@@ -2,7 +2,7 @@ export interface UserObject {
     perustiedot: {
         domain: string;
         email: string;
-        seloste: string,
+        seloste: string[],
         kieli: string;
         nimi: string;
         organisaatio: string;
