@@ -1,15 +1,13 @@
 # JUSTUS Backend
 
 #### Prerequisites
-- Virtualbox ( Confirmed working version is 5.2.44 ) - https://www.virtualbox.org/wiki/Downloads
-- Vagrant (Confirmed working version is 2.1.2 ) - https://www.vagrantup.com/downloads.html or via package manager
+- Virtualbox ( Confirmed working version is 6.1.0 ) - https://www.virtualbox.org/wiki/Downloads
+- Vagrant (Confirmed working version is 2.2.10 ) - https://www.vagrantup.com/downloads.html or via package manager
 ```
 // Example
 § apt install vagrant
 // You can always check that npm was installed correctly by typing for example:
 § vagrant --version
-// Install plugin to get Virtualbox Guest Additions
-§ vagrant plugin install vagrant-vbguest
 
 ```
 
@@ -36,8 +34,8 @@
 
 - After Virtual Box is created and running run these commands
 ```
-$ vagrant ssh
 $ npm install
+$ vagrant ssh
 $ bash start.sh
 ```
 - The backend should now be up and running
