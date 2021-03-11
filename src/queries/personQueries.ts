@@ -90,7 +90,7 @@ class PersonQueries {
     }
 
 
-    public queryHrData = async (organizationCode: string) => {
+    queryHrData = async (organizationCode: string) => {
 
         const params = {"organisaatiotunniste": organizationCode};
         const query = "SELECT 1 FROM person_organization WHERE organisaatiotunniste = " +

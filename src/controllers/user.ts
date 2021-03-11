@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { authService as authService } from "../services/authService";
+import { personQueries as personQueries } from "../queries/personQueries";
 import { UserObject } from "../types/User";
 
 // Database connection from db.ts
@@ -45,6 +46,8 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
         if (!req.session.language) {
             req.session.language = "FI";
         }
+        // True if person tables contain data for this organization
+        userData.showHrData  = await personQueries.queryHrData(userData.organisaatio);
 
         userData.kieli = req.session.language;
         const userDataToClient = await oh.ObjectHandlerUser(userData, req.session.language);
