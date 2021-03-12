@@ -41,7 +41,6 @@ class AuthService {
 
         };
 
-        console.log(headers);
         const role = this.getRole(headers["shib-group"]);
 
         Object.keys(domainMapping).forEach(function (val, key) {
@@ -62,8 +61,6 @@ class AuthService {
             userData["owner"] = true;
         }
 
-        console.log(userData);
-
         return userData;
 
     };
@@ -80,9 +77,6 @@ class AuthService {
 
 
     getRole = (data: any) => {
-
-        console.log("In get role function");
-        console.log(data);
 
         if (data.match(/\/justus#justus-owners($|;)/) !== null) {
             return "owner";
