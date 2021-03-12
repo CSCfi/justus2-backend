@@ -58,7 +58,7 @@ class AuthService {
             }
         });
 
-        if (userData.organisaatio === "00000") {
+        if (userData.organisaatio === "00000" && userData.rooli === "owner") {
             userData["owner"] = true;
         }
 
@@ -70,7 +70,6 @@ class AuthService {
 
 
     parseDomainFromHeadersData = (data: any) => {
-
         const domain = data.match(/(;|^)(@[^;]+)($|;)/);
         if (domain !== null) {
             return domain[2];
@@ -79,12 +78,13 @@ class AuthService {
         }
     };
 
+
     getRole = (data: any) => {
 
         console.log("In get role function");
         console.log(data);
 
-        if (data.match(/\/justus#group-admins($|;)/) !== null) {
+        if (data.match(/\/justus#justus-owners($|;)/) !== null) {
             return "owner";
         }
         else if (data.match(/\/justus#([^;]*)-admins($|;)/) !== null) {
