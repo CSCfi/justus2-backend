@@ -51,7 +51,7 @@ const getUserData = function (headers: any) {
             }
         });
 
-        if (userData.organisaatio === "00000") {
+        if (userData.organisaatio === "00000" && userData.rooli === "owner") {
             userData["owner"] = true;
         }
 
@@ -75,7 +75,7 @@ const parseDomainFromHeadersData = function(data: any) {
 
 const getRole = function(data: any) {
 
-    if (data.match(/\/justus#group-admins($|;)/) !== null) {
+    if (data.match(/\/justus#justus-owners($|;)/) !== null) {
         return "owner";
     }
     else if (data.match(/\/justus#([^;]*)-admins($|;)/) !== null) {
