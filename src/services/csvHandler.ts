@@ -29,7 +29,6 @@ class CsvHandler {
                     }
                 ))
                 .on("headers", (headers: any) => {
-                    console.log(headers);
                     const expectedHeaders = ["tunniste", "etunimi", "sukunimi", "email", "orcid", "alayksikko1", "alayksikko2", "alayksikko3"];
 
                     if (!this.arrayEquals(expectedHeaders, headers)) {

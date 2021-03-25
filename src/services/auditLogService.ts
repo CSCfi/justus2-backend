@@ -54,8 +54,7 @@ class AuditLog {
 
         const kayttoLokiColumns = new connection.pgp.helpers.ColumnSet(dbFields.person_kaytto_loki, {table: "person_kaytto_loki"});
         const saveLokiData = connection.pgp.helpers.insert(kayttoLokiData, kayttoLokiColumns) + "RETURNING id";
-        const id = await connection.db.one(saveLokiData);
-        console.log(id);
+        await connection.db.one(saveLokiData);
     }
 
 }

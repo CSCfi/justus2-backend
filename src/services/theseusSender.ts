@@ -217,9 +217,11 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         const fileExists = await this.isFileUploaded(julkaisuID);
 
         console.log("The stuff in insert temp table: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
+        console.log(await julkaisuArkisto.isPublicationInQueue(julkaisuID));
+        console.log("Julkaisuid = " + julkaisuID);
 
         // Publication is already approved, send request to Theseus
-        if (!await julkaisuArkisto.isPublicationInQueue(julkaisuID)) {
+        if (await julkaisuArkisto.isPublicationInQueue(julkaisuID)) {
             try {
                 if (fileExists && fileExists.filename) {
                     await this.sendBitstreamToItem(julkaisuID, theseusItemID, jukuriPublication);
@@ -232,7 +234,7 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             } catch (e) {
                 console.log("Error in sending  publication and its metadata to Thseus: " + e);
             }
-     }
+        }
         // Otherwise just update data to archive table
         else {
             console.log("Metadata for item updated");
