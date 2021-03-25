@@ -104,8 +104,11 @@ export const savePersons = async (req: Request, res: Response) => {
             res.status(200).send("OK");
         }).catch(function (err: any) {
             console.log(err);
-            fs.unlinkSync(filePath);
-            res.status(500).send(err.message);
+            res.status(500).send(err);
+            setTimeout(function() {
+                fs.unlinkSync(filePath);
+                console.log("File removed successfully");
+            }, 2000);
         });
     } else {
         return res.status(403).send("Permission denied");

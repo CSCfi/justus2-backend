@@ -40,15 +40,18 @@ export const downloadPersons = async(req: Request, res: Response) => {
             }
 
             // create CSV file to csv-download folder
-            csvHandler.writeCSV(persons, organization).then(() => {
+            csvHandler.writeCSV( persons, organization).then(() => {
+
                 // send data to UI
-                res.download(csvFilePath + organization + "_file.csv", fileName, function (err: any) {
+               return res.download(csvFilePath + organization + "_file.csv", fileName, function (err: any) {
                     if (err) {
                         console.log(err);
                     }
-                    console.log("Remove downloaded CSV file...");
-                    // after download delete csv file
-                    fs.unlinkSync(csvFilePath + organization + "_file.csv");
+                   // after download delete csv file
+                    setTimeout(function() {
+                        fs.unlinkSync(csvFilePath + organization + "_file.csv");
+                        console.log("File removed successfully");
+                    }, 2000);
                 });
             });
 
