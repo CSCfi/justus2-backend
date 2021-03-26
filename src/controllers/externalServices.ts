@@ -250,7 +250,6 @@ export const getJulkaisuVirtaCrossrefEsitaytto = async (req: Request, res: Respo
 
     } catch (error) {
         console.log(error);
-        console.log(error.message);
         if (error.response) {
            if (error.response.status === 400 || error.response.status === 404 ) {
                return res.sendStatus(404);
