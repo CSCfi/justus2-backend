@@ -144,15 +144,11 @@ class JulkaisuArkistoQueries {
 
     isPublicationInQueue = async (id: any) => {
 
-        console.log(id);
         const params = {"id": id };
         const query = "SELECT 1 FROM julkaisujono WHERE julkaisuid = " +
             "${id};";
 
-        console.log(query);
         const data = await connection.db.oneOrNone(query, params);
-        console.log("In is publication in queue function");
-        console.log(data);
 
         if (data) {
             return true;

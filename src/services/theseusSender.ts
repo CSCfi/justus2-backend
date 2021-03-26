@@ -217,8 +217,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
         const fileExists = await this.isFileUploaded(julkaisuID);
 
         console.log("The stuff in insert temp table: " + julkaisuID + " " + theseusItemID + " " + theseusHandleID);
-        console.log(await julkaisuArkisto.isPublicationInQueue(julkaisuID));
-        console.log("Julkaisuid = " + julkaisuID);
 
         // Publication is already approved, send request to Theseus
         if (await julkaisuArkisto.isPublicationInQueue(julkaisuID)) {

@@ -249,12 +249,14 @@ export const getJulkaisuVirtaCrossrefEsitaytto = async (req: Request, res: Respo
         return res.status(200).json(ret);
 
     } catch (error) {
+        console.log(error);
         if (error.response) {
            if (error.response.status === 400 || error.response.status === 404 ) {
                return res.sendStatus(404);
            }
         }
-        return res.sendStatus(500);
+        // return res.sendStatus(500);
+        return res.status(500).send(error);
     }
 
 };
