@@ -415,23 +415,23 @@ const parseVirtaData = async (data: any) => {
     if (data["VolyymiTeksti"]) obj["julkaisu"]["volyymi"] = data["VolyymiTeksti"];
     if (data["LehdenNumeroTeksti"]) obj["julkaisu"]["numero"] = data["LehdenNumeroTeksti"];
     if (data["SivunumeroTeksti"]) obj["julkaisu"]["sivut"] = data["SivunumeroTeksti"];
-    if (enableZeroValue(data["Artikkelinumero"])) obj["julkaisu"]["artikkelinumero"] = data["Artikkelinumero"].toString();
+    if (await enableZeroValue(data["Artikkelinumero"])) obj["julkaisu"]["artikkelinumero"] = data["Artikkelinumero"].toString();
     if (data["KustantajanNimi"]) obj["julkaisu"]["kustantaja"] = data["KustantajanNimi"];
     if (data["KustannuspaikkaTeksti"]) obj["julkaisu"]["julkaisunkustannuspaikka"] = data["KustannuspaikkaTeksti"];
     if (data["JulkaisunKieliKoodi"]) obj["julkaisu"]["julkaisunkieli"] = data["JulkaisunKieliKoodi"];
-    if (enableZeroValue(data["JulkaisunKansainvalisyysKytkin"])) obj["julkaisu"]["julkaisunkansainvalisyys"] = data["JulkaisunKansainvalisyysKytkin"].toString();
+    if (await enableZeroValue(data["JulkaisunKansainvalisyysKytkin"])) obj["julkaisu"]["julkaisunkansainvalisyys"] = data["JulkaisunKansainvalisyysKytkin"].toString();
     if (data["JulkaisumaaKoodi"]) obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"];
     if (data["JulkaisumaaKoodi"]) obj["julkaisu"]["julkaisumaa"] = data["JulkaisumaaKoodi"].toString();
-    if (enableZeroValue(data["YhteisjulkaisuKVKytkin"])) obj["julkaisu"]["kansainvalinenyhteisjulkaisu"] = data["YhteisjulkaisuKVKytkin"].toString();
-    if (enableZeroValue(data["YhteisjulkaisuYritysKytkin"])) obj["julkaisu"]["yhteisjulkaisuyrityksenkanssa"] = data["YhteisjulkaisuYritysKytkin"].toString();
+    if (await enableZeroValue(data["YhteisjulkaisuKVKytkin"])) obj["julkaisu"]["kansainvalinenyhteisjulkaisu"] = data["YhteisjulkaisuKVKytkin"].toString();
+    if (await enableZeroValue(data["YhteisjulkaisuYritysKytkin"])) obj["julkaisu"]["yhteisjulkaisuyrityksenkanssa"] = data["YhteisjulkaisuYritysKytkin"].toString();
     if (data["DOI"]) obj["julkaisu"]["doitunniste"] = data["DOI"];
     if (data["PysyvaOsoiteTeksti"]) obj["julkaisu"]["pysyvaverkkoosoite"] = data["PysyvaOsoiteTeksti"];
-    if (enableZeroValue(data["AvoinSaatavuusKoodi"])) obj["julkaisu"]["avoinsaatavuus"] = data["AvoinSaatavuusKoodi"].toString();
-    if (enableZeroValue(data["RinnakkaistallennettuKytkin"])) obj["julkaisu"]["julkaisurinnakkaistallennettu"] = data["RinnakkaistallennettuKytkin"].toString();
-    if (enableZeroValue(data["JufoTunnus"])) {
+    if (await enableZeroValue(data["AvoinSaatavuusKoodi"])) obj["julkaisu"]["avoinsaatavuus"] = data["AvoinSaatavuusKoodi"].toString();
+    if (await enableZeroValue(data["RinnakkaistallennettuKytkin"])) obj["julkaisu"]["julkaisurinnakkaistallennettu"] = data["RinnakkaistallennettuKytkin"].toString();
+    if (await enableZeroValue(data["JufoTunnus"])) {
         obj["julkaisu"]["jufotunnus"] = data["JufoTunnus"].toString();
     }
-    if (enableZeroValue(data["JufoLuokkaKoodi"])) {
+    if (await enableZeroValue(data["JufoLuokkaKoodi"])) {
         obj["julkaisu"]["jufoluokitus"] = data["JufoLuokkaKoodi"].toString();
     }
 
