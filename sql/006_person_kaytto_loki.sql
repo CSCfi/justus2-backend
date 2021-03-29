@@ -16,7 +16,8 @@ CREATE TABLE person_kaytto_loki (
     itable character varying(100) NOT NULL,
     action character varying(10) NOT NULL,
     data json,
-    luonti_pvm timestamptz
+    luonti_pvm timestamptz,
+	CONSTRAINT person_kaytto_loki_pkey PRIMARY KEY (id)
 );
 
 ALTER TABLE public.person_kaytto_loki OWNER TO postgres;

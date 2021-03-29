@@ -320,8 +320,8 @@ CREATE TABLE person
 (
   id bigserial NOT NULL,
   tunniste character varying NOT NULL,
-  etunimi character varying NOT NULL,
-  sukunimi character varying NOT NULL,
+  etunimi character varying,
+  sukunimi character varying,
   email character varying,
   created timestamp with time zone NOT NULL DEFAULT now(),
   modified timestamp with time zone NOT NULL DEFAULT now(),
@@ -342,7 +342,7 @@ CREATE TABLE person_organization
 (
   id bigserial NOT NULL,
   personid bigint NOT NULL,
-  organisaatiotunniste character varying NOT NULL,
+  organisaatiotunniste character varying,
   alayksikko character varying,
   created timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT person_organization_pkey PRIMARY KEY (id),
@@ -364,8 +364,8 @@ CREATE TABLE person_identifier
 (
   id bigserial NOT NULL,
   personid bigint NOT NULL,
-  tunnistetyyppi character varying NOT NULL,
-  tunniste character varying NOT NULL,
+  tunnistetyyppi character varying,
+  tunniste character varying,
   created timestamp with time zone NOT NULL DEFAULT now(),
   modified timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT person_identifier_pkey PRIMARY KEY (id),
