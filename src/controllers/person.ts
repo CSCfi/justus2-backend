@@ -72,9 +72,8 @@ export const getPersonListaus = async(req: Request, res: Response) => {
     // userData = await authService.getUserData(req.headers);
 
     const hasOrganisation = await authService.hasOrganisation(userData);
-    const isAdmin = await authService.isAdmin(userData);
 
-    if (hasOrganisation && isAdmin) {
+    if (hasOrganisation) {
         const organization = userData.organisaatio;
 
         try {
