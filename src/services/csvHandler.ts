@@ -246,7 +246,7 @@ class CsvHandler {
         const regex = new RegExp(/^(|[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X])$/g);
 
         const invalidOrcids = filteredArray.filter(function (obj: any) {
-            return (!obj.orcid.match(regex) || obj.orcid === "0000-0000-0000-0000");
+            return (!obj.orcid.trim().match(regex) || obj.orcid.trim() === "0000-0000-0000-0000");
         });
 
         if (invalidOrcids.length) {
