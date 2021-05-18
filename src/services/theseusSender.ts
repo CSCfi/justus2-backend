@@ -725,8 +725,6 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
             metadataObject = [{"key": "dc.source.identifier", "value": id }];
 
         } else {
-            // this is just for development setup
-            // tempMetadataObject.push({ "key": "dc.teh", "value": "00000" });
             tempMetadataObject.push({ "key": "dc.relation.ispartofseries", "value": julkaisuData["lehdenjulkaisusarjannimi"]});
             tempMetadataObject.push({"key": "dc.okm.selfarchived", "value": this.mapZeroAndOneValues(julkaisuData["julkaisurinnakkaistallennettu"]) });
             tempMetadataObject.push({"key": "dc.okm.internationalcopublication", "value": this.mapZeroAndOneValues(julkaisuData["kansainvalinenyhteisjulkaisu"]) });
@@ -819,14 +817,16 @@ const jukuriAuthPassword = process.env.JUKURI_AUTH_PASSWORD;
                     metadataObject.push(tieteenalaObject);
                 });
             }
-            // Jukuri does not want to have this field in test environment
-            if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "dev")  { 
+            // Map project number only in production environment, otherwise 00000
+            if (process.env.NODE_ENV === "prod")  {
                 if (!this.arrayIsEmpty(projektinumeroData)) {
                     projektinumeroData.forEach((value: any) => {
                         const pnobject = {"key": "dc.teh", "value": value};
                         metadataObject.push(pnobject);
                     });
                 }
+            } else {
+                metadataObject.push({"key": "dc.teh", "value": "00000"});
             }
         }
 
