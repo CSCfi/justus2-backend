@@ -18,6 +18,7 @@ const utf8 = require("utf8");
 
 import { Keyword, KeywordList } from "../types/Keyword";
 import { JufoKanava, JufoList } from "../types/Jufo";
+import { ExternalPublicationPrefillObject, SortObject } from "Julkaisu";
 
 export const getAvainSanat = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -209,7 +210,26 @@ export const getJulkaisutVirtaCrossrefLista = async (req: Request, res: Response
         }
 
         const ret = await parseCrAndVirtaData(obj);
-        res.status(200).json(ret);
+
+        const searchTextLowercased = julkaisu.toLowerCase();
+        const rankedIndex = ret.map((entry: ExternalPublicationPrefillObject) => {
+            let relevance = 0;
+
+            if (entry.title.toLowerCase().includes(searchTextLowercased)) {
+                relevance += 100;
+            }
+
+            const keywords = searchTextLowercased.split(" ");
+            keywords.forEach(keyword => {
+                if (entry.title.toLowerCase().includes(keyword)) {
+                    relevance += 1;
+                }
+            });
+
+            return {...entry, relevance};
+        }).sort((a: SortObject, b: SortObject) => b.relevance - a.relevance);
+
+        res.status(200).json(rankedIndex);
 
     }).catch(function (err) {
         console.log(err);
