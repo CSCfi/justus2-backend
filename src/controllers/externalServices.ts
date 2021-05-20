@@ -483,7 +483,7 @@ const parseVirtaData = async (data: any) => {
     }
 
     if (data["Avainsanat"]) {
-        obj["avainsanat"] = data["Avainsanat"]["AvainsanaTeksti"];
+        obj["avainsanat"] = typeof data["Avainsanat"]["AvainsanaTeksti"] === "string" ? [data["Avainsanat"]["AvainsanaTeksti"]] : data["Avainsanat"]["AvainsanaTeksti"];
     } else {
         delete obj["avainsanat"];
     }
