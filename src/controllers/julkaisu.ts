@@ -27,6 +27,7 @@ const jukuriHandleLink = process.env.JUKURI_HANDLE_LINK;
 
 
 export const getJulkaisut = async (req: Request, res: Response, next: NextFunction) => {
+    req.setTimeout(5 * 60 * 1000);
 
     userData = req.session.userData;
     // userData = await authService.getUserData(req.headers);
